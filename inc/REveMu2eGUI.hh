@@ -20,7 +20,6 @@ namespace mu2e {
 class REveMu2eGUI : public ROOT::Experimental::REveElement
 {
   public:
-  REveBrintEventInfo *print_einfo;
  
      //int fCount{0};
      //int fTotal{10};
