@@ -1,42 +1,3 @@
-//Author: S Middleton
-//Date: 2021
-//Purpose: REveEventDisplay Driving module
-
-#include "TRACE/trace.h"
-//Art:
-#include "art/Framework/Core/EDAnalyzer.h"
-#include "art/Framework/Core/ModuleMacros.h"
-#include "art/Framework/Principal/Event.h"
-#include "art/Framework/Principal/Handle.h"
-#include "art/Framework/Principal/Run.h"
-#include "canvas/Utilities/InputTag.h"
-#include "art_root_io/TFileService.h"
-#include "art_root_io/TFileDirectory.h"
-#include "canvas/Persistency/Common/TriggerResults.h"
-#include "art/Framework/Services/System/TriggerNamesService.h"
-#include "cetlib_except/exception.h"
-#include "fhiclcpp/ParameterSet.h"
-#include "fhiclcpp/ParameterSetRegistry.h"
-
-#include "artdaq-core/Data/ContainerFragment.hh"
-#include "artdaq-core/Data/Fragment.hh"
-//#include "artdaq/DAQdata/Globals.hh"
-
-#include "cetlib_except/exception.h"
-
-//ROOT:
-//#include "art_root_io/TFileService.h" 
-#include <TApplication.h>
-#include <TSystem.h>
-#include <TList.h>
-#include <TObjArray.h>
-#include <Rtypes.h>
-#include <TFile.h>
-#include <TTree.h>
-
-//EVE-7
-#include <ROOT/RWebWindow.hxx>
-#include <ROOT/RWebWindowsManager.hxx>
 #include <ROOT/REveManager.hxx>
 
 #include <condition_variable>
@@ -363,7 +324,7 @@ namespace mu2e
       world->AddElement(fGui);
       world->AddCommand("QuitRoot",  "sap-icon://log",  eventMgr_, "QuitRoot()");
       world->AddCommand("NextEvent", "sap-icon://step", eventMgr_, "NextEvent()");
-      world->AddCommand("PrintEventInfo", "sap-icon://step", fGui, "PrintEventInfo()");
+      world->AddCommand("PrintEveInfo", "sap-icon://step", fGui, "PrintEveInfo()");
       std::unique_lock lock{m_};
       cv_.notify_all();
  
