@@ -62,6 +62,8 @@
 
 #include "Offline/RecoDataProducts/inc/CaloCluster.hh"
 #include "Offline/RecoDataProducts/inc/ComboHit.hh"
+#include "Offline/RecoDataProducts/inc/CaloCluster.hh"
+#include "Offline/RecoDataProducts/inc/HelixSeed.hh"
 #include "Offline/GeometryService/inc/GeomHandle.hh"
 #include "Offline/CalorimeterGeom/inc/CaloGeomUtil.hh"
 #include "Offline/CalorimeterGeom/inc/Calorimeter.hh"
@@ -226,6 +228,7 @@ namespace mu2e
     <<" addTimeClusters : "<<filler_.addTimeClusters_
     <<" addCRVpulses : "<<filler_.addCrvHits_
     <<" addClusters : "<<filler_.addClusters_
+    <<" addHelices : "<<filler_.addHelixSeeds_
     <<" addTracks : "<<filler_.addKalSeeds_
     <<" addCosmicTrackSeeds : "<<filler_.addCosmicTrackSeeds_
     <<" add CRV : "<<filler_.addCrvHits_<<std::endl;
@@ -297,6 +300,7 @@ namespace mu2e
         if(filler_.addCrvHits_) filler_.FillRecoCollections(event, data, CRVRecoPulses);
         if(filler_.addTimeClusters_) filler_.FillRecoCollections(event, data, TimeClusters);
         if(filler_.addTrkHits_) filler_.FillRecoCollections(event, data, TrkHits); 
+        if(filler_.addHelixSeeds_) filler_.FillRecoCollections(event, data, HelixSeeds);
         if(filler_.addKalSeeds_)  filler_.FillRecoCollections(event, data, KalSeeds);
         if(filler_.addCosmicTrackSeeds_)  filler_.FillRecoCollections(event, data, CosmicTrackSeeds);
         if(filler_.addMCTraj_)  filler_.FillMCCollections(event, data, MCTrajectories);
@@ -389,7 +393,7 @@ namespace mu2e
       REX::REveElement* scene = eveMng_->GetEventScene();
 
       std::cout<<"[REveEventDisplay : process_single_event] -- calls to data interface "<<std::endl;
-      DrawOptions drawOpts(filler_.addCosmicTrackSeeds_, filler_.addKalSeeds_, filler_.addClusters_, filler_.addHits_, filler_.addCrvHits_, filler_.addTimeClusters_, filler_.addTrkHits_, filler_.addMCTraj_);
+      DrawOptions drawOpts(filler_.addCosmicTrackSeeds_, filler_.addHelixSeeds_, filler_.addKalSeeds_, filler_.addClusters_, filler_.addHits_, filler_.addCrvHits_, filler_.addTimeClusters_, filler_.addTrkHits_, filler_.addMCTraj_);
       frame_->showEvents(eveMng_, scene, firstLoop_, data, drawOpts, particles_, strawdisplay_);
 
       std::cout<<"[REveEventDisplay : process_single_event] -- cluster added to scene "<<std::endl;

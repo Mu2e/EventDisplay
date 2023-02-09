@@ -12,6 +12,7 @@ namespace mu2e{
       tcTag_(conf.tcTag()),
       crvcoinTag_(conf.crvcoinTag()),
       cluTag_(conf.cluTag()),
+      helixSeedTag_(conf.helixSeedTag()),
       kalSeedTag_(conf.kalSeedTag()),
       cosmicTrackSeedTag_(conf.cosmicTrackSeedTag()),
       MCTrajTag_(conf.MCTrajTag()),
@@ -20,6 +21,7 @@ namespace mu2e{
       addTimeClusters_(conf.addTimeClusters()),
       addTrkHits_(conf.addTrkHits()),
       addClusters_(conf.addClusters()),
+      addHelixSeeds_(conf.addHelixSeeds()),
       addKalSeeds_(conf.addKalSeeds()),
       addCosmicTrackSeeds_(conf.addCosmicTrackSeeds()),
       addMCTraj_(conf.addMCTraj()),
@@ -92,6 +94,21 @@ namespace mu2e{
                 data.calocluster_labels.push_back(name);
             }
             data.calocluster_tuple = std::make_tuple(data.calocluster_labels,data.calocluster_list);
+        }
+        if(FillAll_ or (CollectionName==HelixSeeds)){
+          
+            for(const auto &tag : helixSeedTag_){
+                auto chH = evt.getValidHandle<mu2e::HelixSeedCollection>(tag);
+                data.helixSeedcol = chH.product();
+                data.helix_list.push_back(data.helixSeedcol);
+
+                std::string name = TurnNameToString(tag);
+                std::cout<<"Plotting HelixSeed Instance: "<<name<<std::endl;
+                data.helix_labels.push_back(name);
+
+            }
+            data.helix_tuple = std::make_tuple(data.helix_labels,data.helix_list);
+            
         }
         if(FillAll_ or (CollectionName==KalSeeds)){
           

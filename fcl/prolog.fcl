@@ -8,13 +8,14 @@ REveEventDisplay : {
     showTS : false
     filler : {
       diagLevel : 0
-      ComboHitCollection : ["makeSH"]
+      ComboHitCollection : ["makePH"]
       CrvRecoPulseCollection : ["SelectRecoMC"]
-      TimeClusterCollection : ["MHDeM"]
+      TimeClusterCollection : ["MHDmu"]
       CaloClusterCollection : ["CaloClusterFast"]
-      KalSeedCollection : ["KFFDeM"]
+      HelixSeedCollection : ["MHFinderDmu"]
+      KalSeedCollection : ["KFFDmu"]
       CosmicTrackSeedCollection : "CosmicTrackFinderTimeFit"
-      MCTrajectoryCollection :  ["compressRecoMCs"]
+      MCTrajectoryCollection :  ["compressDigiMCs"]
       addHits : false
       addCrvHits : false
       addTimeClusters : false

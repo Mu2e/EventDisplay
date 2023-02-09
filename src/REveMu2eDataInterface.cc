@@ -336,6 +336,43 @@ void REveMu2eDataInterface::FillKinKalTrajectory(REX::REveManager *&eveMng, bool
   }
 }
 
+void REveMu2eDataInterface::AddHelixSeedCollection(REX::REveManager *&eveMng,bool firstloop,  std::tuple<std::vector<std::string>, std::vector<const HelixSeedCollection*>> helix_tuple, REX::REveElement* &scene){
+
+    std::cout<<"[REveMu2eDataInterface] AddHelices "<<std::endl;
+    std::vector<const HelixSeedCollection*> helix_list = std::get<1>(helix_tuple);
+    std::vector<std::string> names = std::get<0>(helix_tuple);
+    std::vector<int> colour;
+    std::cout<<"helix collection size = "<<helix_list.size()<<std::endl;
+     for(unsigned int j=0; j< helix_list.size(); j++){
+      const HelixSeedCollection* seedcol = helix_list[j];
+      colour.push_back(j+8);
+      if(seedcol!=0){  
+       for(unsigned int k = 0; k < seedcol->size(); k = k + 20){ //TODO
+          mu2e::HelixSeed hseed = (*seedcol)[k];
+          const ComboHitCollection& hhits = hseed.hits();
+          unsigned int nhhits = hhits.size();
+          auto line = new REX::REveLine(names[j], names[j],nhhits);
+	  std::cout<<"Helix hits = "<<nhhits<<std::endl;
+          if(hhits.size() !=0 ){
+            // Loop over hits
+            for(unsigned int i=0; i< nhhits; i++){
+              mu2e::ComboHit const  &hit= hhits.at(i);
+              int sid = hit._sid.asUint16();
+	      std::cout<<"sid = "<<sid<<std::endl;
+              CLHEP::Hep3Vector HitPos(hit.pos().x(), hit.pos().y(), hit.pos().z());
+              line->SetNextPoint(pointmmTocm(HitPos.x()),pointmmTocm(HitPos.y()) ,pointmmTocm(HitPos.z()));                  
+	    } 
+	  }
+          line->SetLineColor(kGreen);
+          line->SetLineWidth(drawconfig.getInt("TrackLineWidth"));
+          scene->AddElement(line); 
+       }
+      }
+     }
+   
+}
+
+
 void REveMu2eDataInterface::AddKalSeedCollection(REX::REveManager *&eveMng,bool firstloop,  std::tuple<std::vector<std::string>, std::vector<const KalSeedCollection*>> track_tuple, REX::REveElement* &scene){
 
     std::cout<<"[REveMu2eDataInterface] AddTracks  "<<std::endl;

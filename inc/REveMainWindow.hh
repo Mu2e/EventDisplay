@@ -51,6 +51,7 @@ namespace mu2e {
   struct DrawOptions{
       // data options
       bool addCosmicTracks = false;
+      bool addHelices = false;
       bool addTracks = false;
       bool addClusters = false; 
       bool addComboHits = false;
@@ -60,8 +61,8 @@ namespace mu2e {
       bool addMCTrajectories = false;
      
       DrawOptions(){};
-      DrawOptions(bool cosmictracks, bool tracks, bool clusters, bool combohits, bool crv, bool timeclusters, bool trkhits, bool mctraj) 
-      : addCosmicTracks(cosmictracks), addTracks(tracks), addClusters(clusters), addComboHits(combohits), addCRVInfo(crv), addTimeClusters(timeclusters), addTrkHits(trkhits), addMCTrajectories(mctraj){};
+    DrawOptions(bool cosmictracks, bool helices, bool tracks, bool clusters, bool combohits, bool crv, bool timeclusters, bool trkhits, bool mctraj) 
+      : addCosmicTracks(cosmictracks), addHelices(helices), addTracks(tracks), addClusters(clusters), addComboHits(combohits), addCRVInfo(crv), addTimeClusters(timeclusters), addTrkHits(trkhits), addMCTrajectories(mctraj){};
      };
      
     class REveMainWindow  : public REX::REveElement {

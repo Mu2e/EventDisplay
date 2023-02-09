@@ -246,6 +246,11 @@ void REveMainWindow::showNodesByName(TGeoNode* n, const std::string& str, bool o
       std::vector<const CaloClusterCollection*> calocluster_list = std::get<1>(data.calocluster_tuple);
       if(calocluster_list.size() !=0 ) pass_data->AddCaloClusters(eveMng, firstLoop, data.calocluster_tuple, eventScene);
     }
+    std::vector<const HelixSeedCollection*> helix_list = std::get<1>(data.helix_tuple);
+    if(drawOpts.addHelices and helix_list.size() !=0) {
+      std::cout<<"helix there ? "<<std::endl;
+      pass_data->AddHelixSeedCollection(eveMng, firstLoop, data.helix_tuple, eventScene);
+    }
     std::vector<const KalSeedCollection*> track_list = std::get<1>(data.track_tuple);
     if(drawOpts.addTracks and track_list.size() !=0) {
       pass_data->AddKalSeedCollection(eveMng, firstLoop, data.track_tuple, eventScene);

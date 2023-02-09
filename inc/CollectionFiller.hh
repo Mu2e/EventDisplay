@@ -17,7 +17,7 @@
 
 namespace mu2e{
 
-  enum RecoDataProductName {ComboHits,  CRVRecoPulses, TimeClusters, CaloClusters, KalSeeds, CosmicTrackSeeds, TrkHits};
+  enum RecoDataProductName {ComboHits,  CRVRecoPulses, TimeClusters, CaloClusters, HelixSeeds, KalSeeds, CosmicTrackSeeds, TrkHits};
   enum MCDataProductName {MCTrajectories};
 	class CollectionFiller
 	{
@@ -30,14 +30,17 @@ namespace mu2e{
           fhicl::Sequence<art::InputTag>tcTag{Name("TimeClusterCollection"),Comment("ttcTag")};
           fhicl::Sequence<art::InputTag>crvcoinTag{Name("CrvRecoPulseCollection"),Comment("crvTag")};
           fhicl::Sequence<art::InputTag>cluTag{Name("CaloClusterCollection"),Comment("cluTag")};
-	        fhicl::Sequence<art::InputTag>kalSeedTag{Name("KalSeedCollection"),Comment("kalseedTag")};
+          fhicl::Sequence<art::InputTag>helixSeedTag{Name("HelixSeedCollection"),Comment("helixseedTag")};
+	  fhicl::Sequence<art::InputTag>kalSeedTag{Name("KalSeedCollection"),Comment("kalseedTag")};
           fhicl::Atom<art::InputTag>cosmicTrackSeedTag{Name("CosmicTrackSeedCollection"),Comment("cosmicTrackSeedTag")};
+
           fhicl::Sequence<art::InputTag>MCTrajTag{Name("MCTrajectoryCollection"),Comment("MCTrajTag")};
           fhicl::Atom<bool> addHits{Name("addHits"), Comment("set to add the hits"),false};
           fhicl::Atom<bool> addCrvHits{Name("addCrvHits"), Comment("set to add crv hits"),false};
-	        fhicl::Atom<bool> addTimeClusters{Name("addTimeClusters"), Comment("set to add the CRV hits"),false};
-	        fhicl::Atom<bool> addTrkHits{Name("addTrkHits"), Comment("set to add the Trk hits"),false};
+	  fhicl::Atom<bool> addTimeClusters{Name("addTimeClusters"), Comment("set to add the CRV hits"),false};
+	  fhicl::Atom<bool> addTrkHits{Name("addTrkHits"), Comment("set to add the Trk hits"),false};
           fhicl::Atom<bool> addClusters{Name("addClusters"), Comment("set to add caloclusters"),false};
+          fhicl::Atom<bool> addHelixSeeds{Name("addHelixSeeds"), Comment("set to add helixseeds"),false};
           fhicl::Atom<bool> addKalSeeds{Name("addKalSeeds"), Comment("set to add kalseeds"),false};
           fhicl::Atom<bool> addCosmicTrackSeeds{Name("addCosmicTrackSeeds"), Comment("set to add cosmic track seeds"),false};
           fhicl::Atom<bool> addMCTraj{Name("addMCTraj"), Comment("set to add add MC information"),false};
@@ -52,12 +55,13 @@ namespace mu2e{
         std::vector<art::InputTag> tcTag_; //TODO - make in same style as others
         std::vector<art::InputTag> crvcoinTag_;
         std::vector<art::InputTag> cluTag_;
+        std::vector<art::InputTag> helixSeedTag_;
         std::vector<art::InputTag> kalSeedTag_;
         art::InputTag cosmicTrackSeedTag_;
         std::vector<art::InputTag> MCTrajTag_;
         art::Event *_event;
         art::Run *_run;
-	      bool addHits_,  addCrvHits_, addTimeClusters_, addTrkHits_, addClusters_, addKalSeeds_, addCosmicTrackSeeds_, addMCTraj_, FillAll_;
+	bool addHits_,  addCrvHits_, addTimeClusters_, addTrkHits_, addClusters_, addHelixSeeds_, addKalSeeds_, addCosmicTrackSeeds_, addMCTraj_, FillAll_;
         void FillRecoCollections(const art::Event& evt, DataCollections &data, RecoDataProductName code);
         void FillMCCollections(const art::Event& evt, DataCollections &data, MCDataProductName code);
         //template <class L> void test(const L& item);
