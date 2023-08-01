@@ -28,7 +28,7 @@ double STz0 = SConfig.getDouble("stoppingTarget.z0InMu2e");
 double STz = STz0 - motherhalflength;//4236
       
 double FrontTracker_gdmltag; 
-
+double CRV_2Dview;
 void REveMainWindow::makeEveGeoShape(TGeoNode* n, REX::REveTrans& trans, REX::REveElement* holder, int val, bool crystal1, bool crystal2, std::string name, int color)
  {
     auto gss = n->GetVolume()->GetShape();
@@ -54,7 +54,11 @@ void REveMainWindow::makeEveGeoShape(TGeoNode* n, REX::REveTrans& trans, REX::RE
     if( val == FrontTracker_gdmltag ){ 
         mngTrackerXY->ImportElements(b1s, TrackerXYGeomScene); //shows only one plane for 2D view for simplicity
     }
-    
+    if( val == CRV_2Dview ){
+      mngCRVXY->ImportElements(b1s, CRVXYGeomScene); 
+      mngCRVRhoZ  ->ImportElements(b1s, CRVrhoZGeomScene); 
+    }
+       
     bool isCRV = name.find("CRS") != string::npos;
     // remove CRV from the YZ view as it blocks tracker/calo view (will have its own view)
     if(!isCRV) { mngRhoZ->ImportElements(b1s, rhoZGeomScene); }
@@ -111,6 +115,10 @@ void REveMainWindow::showNodesByName(TGeoNode* n, const std::string& str, bool o
                   FrontTracker_gdmltag = j;
                   
                  }
+                std::string CRVstr("CRS"); // ("CRSScintillatorBar_1_0");
+                if (name.find(CRVstr)!= std::string::npos){
+                  CRV_2Dview = j;                  
+		    }
                 if(name == "caloDisk_00x3d71700" or name == "caloDisk_00x4f89e50") { // latter for extracted.
                   disk1_center = tv[2] ;
                  }
@@ -262,7 +270,7 @@ void REveMainWindow::showNodesByName(TGeoNode* n, const std::string& str, bool o
     }
 }
 
- void REveMainWindow::projectEvents(REX::REveManager *eveMng)
+ void REveMainWindow::projectEvents(REX::REveManager *eveMng, GeomOptions geomOpt)
  {
        for (auto &ie : eveMng->GetEventScene()->RefChildren())
        {
@@ -275,10 +283,17 @@ void REveMainWindow::showNodesByName(TGeoNode* n, const std::string& str, bool o
           mngRhoZ  ->ImportElements(ie, rhoZEventScene);
           if(ie->GetName() == "disk1") mngXYCaloDisk1->ImportElements(ie, XYCaloDisk1EventScene);
           if(ie->GetName() == "disk2") mngXYCaloDisk2->ImportElements(ie, XYCaloDisk2EventScene);
+
+          if(geomOpt.showCRV){
+          CRVXYView->SetCameraType(REX::REveViewer::kCameraOrthoXOY);
+          CRVrhoZView->SetCameraType(REX::REveViewer::kCameraOrthoXOY);
+          //mngCRVXY->ImportElements(ie, TrackerXYEventScene);
+          //mngCRVRhoZ  ->ImportElements(ie, rhoZEventScene);
+          }
        }
  }
 
- void REveMainWindow::createProjectionStuff(REX::REveManager *eveMng)
+ void REveMainWindow::createProjectionStuff(REX::REveManager *eveMng, GeomOptions geomOpt)
  {
     // -------------------Tracker XY View ----------------------------------
     TrackerXYGeomScene  = eveMng->SpawnNewScene("TrackerXY Geometry","TrackerXY");
@@ -322,6 +337,27 @@ void REveMainWindow::showNodesByName(TGeoNode* n, const std::string& str, bool o
     XYCaloDisk2View = eveMng->SpawnNewViewer("XYCaloDisk2 View", "");
     XYCaloDisk2View->AddScene(XYCaloDisk2GeomScene);
     XYCaloDisk2View->AddScene(XYCaloDisk2EventScene); 
+
+    if(geomOpt.showCRV){
+   // -------------------CRV XY View ----------------------------------
+    CRVXYGeomScene  = eveMng->SpawnNewScene("CRVXY Geometry","CRVXY");
+    CRVXYEventScene = eveMng->SpawnNewScene("CRVXY Event Data","CRVXY");
+  
+    mngCRVXY = new REX::REveProjectionManager(REX::REveProjection::kPT_RPhi);
+    CRVXYView = eveMng->SpawnNewViewer("CRVXY View", "");
+    CRVXYView->AddScene(CRVXYGeomScene);
+    CRVXYView->AddScene(CRVXYEventScene);
+    
+    // --------------------CRV YZ View ------------------------------
+  
+    CRVrhoZGeomScene  = eveMng->SpawnNewScene("CRVrhoZ Geometry", "CRVrhoZ");
+    CRVrhoZEventScene = eveMng->SpawnNewScene("CRVrhoZ Event Data","CRVrhoZ");
+  
+    mngCRVRhoZ = new REX::REveProjectionManager(REX::REveProjection::kPT_ZY );
+    CRVrhoZView = eveMng->SpawnNewViewer("ZY Detector View", "");
+    CRVrhoZView->AddScene(CRVrhoZGeomScene);
+    CRVrhoZView->AddScene(CRVrhoZEventScene);
+    }
  }
 
 
