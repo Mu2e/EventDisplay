@@ -415,7 +415,7 @@ void REveMainWindow::showNodesByName(TGeoNode* n, const std::string& str, bool o
     } 
     
     // ... project these events onto 2D geometry:
-    projectEvents(eveMng);
+    projectEvents(eveMng, geomOpts);
  }
  
  void REveMainWindow::makeGeometryScene(REX::REveManager *eveMng, GeomOptions geomOpt, std::string gdmlname)
@@ -426,7 +426,7 @@ void REveMainWindow::showNodesByName(TGeoNode* n, const std::string& str, bool o
     gGeoManager->SetTopVolume(topvol);
     gGeoManager->SetTopVisible(kFALSE);
     TGeoNode* topnode = gGeoManager->GetTopNode(); 
-    createProjectionStuff(eveMng);
+    createProjectionStuff(eveMng, geomOpt);
     std::string name(topnode->GetName());
     {
         auto holder = new REX::REveElement("Mu2e World");
