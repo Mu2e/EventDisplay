@@ -131,22 +131,28 @@ namespace mu2e {
             void makeGeometryScene(REX::REveManager *eveMng,  GeomOptions geomOpts, std::string filename);
             void showEvents(REX::REveManager *eveMng,  REX::REveElement* &eventScene, bool firstLoop, DataCollections &data, DrawOptions drawOpts, std::vector<int> particleIds, bool strawdisplay, GeomOptions geomOpts);
             void changeEveGeoShape(TGeoNode* node, REX::REveTrans& trans,  REX::REveElement* holder, int maxlevel, int level);
-            void createProjectionStuff(REX::REveManager *eveMng);
+            void createProjectionStuff(REX::REveManager *eveMng, GeomOptions geomOpt);
             void AddTrackerProjection(REX::REveManager *eveMng);
             void projectScenes(REX::REveManager *eveMng, bool geomp, bool eventp);
-            void projectEvents(REX::REveManager *eveMng);
+            void projectEvents(REX::REveManager *eveMng, GeomOptions geomOpt);
             REX::REveProjectionManager *mngTrackerXY = nullptr;
             REX::REveProjectionManager *mngXYCaloDisk1 = nullptr;
             REX::REveProjectionManager *mngXYCaloDisk2 = nullptr;
             REX::REveProjectionManager *mngRhoZ   = nullptr;
+            REX::REveProjectionManager *mngCRVXY = nullptr;
+            REX::REveProjectionManager *mngCRVRhoZ   = nullptr;
             REX::REveScene  *TrackerXYGeomScene = nullptr, *TrackerXYEventScene = nullptr;
             REX::REveScene  *XYCaloDisk1GeomScene = nullptr, *XYCaloDisk1EventScene = nullptr;
             REX::REveScene  *XYCaloDisk2GeomScene = nullptr, *XYCaloDisk2EventScene = nullptr;
+            REX::REveScene  *CRVXYGeomScene = nullptr, *CRVXYEventScene = nullptr;
+            REX::REveScene  *CRVrhoZGeomScene = nullptr, *CRVrhoZEventScene = nullptr;
             REX::REveScene  *rhoZGeomScene = nullptr, *rhoZEventScene = nullptr;
             REX::REveViewer *TrackerXYView = nullptr;
             REX::REveViewer *XYCaloDisk1View = nullptr;
             REX::REveViewer *XYCaloDisk2View = nullptr;
             REX::REveViewer *rhoZView = nullptr;
+            REX::REveViewer *CRVXYView = nullptr;
+            REX::REveViewer *CRVrhoZView = nullptr;
             std::vector<int> crystals_hit;
             
             #else
