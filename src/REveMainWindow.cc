@@ -28,7 +28,6 @@ double STz0 = SConfig.getDouble("stoppingTarget.z0InMu2e");
 double STz = STz0 - motherhalflength;//4236
       
 double FrontTracker_gdmltag; 
-double CRV_2Dview;
 void REveMainWindow::makeEveGeoShape(TGeoNode* n, REX::REveTrans& trans, REX::REveElement* holder, int val, bool crystal1, bool crystal2, std::string name, int color)
  {
     auto gss = n->GetVolume()->GetShape();
@@ -54,14 +53,15 @@ void REveMainWindow::makeEveGeoShape(TGeoNode* n, REX::REveTrans& trans, REX::RE
     if( val == FrontTracker_gdmltag ){ 
         mngTrackerXY->ImportElements(b1s, TrackerXYGeomScene); //shows only one plane for 2D view for simplicity
     }
-    if( val == CRV_2Dview ){
-      mngCRVXY->ImportElements(b1s, CRVXYGeomScene); 
-      mngCRVRhoZ  ->ImportElements(b1s, CRVrhoZGeomScene); 
-    }
-       
+      
     bool isCRV = name.find("CRS") != string::npos;
     // remove CRV from the YZ view as it blocks tracker/calo view (will have its own view)
     if(!isCRV) { mngRhoZ->ImportElements(b1s, rhoZGeomScene); }
+
+    if(isCRV){
+      mngCRVXY->ImportElements(b1s, CRVXYGeomScene); 
+      mngCRVRhoZ->ImportElements(b1s, CRVrhoZGeomScene); 
+    }
  }
 
 int j = 0;
@@ -115,10 +115,6 @@ void REveMainWindow::showNodesByName(TGeoNode* n, const std::string& str, bool o
                   FrontTracker_gdmltag = j;
                   
                  }
-                std::string CRVstr("CRS"); // ("CRSScintillatorBar_1_0");
-                if (name.find(CRVstr)!= std::string::npos){
-                  CRV_2Dview = j;                  
-		    }
                 if(name == "caloDisk_00x3d71700" or name == "caloDisk_00x4f89e50") { // latter for extracted.
                   disk1_center = tv[2] ;
                  }
