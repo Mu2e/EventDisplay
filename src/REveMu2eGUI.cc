@@ -36,11 +36,11 @@ void REveMu2eGUI::PrintSimInfo(){
       <<"      posx    "<<"     posy      "<<"    posz    "<<"  t0      "<<"     p1x   "<<"    p1y   "<<"   p1z    "<<"    t1"<<std::endl;
       for(trajectoryIter=trajcol->begin(); trajectoryIter!=trajcol->end(); trajectoryIter++){
          std::string pdgID = std::to_string(trajectoryIter->first->pdgId());
-	       std::string t0 = std::to_string(trajectoryIter->first->startGlobalTime());
-	       std::string p0x = std::to_string(trajectoryIter->first->startMomentum().x());
+	 std::string t0 = std::to_string(trajectoryIter->first->startGlobalTime());
+	 std::string p0x = std::to_string(trajectoryIter->first->startMomentum().x());
          std::string p0y = std::to_string(trajectoryIter->first->startMomentum().y());
          std::string p0z = std::to_string(trajectoryIter->first->startMomentum().z());
-	       std::string energy = std::to_string(trajectoryIter->first->startMomentum().e());
+	 std::string energy = std::to_string(trajectoryIter->first->startMomentum().e());
          std::string posx = std::to_string(trajectoryIter->first->startPosition().x());
          std::string posy = std::to_string(trajectoryIter->first->startPosition().y());
          std::string posz = std::to_string(trajectoryIter->first->startPosition().z());
@@ -73,8 +73,8 @@ void  REveMu2eGUI::PrintKalInfo(){
          mu2e::KalSeed const  &kseed= (*seedcol)[i];
          const std::vector<mu2e::TrkStrawHitSeed>* hots = &kseed.hits();
          int n_krep_hits = hots->size();
-	       std::string kt0 = std::to_string(kseed.t0().t0());
-	       const std::vector<mu2e::KalSegment> &segments = kseed.segments();
+	 std::string kt0 = std::to_string(kseed.t0().t0());
+	 const std::vector<mu2e::KalSegment> &segments = kseed.segments();
          unsigned int nSegments=segments.size();
          std::cout<<" t0 = "<<kt0<<" hits = "<<n_krep_hits<<" segments = "<<nSegments<<std::endl; 
          // Print more details about the track hits
