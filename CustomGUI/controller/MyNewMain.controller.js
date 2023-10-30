@@ -153,6 +153,15 @@ sap.ui.define(['rootui5/eve7/controller/Main.controller',
 				this.oRun.setValue(this.iRunValue);
 			}
 		},
+		autoplay: function (oEvent) {
+         console.log("AUTO", oEvent.getParameter("selected"));
+         this.mgr.SendMIR("autoplay(" + oEvent.getParameter("selected") + ")", this.fw2gui.fElementId, "EventDisplayManager");
+      },
+
+      playdelay: function (oEvent) {
+         console.log("playdelay ", oEvent.getParameters());
+         this.mgr.SendMIR("playdelay(" + oEvent.getParameter("value") + ")", this.fw2gui.fElementId, "EventDisplayManager");
+      },
 
 		eventChangeHandler: function(oEvent) {
 		  //this.oEvent = .setValue(this.fw2gui.eventid);

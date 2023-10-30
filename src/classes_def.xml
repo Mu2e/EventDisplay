@@ -6,7 +6,5 @@
   <class name="mu2e::CollectionFiller"/>
   <class name="mu2e::REveGeomUtil"/>
   <class name="mu2e::REveMu2eGUI"/>
-  <class name="mu2e::REveCaloCluster"/>
-  <class name="mu2e::REveComboHit"/>
   <class name="mu2e::REveDataProduct"/>
 </lcgdict>

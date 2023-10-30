@@ -56,8 +56,6 @@
 #include "REve/inc/CollectionFiller.hh"
 #include "REve/inc/DataCollections.hh"
 #include "REve/inc/REveMu2eGUI.hh"
-#include "REve/inc/REveCaloCluster.hh"
-#include "REve/inc/REveComboHit.hh"
 #include "REve/inc/REveDataProduct.hh"
 
 #include "Offline/RecoDataProducts/inc/CaloCluster.hh"
@@ -266,7 +264,11 @@ namespace mu2e
       if(diagLevel_ == 1) std::cout<<"[REveEventDisplay : beginJob()] -- starting wait on app start"<<std::endl;
       cv_.wait(lock);
       if(diagLevel_ == 1) std::cout<<"[REveEventDisplay : beginJob()] -- app start signal received, starting eve init"<<std::endl;
+      auto start1 = std::chrono::high_resolution_clock::now();
+  
       XThreadTimer suet([this]{ setup_eve(); });
+      auto end1 = std::chrono::high_resolution_clock::now();
+      std::cout<<" time through process setup evene"<<std::chrono::duration<double, std::milli>(end1 - start1).count()<<" ms "<<std::endl;
       if(diagLevel_ == 1) std::cout<<"[REveEventDisplay : beginJob()] -- starting wait on eve setup"<<std::endl;
       cv_.wait(lock);
       if(diagLevel_ == 1) std::cout<<"[REveEventDisplay : beginJob()] -- eve setup apparently complete"<<std::endl;
@@ -318,6 +320,9 @@ namespace mu2e
     }
     
   void REveEventDisplay::analyze(art::Event const& event){
+      
+      //auto start = std::chrono::high_resolution_clock::now();
+  
       //remove previous event objects;
       data.Reset();
       // Update state relevant for displaying new event.
@@ -332,11 +337,12 @@ namespace mu2e
         // Hand off control to display thread
         std::unique_lock lock{m_};
         if(diagLevel_ == 1) std::cout<<"[REveEventDisplay : analyze()] -- Fill collections "<<std::endl;
-        
+        //auto start1 = std::chrono::high_resolution_clock::now();
         // fill the collection lists
         if(filler_.addClusters_) {
           if(specifyTag_) filler_.FillRecoCollections(event, data, CaloClusters);
           else { FillAnyCollection<CaloClusterCollection, const CaloClusterCollection*>(event, _chits, data.calocluster_tuple);}
+          
         }
         
         if(filler_.addCaloDigis_) {
@@ -381,15 +387,24 @@ namespace mu2e
         
         if(filler_.addTrkHits_) filler_.FillRecoCollections(event, data, TrkHits); 
         if(filler_.addCosmicTrackSeeds_)  filler_.FillRecoCollections(event, data, CosmicTrackSeeds);
-        
+        //auto end1 = std::chrono::high_resolution_clock::now();
+  
+          //std::cout<<" time through fill functions "<<std::chrono::duration<double, std::milli>(end1 - start1).count()<<" ms "<<std::endl;
         if(diagLevel_ == 1) std::cout<<"[REveEventDisplay : analyze()] -- Event processing started "<<std::endl;
         XThreadTimer proc_timer([this]{ process_single_event(); });
+        //auto end2 = std::chrono::high_resolution_clock::now();
+  
+        //std::cout<<" time through process single event "<<std::chrono::duration<double, std::milli>(end2 - start1).count()<<" ms "<<std::endl;
         if(diagLevel_ == 1) std::cout<<"[REveEventDisplay : analyze()] -- transferring to TApplication thread "<<std::endl;
         cv_.wait(lock);
         if(diagLevel_ == 1) std::cout<<"[REveEventDisplay : analyze()] -- TApplication thread returning control "<<std::endl;
         if(diagLevel_ == 1) std::cout<<"[REveEventDisplay : analyze()] Ended Event "<<std::endl; 
         seqMode_ = true;
+        
       }
+      //auto end = std::chrono::high_resolution_clock::now();
+  
+      //std::cout<<" time through analyze "<<std::chrono::duration<double, std::milli>(end - start).count()<<" ms "<<std::endl;
   }
 
     void REveEventDisplay::endJob()
@@ -442,6 +457,8 @@ namespace mu2e
       world->AddCommand("QuitRoot",  "sap-icon://log",  eventMgr_, "QuitRoot()");
       world->AddCommand("NextEvent", "sap-icon://step", eventMgr_, "NextEvent()");
       world->AddCommand("PrintEveInfo", "sap-icon://step", fGui, "PrintEveInfo()");
+      
+      //world->AddCommand("PrintEventInfo", "sap-icon://step", fGui, "PrintEventInfo()");
       std::unique_lock lock{m_};
       cv_.notify_all();
  

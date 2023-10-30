@@ -154,7 +154,7 @@ void REveMainWindow::showNodesByName(TGeoNode* n, const std::string& str, bool o
     shift.push_back(0);
     shift.push_back(0);
     shift.push_back(0); 
-    geomOpt.print();
+    //geomOpt.print();
     if(geomOpt.showTS){
       static std::vector <std::string> substrings_ts  {"TS"};  
       shift.at(0) = geomconfig.getDouble("psts_x")/10; //TODO these numbers need to be better defined
@@ -368,13 +368,16 @@ void REveMainWindow::showNodesByName(TGeoNode* n, const std::string& str, bool o
     double t2 = 1696.;
     std::vector<const KalSeedCollection*> track_list = std::get<1>(data.track_tuple);
     if(drawOpts.addTracks and track_list.size() !=0) {
-
+      //auto start1 = std::chrono::high_resolution_clock::now();
+ 
       if(drawOpts.useBTrk) { pass_data->AddKalSeedCollection(eveMng, firstLoop, data.track_tuple, eventScene); }
       if(!drawOpts.useBTrk){ pass_data->FillKinKalTrajectory(eveMng, firstLoop, eventScene, data.track_tuple, KKOpts.addKalInter,  KKOpts.addTrkStrawHits, t1, t2); }
      /* if(drawOpts.useBTrk and drawOpts.addTrkHits and drawOpts.addComboHits ) {   // Note this is legacy, requires combo hits in .art
         std::vector<const ComboHitCollection*> combohit_list = std::get<1>(data.combohit_tuple);
         pass_data->AddTrkHits(eveMng, firstLoop, data.combohit_tuple,data.track_tuple, eventScene);
         }*/
+        //auto end1 = std::chrono::high_resolution_clock::now();
+        //std::cout<<" time through fill kinkal"<<std::chrono::duration<double, std::milli>(end1 - start1).count()<<" ms "<<std::endl;
     }
     if(drawOpts.addComboHits) {
       std::vector<const ComboHitCollection*> combohit_list = std::get<1>(data.combohit_tuple);
@@ -397,9 +400,11 @@ void REveMainWindow::showNodesByName(TGeoNode* n, const std::string& str, bool o
     }
     
     if(drawOpts.addClusters){
+    //auto start1 = std::chrono::high_resolution_clock::now();
       std::vector<const CaloClusterCollection*> calocluster_list = std::get<1>(data.calocluster_tuple);
       if(calocluster_list.size() !=0 ) pass_data->AddCaloClusters(eveMng, firstLoopCalo, data.calocluster_tuple, eventScene, drawOpts.addCrystalDraw, t1, t2);
-      std::cout<<t1<<" "<<t2<<std::endl;
+      //auto end1 = std::chrono::high_resolution_clock::now();
+       // std::cout<<" time through fill caloclusters"<<std::chrono::duration<double, std::milli>(end1 - start1).count()<<" ms "<<std::endl;
     }
     
     std::vector<const HelixSeedCollection*> helix_list = std::get<1>(data.helix_tuple);
@@ -419,10 +424,12 @@ void REveMainWindow::showNodesByName(TGeoNode* n, const std::string& str, bool o
     //... add MC:
     std::vector<const MCTrajectoryCollection*> mctrack_list = std::get<1>(data.mctrack_tuple);
     if(drawOpts.addMCTrajectories and mctrack_list.size() !=0){
+      //auto start1 = std::chrono::high_resolution_clock::now();
       pass_mc->AddMCTrajectoryCollection(eveMng, firstLoop,  data.mctrack_tuple, eventScene, particleIds, geomOpts.extracted);
+      //auto end1 = std::chrono::high_resolution_clock::now();
+      //  std::cout<<" time through fill mctraj"<<std::chrono::duration<double, std::milli>(end1 - start1).count()<<" ms "<<std::endl;
     }
-    std::cout<<"going to project events "<<std::endl;
-    
+  
     // ... project these events onto 2D geometry:
     projectEvents(eveMng);
  }
@@ -438,10 +445,11 @@ void REveMainWindow::showNodesByName(TGeoNode* n, const std::string& str, bool o
     createProjectionStuff(eveMng);
     std::string name(topnode->GetName());
     {
+        // make holders for different parts of geometry
         auto trackerholder = new REX::REveElement("Tracker");
         auto caloholder = new REX::REveElement("Calorimeter");
         auto crystalsholder = new REX::REveElement("CalorimeterCrystals");
-        auto crvholder = new REX::REveElement("CRVimeter");
+        auto crvholder = new REX::REveElement("CRV");
         auto beamlineholder = new REX::REveElement("BeamlineElements");
         eveMng->GetGlobalScene()->AddElement(trackerholder);
         eveMng->GetGlobalScene()->AddElement(caloholder);

@@ -841,7 +841,7 @@ using KLPT = KalSeed::KLPT;
 template<class KTRAJ> void REveMu2eDataInterface::AddKinKalTrajectory( std::unique_ptr<KTRAJ> &trajectory, REX::REveElement* &scene, unsigned int j, std::string kaltitle, double& t1, double& t2){
   t1=trajectory->range().begin();
   t2=trajectory->range().end();
-  std::cout<<"Track time "<<t1<<" to "<<t2<<std::endl;
+
   double x1=trajectory->position3(t1).x();
   double y1=trajectory->position3(t1).y();
   double z1=trajectory->position3(t1).z();
