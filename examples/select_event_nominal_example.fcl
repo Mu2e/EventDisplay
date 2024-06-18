@@ -1,3 +1,4 @@
+
 # author : Sophie Middleton
 # purpose : example for helix tracks
 #include "Offline/fcl/minimalMessageService.fcl"
@@ -10,44 +11,42 @@ services : @local::Services.Reco
 process_name : HelixED
 
 source : { module_type : RootInput }
-
-physics :
-{
- analyzers : { @table::REveDis.analyzers}
+physics.filters.eidsel : {
+# To display only selected events, enter their event IDs (run:subrun:event) IN ORDER THEY APPEAR IN THE INPUT
+# in the following list.  next event will move through only these events ("*:*:*" matches every event so remove it!)
+module_type : EventIDFilter
+                idsToMatch: [
+                "*:*:*"
+#                "1202:7:2977",
+#                "1202:8:1816",
+#                "1202:15:1690",
+#                "1202:21:2355",
+#                "1202:24:1261",
+#                "1202:27:2753"
+                ]
 }
 
-//geometry options
+physics.eidselpath : ["eidsel"]
+physics.trigger_paths :  ["eidselpath" ]
+physics.analyzers : { @table::REveDis.analyzers}
 physics.analyzers.REveEventDisplay.showCRV : true
 physics.analyzers.REveEventDisplay.showPS : false
 physics.analyzers.REveEventDisplay.showTS : false
-physics.analyzers.REveEventDisplay.showDS : false
-physics.analyzers.REveEventDisplay.addCRVBars : true
-physics.analyzers.REveEventDisplay.addKalInter : false
-physics.analyzers.REveEventDisplay.addCrystalHits : true
 physics.analyzers.REveEventDisplay.filler.addHelixSeeds : false
 physics.analyzers.REveEventDisplay.filler.addKalSeeds : true
+physics.analyzers.REveEventDisplay.filler.KalSeedCollection : ["KKDeM"]
 physics.analyzers.REveEventDisplay.filler.addClusters : true
-physics.analyzers.REveEventDisplay.filler.addHits : false // adds ComboHits
-physics.analyzers.REveEventDisplay.filler.addCrvClusters : true
+physics.analyzers.REveEventDisplay.filler.addHits : true
 physics.analyzers.REveEventDisplay.filler.addCrvHits : false
 physics.analyzers.REveEventDisplay.filler.addTimeClusters : false
-
-physics.analyzers.REveEventDisplay.addTrkStrawHits : true
-
+physics.analyzers.REveEventDisplay.filler.addTrkHits : false
 physics.analyzers.REveEventDisplay.filler.addCosmicTrackSeeds : false
-
 physics.analyzers.REveEventDisplay.filler.addMCTraj : true
-
-//allows movement through events in sequential order
 physics.analyzers.REveEventDisplay.seqMode : true
 physics.analyzers.REveEventDisplay.strawdisplay : false
-
-//print statements
 physics.analyzers.REveEventDisplay.diagLevel : 10
-
-//the path
 physics.EndPath  : [ @sequence::REveDis.seqBase]
+//physics.analyzers.REveEventDisplay.SelectEvents : ["eidselpath" ]
 
-//useless file name
-services.TFileService.fileName: "nts.owner.REve.version.sequencer.root"
+services.TFileService.fileName: "/dev/null"
 
