@@ -380,7 +380,7 @@ namespace mu2e
 
         if(filler_.addKalSeeds_) {
           if(specifyTag_) { filler_.FillRecoCollections(event, data, KalSeeds); }
-          else { FillAnyCollection<KalSeedPtrCollection, const KalSeedPtrCollection*>(event, _chits, data.track_tuple ); }
+          else { FillAnyCollection<KalSeedCollection, const KalSeedCollection*>(event, _chits, data.track_tuple ); }
         }
 
         if(filler_.addMCTraj_) {

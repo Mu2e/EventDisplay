@@ -14,7 +14,6 @@ source : { module_type : RootInput }
 physics :
 {
   analyzers : { @table::REveDis.analyzers}
-  producers : { @table::REveDis.producers }
   filters : { @table::REveDis.filters }
 }
 # geometry options
@@ -22,7 +21,7 @@ physics.analyzers.REveEventDisplay.showCRV : true
 physics.analyzers.REveEventDisplay.showPS : false
 physics.analyzers.REveEventDisplay.showTS : false
 physics.analyzers.REveEventDisplay.showDS : false
-physics.analyzers.REveEventDisplay.addCRVBars : false # currently crashing
+physics.analyzers.REveEventDisplay.addCRVBars : false
 physics.analyzers.REveEventDisplay.addKalInter : false
 physics.analyzers.REveEventDisplay.addCrystalHits : true
 physics.analyzers.REveEventDisplay.filler.addHelixSeeds : false

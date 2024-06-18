@@ -10,8 +10,6 @@ source : { module_type : RootInput }
 physics :
 {
  analyzers : { @table::REveDis.analyzers}
-  producers : { @table::REveDis.producers }
-  filters : { @table::REveDis.filters }
 }
 //geometry options
 physics.analyzers.REveEventDisplay.showCRV : true
@@ -26,7 +24,7 @@ physics.analyzers.REveEventDisplay.filler.addCrvClusters : true
 physics.analyzers.REveEventDisplay.addKalInter : true
 physics.analyzers.REveEventDisplay.addTrkStrawHits : false
 physics.analyzers.REveEventDisplay.filler.addKalSeeds : true
-physics.analyzers.REveEventDisplay.filler.addTrkHits : false
+physics.analyzers.REveEventDisplay.filler.addTrkHits : false 
 //turn these off for now
 physics.analyzers.REveEventDisplay.filler.addClusters : false //CaloClusters
 physics.analyzers.REveEventDisplay.filler.addHits : false //ComboHits
@@ -47,9 +45,5 @@ physics.analyzers.REveEventDisplay.seqMode : true
 physics.analyzers.REveEventDisplay.diagLevel : 1
 //the path
 physics.EndPath  : [ @sequence::REveDis.seqBase]
-physics.REvePath : @local::REvePath
-physics.trigger_paths :  ["REvePath" ]
-physics.analyzers.REveEventDisplay.SelectEvents : ["REvePath" ]
-
-services.TFileService.fileName: "/dev/null"
+services.TFileService.fileName: "nts.owner.REve.version.sequencer.root"
 services.GeometryService.inputFile: "Offline/Mu2eG4/geom/geom_common_extracted.txt"

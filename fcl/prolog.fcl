@@ -28,7 +28,7 @@ REveEventDisplay : {
       TimeClusterCollection : ["MHDeM"]
       CaloDigiCollection : ["CaloDigiMaker"]
       CaloClusterCollection : ["CaloClusterFast"]
-      KalSeedPtrCollection : ["KKDeM"]
+      KalSeedCollection : ["KKDeM"]
       HelixSeedCollection : ["MHFinderDe"]
       CosmicTrackSeedCollection : "CosmicTrackFinderTimeFit"
       MCTrajectoryCollection :  ["compressRecoMCs"]
@@ -54,12 +54,6 @@ REveDis : {
   analyzers : {
       REveEventDisplay     : @local::REveEventDisplay
   }
-  producers: {
-      MergeKK : {
-        module_type : MergeKalSeeds
-        KalSeedCollections : ["KKDeM", "KKDeP", "KKUeM", "KKUeP", "KKDmuM", "KKDmuP", "KKUmuM", "KKUmuP" ]
-      }
-  }
   filters : {
     eidsel : {
       module_type : EventIDFilter
@@ -68,6 +62,6 @@ REveDis : {
   }
   seqBase   : [REveEventDisplay]
 }
-REvePath : ["eidsel", "MergeKK" ]
+REvePath : ["eidsel"]
 
 END_PROLOG

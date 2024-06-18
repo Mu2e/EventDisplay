@@ -31,11 +31,11 @@ class REveMu2ePrintInfo : public ROOT::Experimental::REveElement
      std::vector<std::string> mctrack_labels;
      std::tuple<std::vector<std::string>, std::vector<const mu2e::MCTrajectoryCollection*>> fmctrack_tuple;
 
-     const mu2e::KalSeedPtrCollection* kalSeedcol = 0;
-     std::vector<const mu2e::KalSeedPtrCollection*> track_list;
+     const mu2e::KalSeedCollection* kalSeedcol = 0;
+     std::vector<const mu2e::KalSeedCollection*> track_list;
      std::vector<std::string> track_labels;
-     std::tuple<std::vector<std::string>, std::vector<const mu2e::KalSeedPtrCollection*>> ftrack_tuple;
-
+     std::tuple<std::vector<std::string>, std::vector<const mu2e::KalSeedCollection*>> ftrack_tuple;
+     
      const mu2e::CrvCoincidenceClusterCollection* crvcoincol = 0;
      std::vector<const mu2e::CrvCoincidenceClusterCollection*> crvcoin_list;
      std::vector<std::string> crvcoin_labels;
