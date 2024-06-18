@@ -25,27 +25,27 @@
 
 namespace mu2e{
 
-	class DataCollections
-	{
+  class DataCollections
+  {
     public:
       explicit DataCollections(){};
       DataCollections(const DataCollections &){};
       DataCollections& operator=(const DataCollections &);
 
       //DataProducts:
-      const mu2e::ComboHitCollection* chcol = 0;  
-      const mu2e::CrvRecoPulseCollection* crvrecocol = 0; 
-      const mu2e::CrvCoincidenceClusterCollection* crvcoincol = 0; 
+      const mu2e::ComboHitCollection* chcol = 0;
+      const mu2e::CrvRecoPulseCollection* crvrecocol = 0;
+      const mu2e::CrvCoincidenceClusterCollection* crvcoincol = 0;
       const mu2e::TimeClusterCollection *tccol = 0;
       const mu2e::CaloDigiCollection* calodigicol = 0;
       const mu2e::CaloClusterCollection* clustercol = 0;
       const mu2e::HelixSeedCollection* helixSeedcol = 0;
-      const mu2e::KalSeedCollection* kalSeedcol = 0;
+      const mu2e::KalSeedPtrCollection* kalSeedcol = 0;
       const mu2e::CosmicTrackSeedCollection* CosmicTrackSeedcol = 0;
       const mu2e::MCTrajectoryCollection *mctrajcol = 0;
       //lists:
       std::vector<const mu2e::HelixSeedCollection*> helix_list;
-      std::vector<const mu2e::KalSeedCollection*> track_list;
+      std::vector<const mu2e::KalSeedPtrCollection*> track_list;
       std::vector<const mu2e::CaloDigiCollection*> calodigi_list;
       std::vector<const mu2e::CaloClusterCollection*> calocluster_list;
       std::vector<const mu2e::ComboHitCollection*> combohit_list;
@@ -65,7 +65,7 @@ namespace mu2e{
       std::vector<std::string> timecluster_labels;
       //Link Labels and Lists:
       std::tuple<std::vector<std::string>, std::vector<const mu2e::HelixSeedCollection*>> helix_tuple;
-      std::tuple<std::vector<std::string>, std::vector<const mu2e::KalSeedCollection*>> track_tuple;
+      std::tuple<std::vector<std::string>, std::vector<const mu2e::KalSeedPtrCollection*>> track_tuple;
       std::tuple<std::vector<std::string>, std::vector<const mu2e::CaloDigiCollection*>> calodigi_tuple;
       std::tuple<std::vector<std::string>, std::vector<const mu2e::CaloClusterCollection*>> calocluster_tuple;
       std::tuple<std::vector<std::string>, std::vector<const mu2e::ComboHitCollection*>> combohit_tuple;
@@ -73,7 +73,7 @@ namespace mu2e{
       std::tuple<std::vector<std::string>, std::vector<const mu2e::CrvCoincidenceClusterCollection*>> crvcoin_tuple;
       std::tuple<std::vector<std::string>, std::vector<const mu2e::TimeClusterCollection*>> timecluster_tuple;
       std::tuple<std::vector<std::string>, std::vector<const mu2e::MCTrajectoryCollection*>> mctrack_tuple;
-      
+
 
       void Reset(){
         this->helix_list.clear();
@@ -85,7 +85,7 @@ namespace mu2e{
         this->crvcoin_list.clear();
         this->timecluster_list.clear();
         this->mctrack_list.clear();
-        
+
         this->track_labels.clear();
         this->calodigi_labels.clear();
         this->calocluster_labels.clear();
@@ -96,9 +96,9 @@ namespace mu2e{
         this->crvcoin_labels.clear();
         this->timecluster_labels.clear();
       }
-      
+
       virtual ~DataCollections(){};
 
-	};
+  };
 }
-#endif 
+#endif

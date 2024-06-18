@@ -91,59 +91,61 @@ void REveMu2eDataInterface::AddCaloClusters(REX::REveManager *&eveMng, bool firs
       // Add crystals
       double maxE = 1e-6;
       double minE = 1000;
-      std::list<CaloCluster> cluList;
+      using CCCPtr = const CaloCluster*;
+      std::list<CCCPtr> cluList;
       //std::array<Color_t, 10> colorList {kViolet, kBlue, kBlue, kGreen, kGreen, kYellow, kYellow, kOrange, kOrange, kRed};
       //std::vector<Color_t> colors;
 
       for(unsigned int i = 0; i < clustercol->size(); i++){
-        mu2e::CaloCluster const  &cluster= (*clustercol)[i];
-        cluList.push_back(cluster);
+        auto const& cluster= (*clustercol)[i];
+        cluList.push_back(&cluster);
         if(cluster.energyDep() > maxE) maxE = cluster.energyDep();
         if(cluster.energyDep() < minE) minE = cluster.energyDep();
 
-      // sort in energy
-      cluList.sort([] (CaloCluster lhs, CaloCluster rhs) {return lhs.energyDep() > rhs.energyDep();} );
+        // sort in energy
+        cluList.sort([] (const CaloCluster* lhs, const CaloCluster* rhs) {return lhs->energyDep() > rhs->energyDep();} );
       }
 
       /*if(cluList.size() <= 2){
-          Color_t color;
-          for(auto const& cluster : cluList){
-            if(cluster.energyDep() == minE){
-              color = kViolet;
-              colors.push_back(color);
-            }
-            if(cluster.energyDep() == maxE){
-              color = kRed;
-              colors.push_back(color);
-            }
-        }
-      }
-      unsigned int c = -1;
-      if(cluList.size() > 2){
+        Color_t color;
         for(auto const& cluster : cluList){
-          c+=1;
-          Color_t color;
-          if(cluster.energyDep() == minE){
-            color = kViolet;
-            colors.push_back(color);
-          }
-          if(cluster.energyDep() == maxE){
-            color = kRed;
-            colors.push_back(color);
-          }
-          if (c > 1 and c < colorList.size()-1){
-            color = colorList.at(c);
-            colors.push_back(color);
-          }
-          if (c > 1 and c >= colorList.size()-1){
-            color = kRed;
-            colors.push_back(color);
-          }
+        if(cluster.energyDep() == minE){
+        color = kViolet;
+        colors.push_back(color);
         }
-      } */
+        if(cluster.energyDep() == maxE){
+        color = kRed;
+        colors.push_back(color);
+        }
+        }
+        }
+        unsigned int c = -1;
+        if(cluList.size() > 2){
+        for(auto const& cluster : cluList){
+        c+=1;
+        Color_t color;
+        if(cluster.energyDep() == minE){
+        color = kViolet;
+        colors.push_back(color);
+        }
+        if(cluster.energyDep() == maxE){
+        color = kRed;
+        colors.push_back(color);
+        }
+        if (c > 1 and c < colorList.size()-1){
+        color = colorList.at(c);
+        colors.push_back(color);
+        }
+        if (c > 1 and c >= colorList.size()-1){
+        color = kRed;
+        colors.push_back(color);
+        }
+        }
+        } */
 
       //unsigned int i = -1;
-      for(auto const& cluster : cluList){
+      for(auto cptr : cluList){
+        auto const& cluster = *cptr;
         //mu2e::CaloCluster const  &cluster= cluList.at(i);
         //i += 1;
 
@@ -174,8 +176,8 @@ void REveMu2eDataInterface::AddCaloClusters(REX::REveManager *&eveMng, bool firs
 
         // Set draw options
         /*TColor color1;
-        color1.SetPalette(1,0);
-        Color_t color = color1.GetNumber();// colors[i];*/
+          color1.SetPalette(1,0);
+          Color_t color = color1.GetNumber();// colors[i];*/
 
         if(abs(cluster.time() - t2) < 20) color = kRed;
         if(abs(cluster.time() - t2) >=  20 and abs(cluster.time() - t2) < 100) color = kOrange;
@@ -371,7 +373,7 @@ void REveMu2eDataInterface::AddCRVInfo(REX::REveManager *&eveMng, bool firstLoop
             if(!extracted){
               auto b = new REX::REveBox("box","label");
               b->SetMainColor(drawconfig.getInt("CRVBarColor"));
-              b->	SetMainTransparency(drawconfig.getInt("CRVtrans"));
+              b-> SetMainTransparency(drawconfig.getInt("CRVtrans"));
               b->SetLineWidth(drawconfig.getInt("GeomLineWidth"));
               double  length = pointmmTocm(crvCounter.getHalfLength());
               double  width = pointmmTocm(crvCounter.getHalfWidth());
@@ -411,7 +413,7 @@ void REveMu2eDataInterface::AddCRVInfo(REX::REveManager *&eveMng, bool firstLoop
                 b->SetVertex(7, length, pointmmTocm(pointInMu2e.y()) - height, pointmmTocm(pointInMu2e.z()) + pointmmTocm(pointInMu2e.x()) + width );//+-+
               }
 
-               if(barDetail.getWidthDirection() == 1 and barDetail.getThicknessDirection() == 0 and barDetail.getLengthDirection() == 2){ //CRV R, CRV L -- orientation DONE
+              if(barDetail.getWidthDirection() == 1 and barDetail.getThicknessDirection() == 0 and barDetail.getLengthDirection() == 2){ //CRV R, CRV L -- orientation DONE
                 b->SetVertex(0, pointmmTocm(pointInMu2e.y()) - height, -1*length, pointmmTocm(pointInMu2e.x()) - width );//---
                 b->SetVertex(1, pointmmTocm(pointInMu2e.y()) + height, -1*length,pointmmTocm(pointInMu2e.x()) - width);//-+-
                 b->SetVertex(2, pointmmTocm(pointInMu2e.y()) + height, -1*length,pointmmTocm(pointInMu2e.x()) + width);//++-
@@ -434,7 +436,7 @@ void REveMu2eDataInterface::AddCRVInfo(REX::REveManager *&eveMng, bool firstLoop
               // Draw "bars hit" in red:
               auto b = new REX::REveBox("box");
               b->SetMainColor(drawconfig.getInt("CRVBarColor"));
-              b->	SetMainTransparency(drawconfig.getInt("CRVtrans"));
+              b-> SetMainTransparency(drawconfig.getInt("CRVtrans"));
               b->SetLineWidth(drawconfig.getInt("GeomLineWidth"));
               double  length = pointmmTocm(crvCounter.getHalfLength());
               double  width = pointmmTocm(crvCounter.getHalfWidth());
@@ -510,106 +512,106 @@ void REveMu2eDataInterface::AddCRVClusters(REX::REveManager *&eveMng, bool first
             CLHEP::Hep3Vector sibardetails(barDetail.getHalfLengths()[0],barDetail.getHalfLengths()[1],barDetail.getHalfLengths()[2]);
 
             if(addCRVBars){
-            if(!extracted){
-              auto b = new REX::REveBox("box","label");
-              b->SetMainColor(drawconfig.getInt("CRVBarColor"));
-              b->	SetMainTransparency(drawconfig.getInt("CRVtrans"));
-              b->SetLineWidth(drawconfig.getInt("GeomLineWidth"));
-              double  length = pointmmTocm(crvCounter.getHalfLength());
-              double  width = pointmmTocm(crvCounter.getHalfWidth());
-              double  height = pointmmTocm(crvCounter.getHalfThickness());
+              if(!extracted){
+                auto b = new REX::REveBox("box","label");
+                b->SetMainColor(drawconfig.getInt("CRVBarColor"));
+                b-> SetMainTransparency(drawconfig.getInt("CRVtrans"));
+                b->SetLineWidth(drawconfig.getInt("GeomLineWidth"));
+                double  length = pointmmTocm(crvCounter.getHalfLength());
+                double  width = pointmmTocm(crvCounter.getHalfWidth());
+                double  height = pointmmTocm(crvCounter.getHalfThickness());
 
-              if(barDetail.getWidthDirection() == 1 and barDetail.getThicknessDirection() == 2 and barDetail.getLengthDirection() == 0){ //CRV D, CRV U -- WORKS
-                b->SetVertex(0,  -1*length, pointmmTocm(pointInMu2e.y()) - width, pointmmTocm(pointInMu2e.z()) + pointmmTocm(pointInMu2e.x()) - height); //---
-                b->SetVertex(1,  -1*length, pointmmTocm(pointInMu2e.y()) - width, pointmmTocm(pointInMu2e.z()) + pointmmTocm(pointInMu2e.x()) + height);//-+-
-                b->SetVertex(2,  -1*length, pointmmTocm(pointInMu2e.y()) + width , pointmmTocm(pointInMu2e.z()) + pointmmTocm(pointInMu2e.x()) + height );//++-
-                b->SetVertex(3,  -1*length, pointmmTocm(pointInMu2e.y()) + width  ,pointmmTocm(pointInMu2e.z()) + pointmmTocm(pointInMu2e.x()) - height);//+--
-                b->SetVertex(4, length, pointmmTocm(pointInMu2e.y()) - width,   pointmmTocm(pointInMu2e.z()) + pointmmTocm(pointInMu2e.x()) - height  );//--+
-                b->SetVertex(5,  length, pointmmTocm(pointInMu2e.y()) - width,  pointmmTocm(pointInMu2e.z()) + pointmmTocm(pointInMu2e.x()) + height );//-++
-                b->SetVertex(6, length, pointmmTocm(pointInMu2e.y()) + width,  pointmmTocm(pointInMu2e.z()) + pointmmTocm(pointInMu2e.x()) + height );//+++
-                b->SetVertex(7, length,pointmmTocm(pointInMu2e.y()) + width,  pointmmTocm(pointInMu2e.z()) + pointmmTocm(pointInMu2e.x()) - height );//+-+
+                if(barDetail.getWidthDirection() == 1 and barDetail.getThicknessDirection() == 2 and barDetail.getLengthDirection() == 0){ //CRV D, CRV U -- WORKS
+                  b->SetVertex(0,  -1*length, pointmmTocm(pointInMu2e.y()) - width, pointmmTocm(pointInMu2e.z()) + pointmmTocm(pointInMu2e.x()) - height); //---
+                  b->SetVertex(1,  -1*length, pointmmTocm(pointInMu2e.y()) - width, pointmmTocm(pointInMu2e.z()) + pointmmTocm(pointInMu2e.x()) + height);//-+-
+                  b->SetVertex(2,  -1*length, pointmmTocm(pointInMu2e.y()) + width , pointmmTocm(pointInMu2e.z()) + pointmmTocm(pointInMu2e.x()) + height );//++-
+                  b->SetVertex(3,  -1*length, pointmmTocm(pointInMu2e.y()) + width  ,pointmmTocm(pointInMu2e.z()) + pointmmTocm(pointInMu2e.x()) - height);//+--
+                  b->SetVertex(4, length, pointmmTocm(pointInMu2e.y()) - width,   pointmmTocm(pointInMu2e.z()) + pointmmTocm(pointInMu2e.x()) - height  );//--+
+                  b->SetVertex(5,  length, pointmmTocm(pointInMu2e.y()) - width,  pointmmTocm(pointInMu2e.z()) + pointmmTocm(pointInMu2e.x()) + height );//-++
+                  b->SetVertex(6, length, pointmmTocm(pointInMu2e.y()) + width,  pointmmTocm(pointInMu2e.z()) + pointmmTocm(pointInMu2e.x()) + height );//+++
+                  b->SetVertex(7, length,pointmmTocm(pointInMu2e.y()) + width,  pointmmTocm(pointInMu2e.z()) + pointmmTocm(pointInMu2e.x()) - height );//+-+
 
-              }
+                }
 
-              if(barDetail.getWidthDirection() == 0 and barDetail.getThicknessDirection() == 1 and barDetail.getLengthDirection() == 2){ //CRV TS -- WORKS
-                b->SetVertex(0, pointmmTocm(pointInMu2e.x()) - width, pointmmTocm(pointInMu2e.y()) - height, pointmmTocm(pointInMu2e.z()) + -1*length ); //---
-                b->SetVertex(1, pointmmTocm(pointInMu2e.x()) - width, pointmmTocm(pointInMu2e.y()) + height, pointmmTocm(pointInMu2e.z()) + -1*length);//-+-
-                b->SetVertex(2, pointmmTocm(pointInMu2e.x()) + width, pointmmTocm(pointInMu2e.y()) + height, pointmmTocm(pointInMu2e.z()) + -1*length);//++-
-                b->SetVertex(3, pointmmTocm(pointInMu2e.x()) + width, pointmmTocm(pointInMu2e.y()) - height, pointmmTocm(pointInMu2e.z()) + -1*length);//+--
-                b->SetVertex(4, pointmmTocm(pointInMu2e.x()) - width, pointmmTocm(pointInMu2e.y()) - height, pointmmTocm(pointInMu2e.z()) + length);//--+
-                b->SetVertex(5, pointmmTocm(pointInMu2e.x()) - width, pointmmTocm(pointInMu2e.y()) + height, pointmmTocm(pointInMu2e.z()) + length);//-++
-                b->SetVertex(6, pointmmTocm(pointInMu2e.x()) + width, pointmmTocm(pointInMu2e.y()) + height, pointmmTocm(pointInMu2e.z()) + length);//+++
-                b->SetVertex(7, pointmmTocm(pointInMu2e.x()) + width, pointmmTocm(pointInMu2e.y()) - height, pointmmTocm(pointInMu2e.z()) + length);//+-+
+                if(barDetail.getWidthDirection() == 0 and barDetail.getThicknessDirection() == 1 and barDetail.getLengthDirection() == 2){ //CRV TS -- WORKS
+                  b->SetVertex(0, pointmmTocm(pointInMu2e.x()) - width, pointmmTocm(pointInMu2e.y()) - height, pointmmTocm(pointInMu2e.z()) + -1*length ); //---
+                  b->SetVertex(1, pointmmTocm(pointInMu2e.x()) - width, pointmmTocm(pointInMu2e.y()) + height, pointmmTocm(pointInMu2e.z()) + -1*length);//-+-
+                  b->SetVertex(2, pointmmTocm(pointInMu2e.x()) + width, pointmmTocm(pointInMu2e.y()) + height, pointmmTocm(pointInMu2e.z()) + -1*length);//++-
+                  b->SetVertex(3, pointmmTocm(pointInMu2e.x()) + width, pointmmTocm(pointInMu2e.y()) - height, pointmmTocm(pointInMu2e.z()) + -1*length);//+--
+                  b->SetVertex(4, pointmmTocm(pointInMu2e.x()) - width, pointmmTocm(pointInMu2e.y()) - height, pointmmTocm(pointInMu2e.z()) + length);//--+
+                  b->SetVertex(5, pointmmTocm(pointInMu2e.x()) - width, pointmmTocm(pointInMu2e.y()) + height, pointmmTocm(pointInMu2e.z()) + length);//-++
+                  b->SetVertex(6, pointmmTocm(pointInMu2e.x()) + width, pointmmTocm(pointInMu2e.y()) + height, pointmmTocm(pointInMu2e.z()) + length);//+++
+                  b->SetVertex(7, pointmmTocm(pointInMu2e.x()) + width, pointmmTocm(pointInMu2e.y()) - height, pointmmTocm(pointInMu2e.z()) + length);//+-+
 
-              }
+                }
 
-              if(barDetail.getWidthDirection() == 2 and barDetail.getThicknessDirection() == 1 and barDetail.getLengthDirection() == 0){ //CRV T -- WORKS
-                b->SetVertex(0, -1*length, pointmmTocm(pointInMu2e.y()) - height, pointmmTocm(pointInMu2e.z()) + pointmmTocm(pointInMu2e.x()) - width); //---
-                b->SetVertex(1, -1*length, pointmmTocm(pointInMu2e.y()) + height, pointmmTocm(pointInMu2e.z()) + pointmmTocm(pointInMu2e.x()) - width);//-+-
-                b->SetVertex(2, -1*length, pointmmTocm(pointInMu2e.y()) + height, pointmmTocm(pointInMu2e.z()) + pointmmTocm(pointInMu2e.x()) + width);//++-
-                b->SetVertex(3, -1*length, pointmmTocm(pointInMu2e.y()) - height, pointmmTocm(pointInMu2e.z()) + pointmmTocm(pointInMu2e.x()) + width);//+--
-                b->SetVertex(4, length, pointmmTocm(pointInMu2e.y()) - height, pointmmTocm(pointInMu2e.z()) + pointmmTocm(pointInMu2e.x()) - width );//--+
-                b->SetVertex(5, length, pointmmTocm(pointInMu2e.y()) + height, pointmmTocm(pointInMu2e.z()) + pointmmTocm(pointInMu2e.x()) - width );//-++
-                b->SetVertex(6, length, pointmmTocm(pointInMu2e.y()) + height, pointmmTocm(pointInMu2e.z()) + pointmmTocm(pointInMu2e.x()) + width );//+++
-                b->SetVertex(7, length, pointmmTocm(pointInMu2e.y()) - height, pointmmTocm(pointInMu2e.z()) + pointmmTocm(pointInMu2e.x()) + width );//+-+
+                if(barDetail.getWidthDirection() == 2 and barDetail.getThicknessDirection() == 1 and barDetail.getLengthDirection() == 0){ //CRV T -- WORKS
+                  b->SetVertex(0, -1*length, pointmmTocm(pointInMu2e.y()) - height, pointmmTocm(pointInMu2e.z()) + pointmmTocm(pointInMu2e.x()) - width); //---
+                  b->SetVertex(1, -1*length, pointmmTocm(pointInMu2e.y()) + height, pointmmTocm(pointInMu2e.z()) + pointmmTocm(pointInMu2e.x()) - width);//-+-
+                  b->SetVertex(2, -1*length, pointmmTocm(pointInMu2e.y()) + height, pointmmTocm(pointInMu2e.z()) + pointmmTocm(pointInMu2e.x()) + width);//++-
+                  b->SetVertex(3, -1*length, pointmmTocm(pointInMu2e.y()) - height, pointmmTocm(pointInMu2e.z()) + pointmmTocm(pointInMu2e.x()) + width);//+--
+                  b->SetVertex(4, length, pointmmTocm(pointInMu2e.y()) - height, pointmmTocm(pointInMu2e.z()) + pointmmTocm(pointInMu2e.x()) - width );//--+
+                  b->SetVertex(5, length, pointmmTocm(pointInMu2e.y()) + height, pointmmTocm(pointInMu2e.z()) + pointmmTocm(pointInMu2e.x()) - width );//-++
+                  b->SetVertex(6, length, pointmmTocm(pointInMu2e.y()) + height, pointmmTocm(pointInMu2e.z()) + pointmmTocm(pointInMu2e.x()) + width );//+++
+                  b->SetVertex(7, length, pointmmTocm(pointInMu2e.y()) - height, pointmmTocm(pointInMu2e.z()) + pointmmTocm(pointInMu2e.x()) + width );//+-+
 
-              }
+                }
 
-               if(barDetail.getWidthDirection() == 1 and barDetail.getThicknessDirection() == 0 and barDetail.getLengthDirection() == 2){ //CRV R, CRV L -- orientation DONE
-                b->SetVertex(0, pointmmTocm(pointInMu2e.y()) - height, -1*length, pointmmTocm(pointInMu2e.x()) - width ); //---
-                b->SetVertex(1, pointmmTocm(pointInMu2e.y()) + height, -1*length,pointmmTocm(pointInMu2e.x()) - width);//-+-
-                b->SetVertex(2, pointmmTocm(pointInMu2e.y()) + height, -1*length,pointmmTocm(pointInMu2e.x()) + width);//++-
-                b->SetVertex(3, pointmmTocm(pointInMu2e.y()) - height, -1*length,pointmmTocm(pointInMu2e.x()) + width);//+--
-                b->SetVertex(4, pointmmTocm(pointInMu2e.y()) - height, length, pointmmTocm(pointInMu2e.x()) - width);//--+
-                b->SetVertex(5, pointmmTocm(pointInMu2e.y()) + height, length, pointmmTocm(pointInMu2e.x()) - width );//-++
-                b->SetVertex(6, pointmmTocm(pointInMu2e.y()) + height, length,pointmmTocm(pointInMu2e.x()) + width );//+++
-                b->SetVertex(7, pointmmTocm(pointInMu2e.y()) - height, length,pointmmTocm(pointInMu2e.x()) + width );//+-+
+                if(barDetail.getWidthDirection() == 1 and barDetail.getThicknessDirection() == 0 and barDetail.getLengthDirection() == 2){ //CRV R, CRV L -- orientation DONE
+                  b->SetVertex(0, pointmmTocm(pointInMu2e.y()) - height, -1*length, pointmmTocm(pointInMu2e.x()) - width ); //---
+                  b->SetVertex(1, pointmmTocm(pointInMu2e.y()) + height, -1*length,pointmmTocm(pointInMu2e.x()) - width);//-+-
+                  b->SetVertex(2, pointmmTocm(pointInMu2e.y()) + height, -1*length,pointmmTocm(pointInMu2e.x()) + width);//++-
+                  b->SetVertex(3, pointmmTocm(pointInMu2e.y()) - height, -1*length,pointmmTocm(pointInMu2e.x()) + width);//+--
+                  b->SetVertex(4, pointmmTocm(pointInMu2e.y()) - height, length, pointmmTocm(pointInMu2e.x()) - width);//--+
+                  b->SetVertex(5, pointmmTocm(pointInMu2e.y()) + height, length, pointmmTocm(pointInMu2e.x()) - width );//-++
+                  b->SetVertex(6, pointmmTocm(pointInMu2e.y()) + height, length,pointmmTocm(pointInMu2e.x()) + width );//+++
+                  b->SetVertex(7, pointmmTocm(pointInMu2e.y()) - height, length,pointmmTocm(pointInMu2e.x()) + width );//+-+
 
-              }
-              scene->AddElement(b);
-
-            }
-            if(extracted){ //TODO same for nominal geom
-
-              // CRV hit scintillation bars highlighted
-              // std::string const& base;
-              // std::string bartitle = crvCounter.name( base );
-              // char const *bartitle_c = base.c_str(); //TODO title
-
-              // Draw "bars hit" in red:
-              auto b = new REX::REveBox("box");
-              b->SetMainColor(drawconfig.getInt("CRVBarColor"));
-              b->	SetMainTransparency(drawconfig.getInt("CRVtrans"));
-              b->SetLineWidth(drawconfig.getInt("GeomLineWidth"));
-              double  length = pointmmTocm(crvCounter.getHalfLength());
-              double  width = pointmmTocm(crvCounter.getHalfWidth());
-              double  height = pointmmTocm(crvCounter.getHalfThickness());
-
-              if(barDetail.getWidthDirection() == 0 and barDetail.getThicknessDirection() == 1 and barDetail.getLengthDirection() == 2){ //T1
-
-                b->SetVertex(0, pointmmTocm(pointInMu2e.x()) - width, pointmmTocm(pointInMu2e.y()) - height, -1*length); //---
-                b->SetVertex(1, pointmmTocm(pointInMu2e.x()) - width, pointmmTocm(pointInMu2e.y())  + height, -1*length);//-+-
-                b->SetVertex(2, pointmmTocm(pointInMu2e.x()) + width, pointmmTocm(pointInMu2e.y()) + height, -1*length);//++-
-                b->SetVertex(3, pointmmTocm(pointInMu2e.x()) + width, pointmmTocm(pointInMu2e.y()) - height, -1*length);//+--
-                b->SetVertex(4, pointmmTocm(pointInMu2e.x()) - width, pointmmTocm(pointInMu2e.y()) - height,  length );//--+
-                b->SetVertex(5, pointmmTocm(pointInMu2e.x()) - width, pointmmTocm(pointInMu2e.y()) + height, length );//-++
-                b->SetVertex(6, pointmmTocm(pointInMu2e.x()) + width, pointmmTocm(pointInMu2e.y()) + height ,length );//+++
-                b->SetVertex(7, pointmmTocm(pointInMu2e.x()) + width, pointmmTocm(pointInMu2e.y()) - height, length );//+-+
-              } else { //EX, T2
-                b->SetVertex(0, -1*length, pointmmTocm(pointInMu2e.y()) - height, pointmmTocm(pointInMu2e.x()) - width + pointmmTocm(pointInMu2e.z()));//---
-                b->SetVertex(1,-1*length, pointmmTocm(pointInMu2e.y()) + height, pointmmTocm(pointInMu2e.x()) - width + pointmmTocm(pointInMu2e.z()));//-+-
-                b->SetVertex(2, length, pointmmTocm(pointInMu2e.y()) + height, pointmmTocm(pointInMu2e.x()) - width  + pointmmTocm(pointInMu2e.z()));//++-
-                b->SetVertex(3, length, pointmmTocm(pointInMu2e.y()) - height , pointmmTocm(pointInMu2e.x()) - width + pointmmTocm(pointInMu2e.z()) );//+--
-                b->SetVertex(4, -1*length , pointmmTocm(pointInMu2e.y()) - height, pointmmTocm(pointInMu2e.x()) + width + pointmmTocm(pointInMu2e.z())); //--+
-                b->SetVertex(5,-1*length, pointmmTocm(pointInMu2e.y()) + height , pointmmTocm(pointInMu2e.x()) + width + pointmmTocm(pointInMu2e.z()) ); // -++
-                b->SetVertex(6, length, pointmmTocm(pointInMu2e.y()) + height , pointmmTocm(pointInMu2e.x()) + width + pointmmTocm(pointInMu2e.z()));//+++
-                b->SetVertex(7,  length , pointmmTocm(pointInMu2e.y()) - height, pointmmTocm(pointInMu2e.x()) + width + pointmmTocm(pointInMu2e.z()));//+-+
+                }
+                scene->AddElement(b);
 
               }
-              scene->AddElement(b);
+              if(extracted){ //TODO same for nominal geom
+
+                // CRV hit scintillation bars highlighted
+                // std::string const& base;
+                // std::string bartitle = crvCounter.name( base );
+                // char const *bartitle_c = base.c_str(); //TODO title
+
+                // Draw "bars hit" in red:
+                auto b = new REX::REveBox("box");
+                b->SetMainColor(drawconfig.getInt("CRVBarColor"));
+                b-> SetMainTransparency(drawconfig.getInt("CRVtrans"));
+                b->SetLineWidth(drawconfig.getInt("GeomLineWidth"));
+                double  length = pointmmTocm(crvCounter.getHalfLength());
+                double  width = pointmmTocm(crvCounter.getHalfWidth());
+                double  height = pointmmTocm(crvCounter.getHalfThickness());
+
+                if(barDetail.getWidthDirection() == 0 and barDetail.getThicknessDirection() == 1 and barDetail.getLengthDirection() == 2){ //T1
+
+                  b->SetVertex(0, pointmmTocm(pointInMu2e.x()) - width, pointmmTocm(pointInMu2e.y()) - height, -1*length); //---
+                  b->SetVertex(1, pointmmTocm(pointInMu2e.x()) - width, pointmmTocm(pointInMu2e.y())  + height, -1*length);//-+-
+                  b->SetVertex(2, pointmmTocm(pointInMu2e.x()) + width, pointmmTocm(pointInMu2e.y()) + height, -1*length);//++-
+                  b->SetVertex(3, pointmmTocm(pointInMu2e.x()) + width, pointmmTocm(pointInMu2e.y()) - height, -1*length);//+--
+                  b->SetVertex(4, pointmmTocm(pointInMu2e.x()) - width, pointmmTocm(pointInMu2e.y()) - height,  length );//--+
+                  b->SetVertex(5, pointmmTocm(pointInMu2e.x()) - width, pointmmTocm(pointInMu2e.y()) + height, length );//-++
+                  b->SetVertex(6, pointmmTocm(pointInMu2e.x()) + width, pointmmTocm(pointInMu2e.y()) + height ,length );//+++
+                  b->SetVertex(7, pointmmTocm(pointInMu2e.x()) + width, pointmmTocm(pointInMu2e.y()) - height, length );//+-+
+                } else { //EX, T2
+                  b->SetVertex(0, -1*length, pointmmTocm(pointInMu2e.y()) - height, pointmmTocm(pointInMu2e.x()) - width + pointmmTocm(pointInMu2e.z()));//---
+                  b->SetVertex(1,-1*length, pointmmTocm(pointInMu2e.y()) + height, pointmmTocm(pointInMu2e.x()) - width + pointmmTocm(pointInMu2e.z()));//-+-
+                  b->SetVertex(2, length, pointmmTocm(pointInMu2e.y()) + height, pointmmTocm(pointInMu2e.x()) - width  + pointmmTocm(pointInMu2e.z()));//++-
+                  b->SetVertex(3, length, pointmmTocm(pointInMu2e.y()) - height , pointmmTocm(pointInMu2e.x()) - width + pointmmTocm(pointInMu2e.z()) );//+--
+                  b->SetVertex(4, -1*length , pointmmTocm(pointInMu2e.y()) - height, pointmmTocm(pointInMu2e.x()) + width + pointmmTocm(pointInMu2e.z())); //--+
+                  b->SetVertex(5,-1*length, pointmmTocm(pointInMu2e.y()) + height , pointmmTocm(pointInMu2e.x()) + width + pointmmTocm(pointInMu2e.z()) ); // -++
+                  b->SetVertex(6, length, pointmmTocm(pointInMu2e.y()) + height , pointmmTocm(pointInMu2e.x()) + width + pointmmTocm(pointInMu2e.z()));//+++
+                  b->SetVertex(7,  length , pointmmTocm(pointInMu2e.y()) - height, pointmmTocm(pointInMu2e.x()) + width + pointmmTocm(pointInMu2e.z()));//+-+
+
+                }
+                scene->AddElement(b);
+              }
             }
           }
-         }
         }
 
         ps1->SetMarkerColor(drawconfig.getInt("CRVHitColor"));
@@ -640,7 +642,7 @@ void REveMu2eDataInterface::AddTimeClusters(REX::REveManager *&eveMng, bool firs
         for(size_t j=0; j<tccol->size();j++){
           mu2e::TimeCluster const  &tclust= (*tccol)[j];
           std::string tctitle = "Time Cluster tag: " + names[i] + '\n'
-          + "t0 " + std::to_string(tclust.t0().t0()) + " +/- " + std::to_string(tclust.t0().t0Err()) + " ns " + '\n' ;
+            + "t0 " + std::to_string(tclust.t0().t0()) + " +/- " + std::to_string(tclust.t0().t0Err()) + " ns " + '\n' ;
           auto ps1 = new REX::REvePointSet("TimeClusters", tctitle, 0);
           CLHEP::Hep3Vector HitPos(tclust._pos.x(), tclust._pos.y(), tclust._pos.z());
           ps1->SetNextPoint(pointmmTocm(HitPos.x()), pointmmTocm(HitPos.y()) , pointmmTocm(HitPos.z()));
@@ -691,20 +693,20 @@ void REveMu2eDataInterface::AddHelixSeedCollection(REX::REveManager *&eveMng,boo
   }
 }
 
-void REveMu2eDataInterface::AddKalIntersection(KalSeed kalseed, REX::REveElement* &scene){
+void REveMu2eDataInterface::AddKalIntersection(KalSeed const& kalseed, REX::REveElement* &scene){
   //Plot intersecitons:
   std::vector<mu2e::KalIntersection> inters = kalseed.intersections();
 
   for(unsigned int i = 0; i < inters.size(); i++){
-  KinKal::VEC3 posKI = inters[i].position3();
-  std::string title = "KalIntersection position : x "  + std::to_string(posKI.x())  +  '\n'
-                  + " y " + std::to_string(posKI.y())  +  '\n'
-                  + " z " + std::to_string(posKI.z())  +  '\n'
-                  + " time :" + std::to_string(inters[i].time()) +  '\n'
-                  + " mom : "
-                  + std::to_string(inters[i].mom())  +
-                  + "MeV/c " + '\n'
-                  + "Surface ID: " + std::to_string(inters[i].surfaceId().index()) ;
+    KinKal::VEC3 posKI = inters[i].position3();
+    std::string title = "KalIntersection position : x "  + std::to_string(posKI.x())  +  '\n'
+      + " y " + std::to_string(posKI.y())  +  '\n'
+      + " z " + std::to_string(posKI.z())  +  '\n'
+      + " time :" + std::to_string(inters[i].time()) +  '\n'
+      + " mom : "
+      + std::to_string(inters[i].mom())  +
+      + "MeV/c " + '\n'
+      + "Surface ID: " + std::to_string(inters[i].surfaceId().index()) ;
     auto interpoint = new REX::REvePointSet("KalIntersections", title,1);
 
     interpoint->SetMarkerStyle(REveMu2eDataInterface::mstyle);
@@ -716,7 +718,7 @@ void REveMu2eDataInterface::AddKalIntersection(KalSeed kalseed, REX::REveElement
 
 }
 
-template<class KTRAJc> void REveMu2eDataInterface::AddTrkStrawHit(KalSeed kalseed, REX::REveElement* &scene,  std::unique_ptr<KTRAJc> &lhptr){
+template<class KTRAJc> void REveMu2eDataInterface::AddTrkStrawHit(KalSeed const& kalseed, REX::REveElement* &scene,  std::unique_ptr<KTRAJc> &lhptr){
   std::cout<<"[REveMu2eDataInterface::AddTrkStrawHit]"<<std::endl;
   //Plot trk straw hits
   mu2e::GeomHandle<mu2e::Tracker> tracker;
@@ -755,10 +757,10 @@ template<class KTRAJc> void REveMu2eDataInterface::AddTrkStrawHit(KalSeed kalsee
       line->SetNextPoint(pointmmTocm(end2.x()),pointmmTocm(end2.y()) ,pointmmTocm(end2.z()));
       //goes along that same line (ddir)
       std::string title = "TrkStrawHitSeed : x "  + std::to_string(pointmmTocm(tshspos.x()))  +  '\n'
-                  + " y " + std::to_string(pointmmTocm(tshspos.y()))  +  '\n'
-                  + " z " + std::to_string(pointmmTocm(tshspos.z()))  +  '\n'
-                  + " time :" + std::to_string(tshs.hitTime())+  '\n'
-                  + " energyDep :" + std::to_string(tshs.energyDep())+ "MeV";
+        + " y " + std::to_string(pointmmTocm(tshspos.y()))  +  '\n'
+        + " z " + std::to_string(pointmmTocm(tshspos.z()))  +  '\n'
+        + " time :" + std::to_string(tshs.hitTime())+  '\n'
+        + " energyDep :" + std::to_string(tshs.energyDep())+ "MeV";
       auto trkstrawpoint = new REX::REvePointSet("TrkStrawHitSeed", title,1);
       trkstrawpoint->SetMarkerStyle(REveMu2eDataInterface::mstyle);
       trkstrawpoint->SetMarkerSize(REveMu2eDataInterface::msize);
@@ -771,27 +773,27 @@ template<class KTRAJc> void REveMu2eDataInterface::AddTrkStrawHit(KalSeed kalsee
   }
 }
 
-void REveMu2eDataInterface::AddTrkCaloHit(KalSeed kalseed, REX::REveElement* &scene){
+void REveMu2eDataInterface::AddTrkCaloHit(KalSeed const& kalseed, REX::REveElement* &scene){
   /*mu2e::TrkCaloHitSeed caloseed = kalseed.caloHit();
     art::Ptr<mu2e::CaloCluster> cluster = caloseed.caloCluster(); // TODO - use this to access x,y,z,t
     */
 }
 
 /*------------Function to color code the Tracker hits -------------*/
-void REveMu2eDataInterface::AddTrkHits(REX::REveManager *&eveMng, bool firstLoop_, std::tuple<std::vector<std::string>, std::vector<const ComboHitCollection*>> combohit_tuple,std::tuple<std::vector<std::string>, std::vector<const KalSeedCollection*>> track_tuple, REX::REveElement* &scene){
+void REveMu2eDataInterface::AddTrkHits(REX::REveManager *&eveMng, bool firstLoop_, std::tuple<std::vector<std::string>, std::vector<const ComboHitCollection*>> combohit_tuple,std::tuple<std::vector<std::string>, std::vector<const KalSeedPtrCollection*>> track_tuple, REX::REveElement* &scene){
   std::cout<<"[REveMu2eDataInterface] AddTrkHits  "<<std::endl;
   std::vector<const ComboHitCollection*> combohit_list = std::get<1>(combohit_tuple);
-  std::vector<const KalSeedCollection*> track_list = std::get<1>(track_tuple);
+  std::vector<const KalSeedPtrCollection*> track_list = std::get<1>(track_tuple);
 
   GeomHandle<DetectorSystem> det;
   std::vector<StrawId> trksid(drawconfig.getInt("maxStrawID"));
   unsigned int trkhitsize=0;
   //Save the hit straw IDs of the KalSeed hits
   for(unsigned int j = 0; j< track_list.size(); j++){
-    const KalSeedCollection* seedcol = track_list[j];
+    const KalSeedPtrCollection* seedcol = track_list[j];
     if(seedcol!=0){
       for(unsigned int k = 0; k < seedcol->size(); k++){
-        KalSeed kseed = (*seedcol)[k];
+        auto const& kseed = *(*seedcol)[k];
         const std::vector<mu2e::TrkStrawHitSeed> &hits = kseed.hits();
         trkhitsize = hits.size();
         for(unsigned int i = 0; i <trkhitsize; i++){
@@ -812,12 +814,12 @@ void REveMu2eDataInterface::AddTrkHits(REX::REveManager *&eveMng, bool firstLoop
                   usedid[q]=q;
                   CLHEP::Hep3Vector HitPos(hit.pos().x(), hit.pos().y(), hit.pos().z());
                   std::string chtitle = "TrkSeedHit position : x "  + std::to_string(hit.pos().x())  +  '\n'
-                  + " y " + std::to_string(hit.pos().y())  +  '\n'
-                  + " z " + std::to_string(hit.pos().z())  +  '\n'
-                  + " time :" + std::to_string(hit.time()) +  '\n'
-                  + " energy dep : "
-                  + std::to_string(hit.energyDep())  +
-                  + "MeV";
+                    + " y " + std::to_string(hit.pos().y())  +  '\n'
+                    + " z " + std::to_string(hit.pos().z())  +  '\n'
+                    + " time :" + std::to_string(hit.time()) +  '\n'
+                    + " energy dep : "
+                    + std::to_string(hit.energyDep())  +
+                    + "MeV";
 
                   auto trkhit = new REX::REvePointSet("TrkHits", chtitle,0);
                   trkhit ->SetMarkerStyle(REveMu2eDataInterface::mstyle);
@@ -863,32 +865,32 @@ template<class KTRAJ> void REveMu2eDataInterface::AddKinKalTrajectory( std::uniq
   scene->AddElement(line);
 }
 
-void REveMu2eDataInterface::FillKinKalTrajectory(REX::REveManager *&eveMng, bool firstloop, REX::REveElement* &scene, std::tuple<std::vector<std::string>, std::vector<const KalSeedCollection*>> track_tuple, bool plotKalIntersection, bool addTrkHits, double& t1, double& t2){
+void REveMu2eDataInterface::FillKinKalTrajectory(REX::REveManager *&eveMng, bool firstloop, REX::REveElement* &scene, std::tuple<std::vector<std::string>, std::vector<const KalSeedPtrCollection*>> track_tuple, bool plotKalIntersection, bool addTrkHits, double& t1, double& t2){
 
-  std::vector<const KalSeedCollection*> track_list = std::get<1>(track_tuple);
+  std::vector<const KalSeedPtrCollection*> track_list = std::get<1>(track_tuple);
   std::vector<std::string> names = std::get<0>(track_tuple);
 
   for(unsigned int j=0; j< track_list.size(); j++){
-    const KalSeedCollection* seedcol = track_list[j];
+    const KalSeedPtrCollection* seedcol = track_list[j];
     if(seedcol!=0){
-      for(unsigned int k = 0; k < seedcol->size(); k++){
-        mu2e::KalSeed kseed = (*seedcol)[k];
-        const std::vector<mu2e::KalSegment> &segments = kseed.segments();
+      for(auto const& kseedptr : *seedcol){
+        auto const& kseed = *kseedptr;
         if(plotKalIntersection) AddKalIntersection(kseed, scene);
+        auto const& segments = kseed.segments();
         if(kseed.loopHelixFit())
         {
           auto trajectory=kseed.loopHelixFitTrajectory();
           //auto lh = trajectory.loopHelix();
           auto lh = segments[0].loopHelix();
           std::string kaltitle = "KalSeed tag : " + names[j] +  '\n'
-              + " mom " + std::to_string(segments[0].mom()) + "MeV/c"+ '\n'
-              + " t0 " + std::to_string(lh.t0()) + "ns " +  '\n'
-              + " lam "  + std::to_string(lh.lam() ) +  '\n'
-              + " rad "  + std::to_string(lh.rad() ) +  '\n'
-              + " cx "  + std::to_string(lh.cx() ) +  '\n'
-              + " cy "  + std::to_string(lh.cy() ) +  '\n'
-              + " phi0 "  + std::to_string(lh.phi0() )+  '\n'
-              + " track arrival time " + std::to_string(t1);
+            + " mom " + std::to_string(segments[0].mom()) + "MeV/c"+ '\n'
+            + " t0 " + std::to_string(lh.t0()) + "ns " +  '\n'
+            + " lam "  + std::to_string(lh.lam() ) +  '\n'
+            + " rad "  + std::to_string(lh.rad() ) +  '\n'
+            + " cx "  + std::to_string(lh.cx() ) +  '\n'
+            + " cy "  + std::to_string(lh.cy() ) +  '\n'
+            + " phi0 "  + std::to_string(lh.phi0() )+  '\n'
+            + " track arrival time " + std::to_string(t1);
           AddKinKalTrajectory<LHPT>(trajectory,scene,j, kaltitle, t1, t2);
           if(addTrkHits) AddTrkStrawHit<LHPT>(kseed, scene, trajectory);
         }
@@ -897,56 +899,54 @@ void REveMu2eDataInterface::FillKinKalTrajectory(REX::REveManager *&eveMng, bool
           auto ch = segments[0].centralHelix();
           std::string kaltitle = "KalSeed tag : " + names[j] +  '\n'
             + " mom " + std::to_string(segments[0].mom()) + "MeV/c"+ '\n'
-                  + " t0 " + std::to_string(ch.t0()) + "ns " +  '\n'
+            + " t0 " + std::to_string(ch.t0()) + "ns " +  '\n'
             + " tandip " + std::to_string(ch.tanDip() ) +  '\n'
             + " d0 " + std::to_string(ch.d0() ) +  '\n'
             + " z0 " + std::to_string(ch.z0() ) +  '\n'
             + " phi0 " + std::to_string(ch.phi0() ) +  '\n'
             + " omega " + std::to_string(ch.omega() )+  '\n'
-              + " track arrival time " + std::to_string(t1);
+            + " track arrival time " + std::to_string(t1);
           auto trajectory=kseed.centralHelixFitTrajectory();
           AddKinKalTrajectory<CHPT>(trajectory,scene,j, kaltitle, t1, t2);
-          if(addTrkHits) AddTrkStrawHit<CHPT>(kseed, scene, trajectory);
         }
         else if(kseed.kinematicLineFit())
         {
-           auto kl = segments[0].kinematicLine();
-           std::string kaltitle = "KalSeed tag : " + names[j]
-              + " mom " + std::to_string(segments[0].mom()) + "MeV/c"+ '\n'
-                  + " t0 " + std::to_string(kl.t0()) + "ns " +  '\n'
-              + " d0 " + std::to_string(kl.d0() ) +  '\n'
-              + " z0 " + std::to_string(kl.z0() ) +  '\n'
-              + " phi0 " + std::to_string(kl.phi0() ) +  '\n'
-              + " theta " + std::to_string(kl.theta() ) +  '\n'
-              + " track arrival time " + std::to_string(t1);
+          auto kl = segments[0].kinematicLine();
+          std::string kaltitle = "KalSeed tag : " + names[j]
+            + " mom " + std::to_string(segments[0].mom()) + "MeV/c"+ '\n'
+            + " t0 " + std::to_string(kl.t0()) + "ns " +  '\n'
+            + " d0 " + std::to_string(kl.d0() ) +  '\n'
+            + " z0 " + std::to_string(kl.z0() ) +  '\n'
+            + " phi0 " + std::to_string(kl.phi0() ) +  '\n'
+            + " theta " + std::to_string(kl.theta() ) +  '\n'
+            + " track arrival time " + std::to_string(t1);
           auto trajectory=kseed.kinematicLineFitTrajectory();
           AddKinKalTrajectory<KLPT>(trajectory,scene,j, kaltitle, t1, t2);
           if(addTrkHits) AddTrkStrawHit<KLPT>(kseed, scene, trajectory);
         }
-
       }
     }
   }
 }
 
 
-void REveMu2eDataInterface::AddKalSeedCollection(REX::REveManager *&eveMng,bool firstloop,  std::tuple<std::vector<std::string>, std::vector<const KalSeedCollection*>> track_tuple, REX::REveElement* &scene){
+void REveMu2eDataInterface::AddKalSeedPtrCollection(REX::REveManager *&eveMng,bool firstloop,  std::tuple<std::vector<std::string>, std::vector<const KalSeedPtrCollection*>> track_tuple, REX::REveElement* &scene){
   //bool useKinKal = true; //TODO this will eventually be the default
 
-  std::vector<const KalSeedCollection*> track_list = std::get<1>(track_tuple);
+  std::vector<const KalSeedPtrCollection*> track_list = std::get<1>(track_tuple);
   std::vector<std::string> names = std::get<0>(track_tuple);
 
   for(unsigned int j=0; j< track_list.size(); j++){
-    const KalSeedCollection* seedcol = track_list[j];
+    const KalSeedPtrCollection* seedcol = track_list[j];
     //bool useKinKal = names[j].find("KK") != std::string::npos;
     //if(useKinKal) {
     //  FillKinKalTrajectory(eveMng, firstloop, scene,  track_tuple);
     //}
     if(seedcol!=0){
       for(unsigned int k = 0; k < seedcol->size(); k = k + 20){
-        mu2e::KalSeed kseed = (*seedcol)[k];
+        auto const& kseed = *(*seedcol)[k];
         //if(plotKalIntersection) AddKalIntersection(kseed, scene);
-        const std::vector<mu2e::KalSegment> &segments = kseed.segments();
+        auto const&segments = kseed.segments();
         unsigned int nSegments=segments.size();
 
         if(nSegments==0) continue;

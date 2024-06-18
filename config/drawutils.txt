@@ -1,6 +1,6 @@
 // draw options
 
-int TRKtrans  = 90;
+int TRKtrans  = 98;
 int CALtrans  = 100;
 int CRYtrans  = 90;
 int CRVtrans  = 98;

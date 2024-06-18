@@ -13,21 +13,22 @@ source : { module_type : RootInput }
 
 physics :
 {
- analyzers : { @table::REveDis.analyzers}
+  analyzers : { @table::REveDis.analyzers}
+  producers : { @table::REveDis.producers }
+  filters : { @table::REveDis.filters }
 }
-
-//geometry options
+# geometry options
 physics.analyzers.REveEventDisplay.showCRV : true
 physics.analyzers.REveEventDisplay.showPS : false
 physics.analyzers.REveEventDisplay.showTS : false
 physics.analyzers.REveEventDisplay.showDS : false
-physics.analyzers.REveEventDisplay.addCRVBars : true
+physics.analyzers.REveEventDisplay.addCRVBars : false # currently crashing
 physics.analyzers.REveEventDisplay.addKalInter : false
 physics.analyzers.REveEventDisplay.addCrystalHits : true
 physics.analyzers.REveEventDisplay.filler.addHelixSeeds : false
 physics.analyzers.REveEventDisplay.filler.addKalSeeds : true
 physics.analyzers.REveEventDisplay.filler.addClusters : true
-physics.analyzers.REveEventDisplay.filler.addHits : false // adds ComboHits
+physics.analyzers.REveEventDisplay.filler.addHits : false #  adds ComboHits
 physics.analyzers.REveEventDisplay.filler.addCrvClusters : true
 physics.analyzers.REveEventDisplay.filler.addCrvHits : false
 physics.analyzers.REveEventDisplay.filler.addTimeClusters : false
@@ -38,16 +39,28 @@ physics.analyzers.REveEventDisplay.filler.addCosmicTrackSeeds : false
 
 physics.analyzers.REveEventDisplay.filler.addMCTraj : true
 
-//allows movement through events in sequential order
+# allows movement through events in sequential order
 physics.analyzers.REveEventDisplay.seqMode : true
 physics.analyzers.REveEventDisplay.strawdisplay : false
 
-//print statements
+# print statements
 physics.analyzers.REveEventDisplay.diagLevel : 10
 
-//the path
+# the path
 physics.EndPath  : [ @sequence::REveDis.seqBase]
+physics.REvePath : @local::REvePath
+physics.trigger_paths :  ["REvePath" ]
+physics.analyzers.REveEventDisplay.SelectEvents : ["REvePath" ]
 
-//useless file name
-services.TFileService.fileName: "nts.owner.REve.version.sequencer.root"
+# useless file name
+services.TFileService.fileName: "/dev/null"
 
+#
+# to display a selected set of events, #include this file with a list of eventid triplets: ie:
+#
+##include "REve/nominal_example.fcl"
+#physics.filters.eidsel.idsToMatch : [
+#  "1202:636:337031",
+#  "1202:648:370322" ]
+#
+#

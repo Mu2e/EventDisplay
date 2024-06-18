@@ -1,8 +1,8 @@
 BEGIN_PROLOG
-			
+
 REveEventDisplay : {
-    module_type : REveEventDisplay 
-    diagLevel : 1 
+    module_type : REveEventDisplay
+    diagLevel : 1
     showCRV : false
     showPS : false
     showTS : false
@@ -28,7 +28,7 @@ REveEventDisplay : {
       TimeClusterCollection : ["MHDeM"]
       CaloDigiCollection : ["CaloDigiMaker"]
       CaloClusterCollection : ["CaloClusterFast"]
-      KalSeedCollection : ["KKDeM"]
+      KalSeedPtrCollection : ["KKDeM"]
       HelixSeedCollection : ["MHFinderDe"]
       CosmicTrackSeedCollection : "CosmicTrackFinderTimeFit"
       MCTrajectoryCollection :  ["compressRecoMCs"]
@@ -48,13 +48,26 @@ REveEventDisplay : {
     strawdisplay : false
     extracted : false
     gdmlname : "Offline/gen/gdml/mu2e.gdml"
-}  
-
-REveDis : {  
-	analyzers : { 	
-	    REveEventDisplay     : @local::REveEventDisplay
-	} 
-	seqBase 	: [REveEventDisplay]
 }
+
+REveDis : {
+  analyzers : {
+      REveEventDisplay     : @local::REveEventDisplay
+  }
+  producers: {
+      MergeKK : {
+        module_type : MergeKalSeeds
+        KalSeedCollections : ["KKDeM", "KKDeP", "KKUeM", "KKUeP", "KKDmuM", "KKDmuP", "KKUmuM", "KKUmuP" ]
+      }
+  }
+  filters : {
+    eidsel : {
+      module_type : EventIDFilter
+      idsToMatch: [ "*:*:*" ]
+    }
+  }
+  seqBase   : [REveEventDisplay]
+}
+REvePath : ["eidsel", "MergeKK" ]
 
 END_PROLOG
