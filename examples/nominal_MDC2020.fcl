@@ -21,6 +21,7 @@ physics :
 
 # print statements
 physics.analyzers.Mu2eEventDisplay.diagLevel : 10
+physics.analyzers.Mu2eEventDisplay.geometry : "nominal_2020"
 
 # the path
 physics.EndPath  : [ @sequence::REveDis.seqBase]

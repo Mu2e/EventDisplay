@@ -1,29 +1,40 @@
-#include "EventDisplay/fcl/prolog.fcl"
+# author : Sophie Middleton
+# purpose : example fo nominal geometry i.e. not extracted
 
-services : @local::Services.Reco
-process_name : Extracted
-source : { module_type : RootInput }
-physics :
-{
- analyzers : { @table::REveDis.analyzers}
-  producers : { @table::REveDis.producers }
-  filters : { @table::REveDis.filters }
-}
+# geometry options
+Mu2eEventDisplay.showCrv : true
+Mu2eEventDisplay.showPS : false
+Mu2eEventDisplay.showTS : false
+Mu2eEventDisplay.showDS : false
+Mu2eEventDisplay.addCrvBars : true
+Mu2eEventDisplay.addKalInter : true
+Mu2eEventDisplay.addCrystalHits : true
+Mu2eEventDisplay.filler.addHelixSeeds : false
+Mu2eEventDisplay.filler.addKalSeeds : true
+Mu2eEventDisplay.filler.addClusters : true
+Mu2eEventDisplay.filler.addHits : false #  adds ComboHits
+Mu2eEventDisplay.filler.addCrvClusters : true
+Mu2eEventDisplay.filler.addCrvRecoPulse : true
+Mu2eEventDisplay.filler.addTimeClusters : false
+Mu2eEventDisplay.filler.addSimParts : false
+Mu2eEventDisplay.addTrkStrawHits : true
+Mu2eEventDisplay.addTrkCaloHits : true
+Mu2eEventDisplay.filler.addCosmicTrackSeeds : false
+Mu2eEventDisplay.filler.addMCTraj : true
+Mu2eEventDisplay.filler.addHelixSeeds : false
+Mu2eEventDisplay.specifyTag : false
 
-physics.analyzers.Mu2eEventDisplay.showCrv : true
-physics.analyzers.Mu2eEventDisplay.showST: false
-physics.analyzers.Mu2eEventDisplay.addCrvBars : true
-physics.analyzers.Mu2eEventDisplay.filler.addCrvRecoPulse: true
-physics.analyzers.Mu2eEventDisplay.filler.addCrvClusters : false
-physics.analyzers.Mu2eEventDisplay.filler.addCosmicTrackSeeds : false
-physics.analyzers.Mu2eEventDisplay.addCrystalHits : true
-physics.analyzers.Mu2eEventDisplay.addKalInter : true
-physics.analyzers.Mu2eEventDisplay.addTrkStrawHits : true
-physics.analyzers.Mu2eEventDisplay.filler.addKalSeeds : true
-physics.analyzers.Mu2eEventDisplay.filler.addTrkHits : false
-physics.analyzers.Mu2eEventDisplay.filler.addClusters : false //CaloClusters
-physics.analyzers.Mu2eEventDisplay.filler.addHits : false //ComboHits
-physics.analyzers.Mu2eEventDisplay.filler.addSimParts : true
+Mu2eEventDisplay.seqMode : true
+Mu2eEventDisplay.strawdisplay : false
 
-physics.analyzers.Mu2eEventDisplay.extracted : true
-physics.analyzers.Mu2eEventDisplay.seqMode : true
+Mu2eEventDisplay.diagLevel : 10
+
+# the path
+physics.EndPath  : [ @sequence::REveDis.seqBase]
+physics.REvePath : @local::REvePath
+physics.trigger_paths :  ["REvePath" ]
+Mu2eEventDisplay.SelectEvents : ["REvePath" ]
+
+# useless file name
+services.TFileService.fileName: "/dev/null"
+

@@ -1,6 +1,6 @@
 #include "EventDisplay/inc/EventDisplayManager.hh"
 namespace mu2e {
-
+        
 // --- Constructor Implementation ---
 /**
  * @brief Constructs the EventDisplayManager singleton instance.
@@ -10,12 +10,18 @@ namespace mu2e {
  * @param cv The condition variable for thread signaling.
  * @param m The mutex for thread synchronization.
  * @param fGui The pointer to the custom GUI element.
+ * @param geometry The initial geometry type (e.g., "2020", "2025").
  */
+std::string drawfilename("EventDisplay/config/guiutils_current.txt");
+SimpleConfig drawconfig(drawfilename);
+
+
 EventDisplayManager::EventDisplayManager(
     ROOT::Experimental::REveManager* eveMgr,
     std::condition_variable& cv,
     std::mutex& m,
-    GUI *fGui)
+    GUI *fGui,
+    const std::string& geometry)
     : 
     REveElement{"EventManager"}, 
     eveMng_{eveMgr}, 
@@ -57,8 +63,9 @@ void EventDisplayManager::autoplay(int x)
     if (ROOT::Experimental::gEve != nullptr) {
         
         // 1. Retrieve the generic REveElement using the global manager (gEve) and the Element ID.
-        // The function name should be FindElementWithId(fTextId_)but I found that this does not work so I hardcoded FIXME
-        ROOT::Experimental::REveElement* element = ROOT::Experimental::gEve->FindElementById(4336); 
+        // Use geometry-based lookup instead of hardcoded ID.
+        //std::uint32_t elementId = getTextSelectIdForGeometry();
+        ROOT::Experimental::REveElement* element = ROOT::Experimental::gEve->FindElementById(drawconfig.getInt("GUIID")); 
         
         if (element != nullptr) {
             // 2. Safely cast the generic element to the specific TextSelect type.
@@ -91,6 +98,15 @@ void EventDisplayManager::setTextSelectId(std::uint32_t textId) {
     std::cout << "[EventDisplayManager::setTextSelectId] fTextId_ set to: " << fTextId_ << std::endl;
 }
 
+/**
+ * @brief Set the current geometry type.
+ * @param geomType The geometry type (e.g., "2020", "2025").
+ */
+void EventDisplayManager::setGeometry(const std::string& geomType) {
+    currentGeometry_ = geomType;
+    std::cout << "[EventDisplayManager::setGeometry] Geometry set to: '" << currentGeometry_ << "'" << std::endl;
+}
+
 // --- Core Lookup and Command Execution ---
 
 /**
@@ -107,8 +123,9 @@ void mu2e::EventDisplayManager::goToRunEvent(int runId, int eventId)
     if (ROOT::Experimental::gEve != nullptr) {
         
         // 1. Retrieve the generic REveElement using the global manager (gEve) and the Element ID.
-        // The function name should be FindElementWithId(fTextId_)but I found that this does not work so I hardcoded FIXME
-        ROOT::Experimental::REveElement* element = ROOT::Experimental::gEve->FindElementById(4336); 
+        // Use geometry-based lookup instead of hardcoded ID.
+        //std::uint32_t elementId = getTextSelectIdForGeometry();
+        ROOT::Experimental::REveElement* element = ROOT::Experimental::gEve->FindElementById(drawconfig.getInt("GUIID")); 
         
         if (element != nullptr) {
             // 2. Safely cast the generic element to the specific TextSelect type.

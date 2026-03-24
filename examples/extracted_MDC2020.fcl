@@ -9,6 +9,7 @@
 physics.analyzers.Mu2eEventDisplay.gdmlname :"Offline/gen/gdml/mu2e_extracted_MDC2020.gdml"
 services.TFileService.fileName: "/dev/null"
 services.GeometryService.inputFile: "Offline/Mu2eG4/geom/geom_common_extracted_MDC2020.txt"
+physics.analyzers.Mu2eEventDisplay.geometry : "extracted_2020"
 
 physics.EndPath  : [ @sequence::REveDis.seqBase]
 physics.REvePath : @local::REvePath

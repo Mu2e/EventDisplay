@@ -28,22 +28,27 @@ void DataInterface::AddCaloDigis(REX::REveManager *&eveMng, bool firstLoop_,
     /*if(!firstLoop_){
         scene->DestroyElements();;
     }*/
-    std::cout << "[DataInterface] AddCaloDigi: Restoring Original Z-Position Logic" << std::endl;
+    std::cout << "[DataInterface] AddCaloDigi: Plotting raw CaloDigis (colored by amplitude/ADC)" << std::endl;
     std::vector<const CaloDigiCollection*> calodigi_list = std::get<1>(calodigi_tuple);
     std::vector<std::string> names = std::get<0>(calodigi_tuple);
 
-    // Find the Global Time Range (min/max t0)
-    double max_t0 = -1e6;
-    double min_t0 = 1e6;
+    // Find the Global Energy Range (min/max amplitude from waveforms)
+    double max_amp = -1e6;
+    double min_amp = 1e6;
     bool found_digis = false;
 
     for(const auto* calodigicol : calodigi_list){
         if(calodigicol && !calodigicol->empty()){
             found_digis = true;
             for(const auto& digi : *calodigicol){
-                double t0 = digi.t0();
-                if(t0 > max_t0) max_t0 = t0;
-                if(t0 < min_t0) min_t0 = t0;
+                const std::vector<int>& waveform = digi.waveform();
+                // Find max amplitude in this waveform
+                double max_wf_val = 0.0;
+                for(const auto& sample : waveform){
+                    if(sample > max_wf_val) max_wf_val = sample;
+                }
+                if(max_wf_val > max_amp) max_amp = max_wf_val;
+                if(max_wf_val < min_amp) min_amp = max_wf_val;
             }
         }
     }
@@ -53,20 +58,9 @@ void DataInterface::AddCaloDigis(REX::REveManager *&eveMng, bool firstLoop_,
         return;
     }
     
-    if (max_t0 == min_t0) {
-        max_t0 += 1.0; 
+    if (max_amp == min_amp) {
+        max_amp += 1.0; 
     }
-
-    // Define the Color Gradient (Palette)
-    const Int_t NRGBs = 5;
-    const Int_t NCont = 255; 
-    Double_t stops[NRGBs] = { 0.00, 0.34, 0.61, 0.84, 1.00 }; 
-    Double_t red[NRGBs]   = { 0.00, 0.00, 0.87, 1.00, 0.51 }; 
-    Double_t green[NRGBs] = { 0.00, 0.81, 1.00, 0.20, 0.00 }; 
-    Double_t blue[NRGBs]  = { 0.51, 1.00, 0.12, 0.00, 0.00 }; 
-    
-    TColor::CreateGradientColorTable(NRGBs, stops, red, green, blue, NCont);
-    gStyle->SetNumberContours(NCont);
 
     // Visualization Loop
     for(unsigned int j = 0; j < calodigi_list.size(); j++){
@@ -91,11 +85,33 @@ void DataInterface::AddCaloDigis(REX::REveManager *&eveMng, bool firstLoop_,
 
                 Crystal const &crystal = cal.crystal(cryID);
                 
-                // Calculate Color based on t0
+                // Extract maximum amplitude from waveform
+                const std::vector<int>& waveform = digi.waveform();
+                double max_amplitude = 0.0;
+                for(const auto& sample : waveform){
+                    if(sample > max_amplitude) max_amplitude = sample;
+                }
+                
+                // Calculate Color based on amplitude (ADC/Energy) using shades of orange
                 Color_t color;
-                double normalized_t0 = (digi.t0() - min_t0) / (max_t0 - min_t0);
-                int colorIdx = static_cast<int>(normalized_t0 * (NCont - 1));
-                color = gStyle->GetColorPalette(colorIdx); 
+                double normalized_amp = (max_amplitude - min_amp) / (max_amp - min_amp);
+                
+                // Map normalized amplitude to shades of orange (light for low energy, dark for high energy)
+                if (normalized_amp < 0.2) {
+                    color = TColor::GetColor(255, 200, 0);    // Very light orange
+                }
+                else if (normalized_amp < 0.4) {
+                    color = TColor::GetColor(255, 165, 0);    // Light orange
+                }
+                else if (normalized_amp < 0.6) {
+                    color = TColor::GetColor(255, 140, 0);    // Medium orange
+                }
+                else if (normalized_amp < 0.8) {
+                    color = TColor::GetColor(200, 100, 20);   // Dark orange
+                }
+                else {
+                    color = TColor::GetColor(139, 69, 19);    // Very dark orange/brown (darkest - most energetic)
+                } 
 
                 // Geometry and Position (Matching Original Logic)
                 double crystalXLen = pointmmTocm(crystal.size().x());
@@ -122,9 +138,11 @@ void DataInterface::AddCaloDigis(REX::REveManager *&eveMng, bool firstLoop_,
                 std::string label = " CaloDigi Instance = " + names[j] + '\n'
                                   + " Crystal ID = " + std::to_string(cryID) + '\n'
                                   + " SiPM. = "+std::to_string(sipmID)+ '\n'
+                                  + " Max Amplitude (ADC) = "+std::to_string(max_amplitude)+" " + '\n'
                                   + " t0 = "+std::to_string(digi.t0())+" ns " + '\n'
                                   + " peakPos = "+std::to_string(digi.peakpos());
                 
+                std::cout << "[DataInterface] Adding CaloDigi: " << digi.t0() << std::endl;
                 // A. Draw Crystal Center (Point Set)
                 auto ps1 = new REX::REvePointSet(label.c_str(), label.c_str(), 0);
                 auto ps2 = new REX::REvePointSet(label.c_str(), label.c_str(), 0);
@@ -148,6 +166,7 @@ void DataInterface::AddCaloDigis(REX::REveManager *&eveMng, bool firstLoop_,
 
                 // B. Draw Crystal Volume (REveBox)
                 std::string crytitle = "Crystal ID = " + std::to_string(cryID) + '\n'
+                                     + " Max Amplitude (ADC) = " + std::to_string(max_amplitude) + '\n'
                                      + " Time = " + std::to_string(digi.t0()) + " ns ";
                 
                 auto b = new REX::REveBox(crytitle.c_str(), crytitle.c_str());
@@ -589,7 +608,7 @@ void DataInterface::AddCrvInfo(REX::REveManager *&eveMng, bool firstLoop_,
     /*if(!firstLoop_){
         scene->DestroyElements();;
     }*/
-    std::cout << "[DataInterface::AddCrvInfo() ] - Coloring by Pulse Height (White Start, More Variation)" << std::endl;
+    std::cout << "[DataInterface::AddCrvInfo() ] - Coloring by Time Window" << std::endl;
     std::vector<const CrvRecoPulseCollection*> crvpulse_list = std::get<1>(crvpulse_tuple);
     std::vector<std::string> names = std::get<0>(crvpulse_tuple);
     
@@ -597,19 +616,23 @@ void DataInterface::AddCrvInfo(REX::REveManager *&eveMng, bool firstLoop_,
     mu2e::GeomHandle<mu2e::CosmicRayShield> CRS;
     mu2e::GeomHandle<mu2e::DetectorSystem> det;
     
-    // Find the Global Pulse Height Range (min/max)
-    double max_height = 0.0;
-    double min_height = 1e6;
+    // Find the Global Pulse Time Range (min/max) and collect all pulses
+    double max_time = -1e6;
+    double min_time = 1e6;
     bool found_pulses = false;
+    std::vector<double> all_pulse_times;
 
-    if(crvpulse_list.size() != 0){
+    if( !crvpulse_list.empty()){
+        std::cout << "[DataInterface::AddCrvInfo() ] Found " << crvpulse_list.size() << " Crv Reco Pulse Collections." << std::endl;
         for(const auto* crvRecoPulse : crvpulse_list){
             if(crvRecoPulse && !crvRecoPulse->empty()){
                 found_pulses = true;
                 for(const auto& crvpulse : *crvRecoPulse){
-                    double height = crvpulse.GetPulseHeight();
-                    if(height > max_height) max_height = height;
-                    if(height < min_height) min_height = height;
+                    double time = crvpulse.GetPulseTime();
+                    std::cout << "Found Crv Reco Pulse with time: " << time << " ns" << std::endl;
+                    all_pulse_times.push_back(time);
+                    if(time > max_time) max_time = time;
+                    if(time < min_time) min_time = time;
                 }
             }
         }
@@ -620,21 +643,24 @@ void DataInterface::AddCrvInfo(REX::REveManager *&eveMng, bool firstLoop_,
         return;
     }
     
-    // Handle cases where all pulses have the same height
-    if (max_height == min_height) {
-        max_height += 1.0; 
-    }
-
-    // Define the Color Gradient (Palette)
-    const Int_t NRGBs = 7; 
-    const Int_t NCont = 255; 
-
-    Double_t stops[NRGBs] = { 0.00, 0.15, 0.30, 0.50, 0.70, 0.85, 1.00 }; 
-    Double_t red[NRGBs]   = { 1.00, 0.90, 0.60, 0.00, 0.00, 0.50, 0.80 }; 
-    Double_t green[NRGBs] = { 1.00, 0.90, 0.80, 0.60, 0.00, 0.00, 0.10 }; 
-    Double_t blue[NRGBs]  = { 1.00, 0.90, 0.80, 0.80, 1.00, 0.80, 0.00 }; 
+    // Define time window size (in ns) - adjust this parameter to group pulses differently
+    const double time_window_size = 500.0; // 100 ns windows
     
-    Int_t palette_start_index = TColor::CreateGradientColorTable(NRGBs, stops, red, green, blue, NCont);
+    // Calculate number of time windows needed
+    double time_range = max_time - min_time;
+    int num_windows = static_cast<int>(std::ceil(time_range / time_window_size)) + 1;
+    
+    // Define a set of distinct colors for time windows
+    std::vector<Color_t> time_window_colors = {
+        kRed, kGreen, kBlue, kYellow, kMagenta, kCyan, 
+        kOrange, kSpring, kTeal, kAzure, kViolet, kPink,
+        kRed+2, kGreen+2, kBlue+2, kYellow+2, kMagenta+2, kCyan+2,
+        kRed+1, kGreen+1
+    };
+    
+    // If we need more colors than we have, cycle through them
+    std::cout << "[DataInterface::AddCrvInfo() ] Time range: " << min_time << " to " << max_time 
+              << " ns (range: " << time_range << " ns), num_windows: " << num_windows << std::endl;
     
     // Visualization Loop
     for(unsigned int i=0; i < crvpulse_list.size(); i++){
@@ -642,41 +668,27 @@ void DataInterface::AddCrvInfo(REX::REveManager *&eveMng, bool firstLoop_,
         
         if(crvRecoPulse->size() != 0){
             
-            std::string temp_title = "Crv Reco Pulses: " + names[i];
-            auto ps1 = new REX::REvePointSet(temp_title.c_str(), temp_title.c_str(), 0); 
             auto allcrvbars = new REX::REveCompound(("CrvHitBars_" + std::to_string(i)).c_str(), 
                                                    ("Crv Hit Bars: " + names[i]).c_str(), 1);
 
-            std::string final_ps1_title = temp_title;
-            
+            std::cout << "[DataInterface::AddCrvInfo() ] Processing Crv Reco Pulse Collection: " << names[i] << " with " << crvRecoPulse->size() << " pulses " << std::endl;
             for(unsigned int j=0; j< crvRecoPulse->size(); j++){
 
                 mu2e::CrvRecoPulse const &crvpulse = (*crvRecoPulse)[j];
                 
-                // Calculate Pulse Height Based Color
-                Color_t hit_color;
+                // Calculate Time Window Based Color
+                double pulse_time = crvpulse.GetPulseTime();
                 
-                // Define a minimum range (e.g., 1.0 ADC count) to prevent color collapse
-                const double kMinRange = 1.0; 
-
-                double pulse_height = crvpulse.GetPulseHeight();
-                double actual_range = max_height - min_height;
-
-                // Use the larger of the actual range or the minimum required range (kMinRange)
-                double range = (actual_range < kMinRange) ? kMinRange : actual_range;
-
-                // Calculate the normalized height (0.0 to 1.0) using the adjusted range
-                double normalized_height = (pulse_height - min_height) / range;
-
-                // Clamp the normalized height between 0 and 1
-                if (normalized_height < 0) normalized_height = 0;
-                if (normalized_height > 1) normalized_height = 1;
-
-                // Map normalized height (0 to 1) to the color index (0 to NCont-1)
-                int colorIdx = palette_start_index + static_cast<int>(normalized_height * (NCont - 1));
-
-                hit_color = TColor::GetColor(colorIdx);
-
+                // Determine which time window this pulse belongs to
+                int time_window_index = static_cast<int>(std::floor((pulse_time - min_time) / time_window_size));
+                if (time_window_index < 0) time_window_index = 0;
+                if (time_window_index >= num_windows) time_window_index = num_windows - 1;
+                
+                // Get color from predefined color array, cycling if necessary
+                Color_t hit_color = time_window_colors[time_window_index % time_window_colors.size()];
+                
+                std::cout << "Found Crv Reco Pulse with time: " << pulse_time << " ns, window: " << time_window_index 
+                          << ", color: " << hit_color << std::endl;
 
                 // Geometry Setup
                 const mu2e::CRSScintillatorBarIndex &crvBarIndex = crvpulse.GetScintillatorBarIndex();
@@ -686,16 +698,14 @@ void DataInterface::AddCrvInfo(REX::REveManager *&eveMng, bool firstLoop_,
                 CLHEP::Hep3Vector crvCounterPos = crvCounter.getPosition(); 
                 CLHEP::Hep3Vector pointInMu2e = det->toDetector(crvCounterPos); 
 
-                // DETAILED PULSE TITLE (Used for REveBox mouseover)
-                std::string pulsetitle = " Crv Pulse Collection: " + names[i] + '\n'
+                // DETAILED PULSE TITLE (Used for individual point labels)
+                std::string pulsetitle = " Crv Pulse #" + std::to_string(j) + " - " + names[i] + '\n'
                                        + " SiPM Channel ID: " + std::to_string(crvpulse.GetSiPMNumber()) + '\n'
                                        + " Crv Bar ID: " + std::to_string(crvBarIndex.asInt()) + '\n'
-                                       + " Pulse Time: " + std::to_string(crvpulse.GetPulseTime()) + " ns" + '\n'
-                                       + " Pulse Height: " + std::to_string(crvpulse.GetPulseHeight()) + " ADC (Color)" + '\n'
+                                       + " Pulse Time: " + std::to_string(crvpulse.GetPulseTime()) + " ns (Time Window: " + std::to_string(time_window_index) + ")" + '\n'
+                                       + " Pulse Height: " + std::to_string(crvpulse.GetPulseHeight()) + " ADC" + '\n'
                                        + " Pedestal: " + std::to_string(crvpulse.GetPedestal()) + " ADC";
                 char const *pulsetitle_c = pulsetitle.c_str();
-
-                final_ps1_title = "Crv Pulses: " + names[i] + " (Last Pulse Details: " + '\n' + pulsetitle;
                 
                 // A. Draw Crv Bar (REveBox)
                 if(addCrvBars){
@@ -804,25 +814,20 @@ void DataInterface::AddCrvInfo(REX::REveManager *&eveMng, bool firstLoop_,
                     }
                 }
                 
-                // B. Add Reco Pulse Marker (Point Set)
+                // B. Add individual Reco Pulse Point with its own label
+                auto ps1 = new REX::REvePointSet(pulsetitle_c, pulsetitle_c, 1);
                 ps1->SetNextPoint(pointmmTocm(pointInMu2e.x()), pointmmTocm(pointInMu2e.y()), pointmmTocm(pointInMu2e.z()));
+                ps1->SetMarkerColor(hit_color); 
+                ps1->SetMarkerStyle(DataInterface::mstyle);
+                ps1->SetMarkerSize(DataInterface::msize);
+                scene->AddElement(ps1);
                 
             } // End of individual pulse loop
-            
-            // Post-Loop: Set the final, detailed title on the PointSet
-            ps1->SetTitle(final_ps1_title.c_str());
             
             // Add Compounds/Collections to Scene
             if (!extracted && addCrvBars) {
                 scene->AddElement(allcrvbars);
             }
-            
-            // Draw reco pulse collection (markers)
-            ps1->SetMarkerColor(i + 3); 
-            ps1->SetMarkerStyle(DataInterface::mstyle);
-            ps1->SetMarkerSize(DataInterface::msize);
-            
-            if(ps1->GetSize() != 0) scene->AddElement(ps1);
         }
     }
 }
@@ -845,9 +850,9 @@ void DataInterface::AddCrvClusters(REX::REveManager *&eveMng, bool firstLoop_,
     
     if (crvpulse_list.size() == 0) return;
 
-    // Find the Global Pulse Height Range (min/max) for ALL pulses in ALL clusters
-    double max_height = 0.0;
-    double min_height = 1e6;
+    // Find the Global Pulse Time Range (min/max) for ALL pulses in ALL clusters
+    double max_time = -1e6;
+    double min_time = 1e6;
     bool found_pulses = false;
 
     for (const auto* crvClusters : crvpulse_list) {
@@ -856,9 +861,9 @@ void DataInterface::AddCrvClusters(REX::REveManager *&eveMng, bool firstLoop_,
                 for (const auto& crvpulsePtr : crvclu.GetCrvRecoPulses()) {
                     if (crvpulsePtr) {
                         found_pulses = true;
-                        double height = crvpulsePtr->GetPulseHeight();
-                        if(height > max_height) max_height = height;
-                        if(height < min_height) min_height = height;
+                        double time = crvpulsePtr->GetPulseTime();
+                        if(time > max_time) max_time = time;
+                        if(time < min_time) min_time = time;
                     }
                 }
             }
@@ -870,20 +875,23 @@ void DataInterface::AddCrvClusters(REX::REveManager *&eveMng, bool firstLoop_,
         return;
     }
 
-    // Handle cases where all pulses have the same height
-    if (max_height == min_height) {
-        max_height += 1.0; 
-    }
+    // Define time window size (in ns) - adjust this parameter to group pulses differently
+    const double time_window_size = 50000.0; // 50 ms windows (400 ms total span / ~8 windows)
     
-    // Define the Color Gradient (Palette)
-    const Int_t NRGBs = 7;
-    const Int_t NCont = 255;
-    Double_t stops[NRGBs] = { 0.00, 0.15, 0.30, 0.50, 0.70, 0.85, 1.00 };
-    Double_t red[NRGBs]   = { 1.00, 0.90, 0.60, 0.00, 0.00, 0.50, 0.80 };
-    Double_t green[NRGBs] = { 1.00, 0.90, 0.80, 0.60, 0.00, 0.00, 0.10 };
-    Double_t blue[NRGBs]  = { 1.00, 0.90, 0.80, 0.80, 1.00, 0.80, 0.00 };
-    Int_t palette_start_index = TColor::CreateGradientColorTable(NRGBs, stops, red, green, blue, NCont);
-    const double kMinRange = 1.0; // Define a minimum range to prevent color collapse
+    // Calculate number of time windows needed
+    double time_range = max_time - min_time;
+    int num_windows = static_cast<int>(std::ceil(time_range / time_window_size)) + 1;
+    
+    // Define a set of distinct colors for time windows
+    std::vector<Color_t> time_window_colors = {
+        kRed, kGreen, kBlue, kYellow, kMagenta, kCyan, 
+        kOrange, kSpring, kTeal, kAzure, kViolet, kPink,
+        kRed+2, kGreen+2, kBlue+2, kYellow+2, kMagenta+2, kCyan+2,
+        kRed+1, kGreen+1
+    };
+    
+    std::cout << "[DataInterface::AddCrvClusters() ] Time range: " << min_time << " to " << max_time 
+              << " ns (range: " << time_range << " ns), num_windows: " << num_windows << std::endl;
 
     // Visualization Loop
     for(unsigned int i=0; i < crvpulse_list.size(); i++){
@@ -922,17 +930,17 @@ void DataInterface::AddCrvClusters(REX::REveManager *&eveMng, bool firstLoop_,
                     const mu2e::CRSScintillatorBarDetail &barDetail = crvCounter.getBarDetail();
                     CLHEP::Hep3Vector crvCounterPos = crvCounter.getPosition();
                     
-                    // Calculate Pulse Height Based Color
+                    // Calculate Time Window Based Color
+                    double pulse_time = crvpulse->GetPulseTime();
                     double pulse_height = crvpulse->GetPulseHeight();
-                    double actual_range = max_height - min_height;
-                    double range = (actual_range < kMinRange) ? kMinRange : actual_range;
-
-                    double normalized_height = (pulse_height - min_height) / range;
-                    if (normalized_height < 0) normalized_height = 0;
-                    if (normalized_height > 1) normalized_height = 1;
-
-                    int colorIdx = palette_start_index + static_cast<int>(normalized_height * (NCont - 1));
-                    Color_t hit_color = TColor::GetColor(colorIdx);
+                    
+                    // Determine which time window this pulse belongs to
+                    int time_window_index = static_cast<int>(std::floor((pulse_time - min_time) / time_window_size));
+                    if (time_window_index < 0) time_window_index = 0;
+                    if (time_window_index >= num_windows) time_window_index = num_windows - 1;
+                    
+                    // Get color from predefined color array, cycling if necessary
+                    Color_t hit_color = time_window_colors[time_window_index % time_window_colors.size()];
 
 
                     // Base Geometry Setup
@@ -949,7 +957,8 @@ void DataInterface::AddCrvClusters(REX::REveManager *&eveMng, bool firstLoop_,
                     std::string pulsetitle = " Crv Bar Hit for tag : "
                                             + names[i] +  '\n'
                                             + "Bar ID: " + std::to_string(crvBarIndex.asInt()) +  '\n'
-                                            + "Pulse Height: " + std::to_string(pulse_height) + " ADC (Color)" + '\n'
+                                            + "Pulse Time: " + std::to_string(pulse_time) + " ns (Time Window: " + std::to_string(time_window_index) + ", Color)" + '\n'
+                                            + "Pulse Height: " + std::to_string(pulse_height) + " ADC" + '\n'
                                             + "Coincidence start time: " + std::to_string(crvclu.GetStartTime()) +  '\n'
                                             + "Coincidence end time: " + std::to_string(crvclu.GetEndTime());
                     char const *pulsetitle_c = pulsetitle.c_str();

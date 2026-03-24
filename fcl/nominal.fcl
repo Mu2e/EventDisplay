@@ -14,7 +14,7 @@ Mu2eEventDisplay.filler.addKalSeeds : true
 Mu2eEventDisplay.filler.addClusters : true
 Mu2eEventDisplay.filler.addHits : false #  adds ComboHits
 Mu2eEventDisplay.filler.addCrvClusters : true
-Mu2eEventDisplay.filler.addCrvRecoPulse : false
+Mu2eEventDisplay.filler.addCrvRecoPulse : true
 Mu2eEventDisplay.filler.addTimeClusters : false
 Mu2eEventDisplay.filler.addSimParts : false
 Mu2eEventDisplay.addTrkStrawHits : true

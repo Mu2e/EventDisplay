@@ -43,6 +43,7 @@
 #include <iostream>
 #include <mutex>
 #include <thread>
+#include <fstream>
 
 //Offline:
 #pragma GCC diagnostic push
@@ -132,6 +133,7 @@ namespace mu2e
           fhicl::Atom<bool> extracted{Name("extracted"), Comment(""),false};
           fhicl::Atom<bool> showEM{Name("showEM"), Comment(""),false};
           fhicl::Atom<bool> seqMode{Name("seqMode"), Comment("turn off for go to any event functionality"),true};
+          fhicl::Atom<std::string>geometry{Name("geometry"),Comment("geometry type (nominal_2020 or nominal_2025)"),"nominal_2025"};
         };
 
         typedef art::EDAnalyzer::Table<Config> Parameters;
@@ -203,6 +205,7 @@ namespace mu2e
         std::unique_ptr<TextSelect> fText{nullptr};
         std::unique_ptr<PrintInfo> fPrint{nullptr};
         REX::REveManager* eveMng_{nullptr};
+        std::string geometry_;
         std::unique_ptr<EventDisplayManager> eventMgr_{nullptr};
         double eventid_;
         double runid_;
@@ -216,7 +219,7 @@ namespace mu2e
         GeomOptions geomOpts;
         ConfigFileLookupPolicy configFile;
     };
-
+}
 
   Mu2eEventDisplay::Mu2eEventDisplay(const Parameters& conf)  :
     art::EDAnalyzer(conf),
@@ -245,6 +248,7 @@ namespace mu2e
     strawdisplay_(conf().strawdisplay()),
     extracted_(conf().extracted()),
     showEM_(conf().showEM()),
+    geometry_(conf().geometry()),
     seqMode_(conf().seqMode())
     {
       geomOpts.fill(showCrv_,showPS_, showTS_, showDS_, show2D_, caloVST_, showST_, extracted_, showSTM_, showCalo_, showTracker_, showCaloCrystals_, showEM_ );
@@ -260,7 +264,30 @@ namespace mu2e
 
   void Mu2eEventDisplay::beginJob(){
       if(diagLevel_ == 1) std::cout<<"[Mu2eEventDisplay : beginJob()] -- starting ..."<<std::endl;
-      {      
+      if(diagLevel_ == 1) std::cout<<"[Mu2eEventDisplay : beginJob()] -- geometry_ = '" << geometry_ << "'"<<std::endl;
+      
+      // Map geometry type to GUIID
+      int guiid = 4313;  // Default to 2025
+      if (geometry_ == "nominal_2020") {
+          guiid = 4336;
+      } else if (geometry_ == "nominal_2025") {
+          guiid = 4313;
+      } else if (geometry_ == "extracted_2025") {
+          guiid = 4285;
+      } else if (geometry_ == "extracted_2020") {
+          guiid = 4285;
+      }
+      
+      // Write GUIID to config file
+      std::ofstream configFile("EventDisplay/config/guiutils_current.txt");
+      if (configFile.is_open()) {
+          configFile << "// Automatically generated GUI configuration\n";
+          configFile << "int GUIID = " << guiid << ";\n";
+          configFile.close();
+          std::cout << "[Mu2eEventDisplay::beginJob()] Wrote GUIID to EventDisplay/config/guiutils_current.txt: " << guiid << std::endl;
+      } else {
+          std::cerr << "[Mu2eEventDisplay::beginJob()] WARNING: Could not open EventDisplay/config/guiutils_current.txt for writing" << std::endl;
+      }
         std::unique_lock lock{m_};
         appThread_ = std::thread{[this] { run_application(); }};
         // Wait for app init to finish ... this will process pending timer events.
@@ -272,9 +299,8 @@ namespace mu2e
         if(diagLevel_ == 1) std::cout<<"[Mu2eEventDisplay : beginJob()] -- starting wait on eve setup"<<std::endl;
         cv_.wait(lock);
         if(diagLevel_ == 1) std::cout<<"[Mu2eEventDisplay : beginJob()] -- eve setup apparently complete"<<std::endl;
-      }
-  }
 
+    }
 
   void Mu2eEventDisplay::beginRun(const art::Run&){}
 
@@ -288,6 +314,7 @@ namespace mu2e
     <<" addCrvRecoPulse : "<<filler_.addCrvRecoPulse_
     <<" addCrvClusters : "<<filler_.addCrvClusters_
     <<" addClusters : "<<filler_.addClusters_
+    <<" addCaloDigi : "<<filler_.addCaloDigis_
     <<" addHelices : "<<filler_.addHelixSeeds_
     <<" addTracks : "<<filler_.addKalSeeds_
     <<" addCosmicTrackSeeds : "<<filler_.addCosmicTrackSeeds_ << std::endl;
@@ -345,7 +372,7 @@ void Mu2eEventDisplay::FillAnyCollection(const art::Event& evt, std::vector<std:
     }
 
   void Mu2eEventDisplay::analyze(art::Event const& event){
-
+        printOpts();
       // Clear all previously stored event objects in the display data structure. 
       // This prepares the structure for the new event's data.
       data.Reset();
@@ -482,7 +509,7 @@ void Mu2eEventDisplay::FillAnyCollection(const art::Event& evt, std::vector<std:
               // Autoplay is ON (Autoplay value is the delay in seconds)
               std::cout << "Auto play switched on.... waiting 10 s for REve display." << std::endl;
               
-              auto timeout = std::chrono::seconds(10);
+              auto timeout = std::chrono::seconds(5);
               cv_.wait_for(lock, timeout); 
 
               lock.unlock();
@@ -580,17 +607,18 @@ void Mu2eEventDisplay::FillAnyCollection(const art::Event& evt, std::vector<std:
 
     // --- Event Manager Instantiation and Singleton Link ---
 
-    // Instantiate the core EventDisplayManager. It takes raw pointers to:
-    // 1. The REveManager (eveMng_)
-    // 2. The synchronization primitives (cv_, m_)
-    // 3. The custom GUI object (fGui.get())
+    // Instantiate the core EventDisplayManager.
+    // Geometry will be loaded from config file in the constructor.
     eventMgr_ = std::make_unique<EventDisplayManager>(
         eveMng_, 
         cv_, 
         m_, 
-        fGui.get()
+        fGui.get(),
+        "2025"  // Not used; geometry loaded from config file in constructor
     );
+    std::cout << "[Mu2eEventDisplay::setup_eve()] EventDisplayManager created and geometry loaded" << std::endl;
 
+    //#eventMgr_->setGeometry("2025"); 
     // --- Scene Setup ---
 
     // Get the top-level scene, the "World," which is the container for all elements.
@@ -615,11 +643,11 @@ void Mu2eEventDisplay::FillAnyCollection(const art::Event& evt, std::vector<std:
     world->AddElement(fText.get());     
     world->AddElement(eventMgr_.get()); 
     world->AddElement(fPrint.get());    
-    world->AddElement(fGui.get());     
+    //world->AddElement(fGui.get());
 
     // --- Final Linking and Command Registration ---
 
-    eventMgr_->setTextSelectId(fText->GetElementId()); 
+    //#eventMgr_->setTextSelectId(fText->GetElementId()); 
 
     // Register commands that the GUI buttons will execute. The command is routed to the 
     // method on the specified element (eventMgr_.get() or fPrint.get()).
@@ -627,7 +655,7 @@ void Mu2eEventDisplay::FillAnyCollection(const art::Event& evt, std::vector<std:
     world->AddCommand("NextEvent", "sap-icon://step", eventMgr_.get(), "NextEvent()");
     world->AddCommand("PrintMCInfo", "sap-icon://step", fPrint.get(), "PrintMCInfo()");
     world->AddCommand("PrintRecoInfo", "sap-icon://step", fPrint.get(), "PrintRecoInfo()");
-    eventMgr_->setid(fText->GetElementId() );
+    //#eventMgr_->setid(fText->GetElementId() );
     // --- Signal Art Thread to Proceed ---
 
     // Acquire a lock on the mutex.
@@ -635,7 +663,7 @@ void Mu2eEventDisplay::FillAnyCollection(const art::Event& evt, std::vector<std:
     // Signal the waiting Art thread (in analyze() or beginRun()) to continue processing 
     // now that the REve display is fully initialized.
     cv_.notify_all();
-    //std::cout << "[DEBUG] TextSelect object ID assigned: " << fText->GetElementId() << std::endl; 
+    std::cout << "[DEBUG] TextSelect object ID assigned: " << fText->GetElementId() << std::endl; 
 }
   
   
@@ -714,6 +742,6 @@ void Mu2eEventDisplay::FillAnyCollection(const art::Event& evt, std::vector<std:
 
       if(diagLevel_ == 1) std::cout<<"[Mu2eEventDisplay : process_single_event] End "<<std::endl;
     }
-  }
+
   using mu2e::Mu2eEventDisplay;
   DEFINE_ART_MODULE(Mu2eEventDisplay)
