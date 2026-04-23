@@ -775,7 +775,10 @@ void MainWindow::showEvents(REX::REveManager *eveMng, REX::REveElement* &eventSc
   double t2 = 1696.;
   std::vector<const KalSeedPtrCollection*> track_list = std::get<1>(data.track_tuple);
   if(drawOpts.addTracks and track_list.size() !=0) {
-    pass_data->FillKinKalTrajectory(eveMng, firstLoop, eventScene, data.track_tuple, KKOpts.addKalInter,  KKOpts.addTrkStrawHits, KKOpts.addTrkCaloHits, t1, t2); 
+    pass_data->FillKinKalTrajectory(eveMng, firstLoop, eventScene, data.track_tuple, KKOpts.addKalInter,  KKOpts.addTrkStrawHits, KKOpts.addTrkCaloHits, t1, t2);
+  }
+  if(drawOpts.addTracks and track_list.size() !=0 and drawOpts.addCrvClusters) {
+    pass_data->AddCRVKalIntersection(eveMng, firstLoop, eventScene, data.track_tuple, KKOpts.addKalInter,  KKOpts.addTrkStrawHits, KKOpts.addTrkCaloHits, t1, t2, data.crvcoin_tuple, geomOpts.extracted, drawOpts.addCrvBars);
   }
   if(drawOpts.addComboHits) {
     std::vector<const ComboHitCollection*> combohit_list = std::get<1>(data.combohit_tuple);
@@ -790,10 +793,10 @@ void MainWindow::showEvents(REX::REveManager *eveMng, REX::REveElement* &eventSc
     if(crvpulse_list.size() !=0) pass_data->AddCrvInfo(eveMng, firstLoop, data.crvpulse_tuple, eventScene, geomOpts.extracted, drawOpts.addCrvBars);
   }
 
-  if(drawOpts.addCrvClusters){
+  /*if(drawOpts.addCrvClusters){
     std::vector<const CrvCoincidenceClusterCollection*> crvcoin_list = std::get<1>(data.crvcoin_tuple);
     if(crvcoin_list.size() !=0) pass_data->AddCrvClusters(eveMng, firstLoop, data.crvcoin_tuple, eventScene, geomOpts.extracted, drawOpts.addCrvBars);
-  }
+    }*/
 
   if(drawOpts.addCaloDigis){
     std::vector<const CaloDigiCollection*> calodigi_list = std::get<1>(data.calodigi_tuple);
