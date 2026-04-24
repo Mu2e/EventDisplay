@@ -559,8 +559,8 @@ void MainWindow::GeomDrawerNominal(TGeoNode* node, REX::REveTrans& trans, REX::R
       if(geomOpt.showCaloCrystals){
         static std::vector <std::string> substrings_crystals  {"CaloWrapper"};
         for(auto& i: substrings_crystals){
-          shift.at(0) = x_wrapper - x_trk;
-          shift.at(1) = y_wrapper - y_trk;
+          shift.at(0) = x_cal - x_trk;
+          shift.at(1) = y_cal - y_trk;
           shift.at(2) = z_wrapper - z_trk;
           showNodesByName(node,i,kFALSE, 0, trans, crystalsholder, maxlevel, level, true, true, shift, true, false, drawconfigf.getInt("CALColor"));
         }
