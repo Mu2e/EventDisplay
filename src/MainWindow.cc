@@ -9,9 +9,9 @@ using namespace std;
 using namespace mu2e;
 
 //positions of components for DS component offsets
-double x_d0 = 0; double x_d1 = 0; double x_cal = 0;double x_trk = 0;double x_ds3 = 0;double x_st = 0; double x_ds2 = 0; double x_ipa =0;
-double y_d0 = 0; double y_d1 = 0; double y_cal  = 0;double y_trk = 0;double y_ds3 = 0;double y_st = 0; double y_ds2 = 0; double y_ipa =0;
-double z_d0 = 0; double z_d1 = 0; double z_cal = 0;double z_trk = 0;double z_ds3 = 0;double z_st = 0; double z_ds2 = 0; double z_ipa =0;
+double x_d0 = 0; double x_d1 = 0; double x_cal = 0;double x_trk = 0;double x_ds3 = 0;double x_st = 0; double x_ds2 = 0; double x_ipa =0; double x_wrapper = 0;
+double y_d0 = 0; double y_d1 = 0; double y_cal  = 0;double y_trk = 0;double y_ds3 = 0;double y_st = 0; double y_ds2 = 0; double y_ipa =0; double y_wrapper = 0;
+double z_d0 = 0; double z_d1 = 0; double z_cal = 0;double z_trk = 0;double z_ds3 = 0;double z_st = 0; double z_ds2 = 0; double z_ipa =0; double z_wrapper = 0;
 
 
 double nCrystals = 674;
@@ -117,8 +117,8 @@ void MainWindow::showNodesByName(TGeoNode* n, const std::string& str, bool onOff
         if(caloshift){
           fp++;
           double d = 0;
-          if(fp < nCrystals) { d = z_d0- z_cal ; }//
-          else { d = z_d1- z_cal ; }
+          if(fp < nCrystals) { d = z_d0 - z_wrapper ; }// shift relative to wrapper hierarchy
+          else { d = z_d1 - z_wrapper ; }
           if(crystal) { t(1,4) = tv[0] + shift[0]; t(2,4) = tv[1] + shift[1] ; t(3,4) = tv[2] + d + shift[2]; }
           else { t(1,4) = tv[0] + shift[0]; t(2,4) = tv[1] + shift[1]; t(3,4) = tv[2]+ shift[2]; }
           if (fp < nCrystals and crystal) cry1 = true;
@@ -410,6 +410,14 @@ void MainWindow::GeomDrawerNominal(TGeoNode* node, REX::REveTrans& trans, REX::R
     x_trk = 0;y_trk = 0;z_trk = 0;
     double x_fp0 = 0; double y_fp0 = 0; double z_fp0 = 0;
     double x_fp1 = 0; double y_fp1 = 0; double z_fp1 = 0;
+    // CaloWrapper hierarchy offsets
+    //double x_wrapper = 0; double y_wrapper = 0; double z_wrapper = 0;
+    double x_calocase = 0; double y_calocase = 0; double z_calocase = 0;
+    double x_calofc = 0; double y_calofc = 0; double z_calofc = 0;
+    // Reset global wrapper variables for fresh extraction
+    x_wrapper = 0; y_wrapper = 0; z_wrapper = 0;
+    x_d0 = 0; y_d0 = 0; z_d0 = 0;
+    x_d1 = 0; y_d1 = 0; z_d1 = 0;
     for(unsigned int i = 0; i < offsets.size(); i++){
       
       if(offsets[i].first.find("World") != string::npos){
@@ -441,15 +449,45 @@ void MainWindow::GeomDrawerNominal(TGeoNode* node, REX::REveTrans& trans, REX::R
         y_cal = y_ds3 + offsets[i].second[1];
         z_cal = z_ds3 + offsets[i].second[2];
       }
-      if(offsets[i].first.find("CaloDisk_00") != string::npos){
-        x_d0 = x_cal + offsets[i].second[0];
-        y_d0 = y_cal + offsets[i].second[1];
-        z_d0 = z_cal + offsets[i].second[2];
+      // CaloDisk extraction moved after CaloWrapper extraction to use hierarchy
+      // Only extract the primary instance (not repeated for each crystal)
+      // CaloFullCase - primary container, not repeated per crystal
+      if(offsets[i].first.find("CaloFullCase") == 0 && x_calofc == 0){
+        x_calofc = x_cal + offsets[i].second[0];
+        y_calofc = y_cal + offsets[i].second[1];
+        z_calofc = z_cal + offsets[i].second[2];
+        std::cout << "CaloFullCase: offset=(" << offsets[i].second[0] << "," << offsets[i].second[1] << "," << offsets[i].second[2] 
+                  << ") -> pos=(" << x_calofc << "," << y_calofc << "," << z_calofc << ")" << std::endl;
       }
-      if(offsets[i].first.find("CaloDisk_10") != string::npos){
-        x_d1 = x_cal + offsets[i].second[0];
-        y_d1 = y_cal + offsets[i].second[1];
-        z_d1 = z_cal + offsets[i].second[2];
+      // CaloCaseRing - match first instance only
+      if(offsets[i].first.find("CaloCaseRing") == 0 && x_calocase == 0){
+        x_calocase = x_calofc + offsets[i].second[0];
+        y_calocase = y_calofc + offsets[i].second[1];
+        z_calocase = z_calofc + offsets[i].second[2];
+        std::cout << "CaloCaseRing: offset=(" << offsets[i].second[0] << "," << offsets[i].second[1] << "," << offsets[i].second[2] 
+                  << ") -> pos=(" << x_calocase << "," << y_calocase << "," << z_calocase << ")" << std::endl;
+      }
+      // CaloWrapper - match first instance only (handles CaloWrapper_00, CaloWrapper_01, or just CaloWrapper)
+      if(offsets[i].first.find("CaloWrapper") == 0 && x_wrapper == 0){
+        x_wrapper = x_calocase + offsets[i].second[0];
+        y_wrapper = y_calocase + offsets[i].second[1];
+        z_wrapper = z_calocase + offsets[i].second[2];
+        std::cout << "CaloWrapper: offset=(" << offsets[i].second[0] << "," << offsets[i].second[1] << "," << offsets[i].second[2] 
+                  << ") -> pos=(" << x_wrapper << "," << y_wrapper << "," << z_wrapper << ")" << std::endl;
+      }
+      if(offsets[i].first.find("CaloDisk_00") != string::npos && x_d0 == 0){
+        x_d0 = x_wrapper + offsets[i].second[0];
+        y_d0 = y_wrapper + offsets[i].second[1];
+        z_d0 = z_wrapper + offsets[i].second[2];
+        std::cout << "CaloDisk_00: offset=(" << offsets[i].second[0] << "," << offsets[i].second[1] << "," << offsets[i].second[2] 
+                  << ") -> pos=(" << x_d0 << "," << y_d0 << "," << z_d0 << ")" << std::endl;
+      }
+      if(offsets[i].first.find("CaloDisk_10") != string::npos && x_d1 == 0){
+        x_d1 = x_wrapper + offsets[i].second[0];
+        y_d1 = y_wrapper + offsets[i].second[1];
+        z_d1 = z_wrapper + offsets[i].second[2];
+        std::cout << "CaloDisk_10: offset=(" << offsets[i].second[0] << "," << offsets[i].second[1] << "," << offsets[i].second[2] 
+                  << ") -> pos=(" << x_d1 << "," << y_d1 << "," << z_d1 << ")" << std::endl;
       }
       if(offsets[i].first.find("DS2Vacuum") != string::npos){
         x_ds2 = x_hall + offsets[i].second[0];
@@ -477,6 +515,14 @@ void MainWindow::GeomDrawerNominal(TGeoNode* node, REX::REveTrans& trans, REX::R
         z_fp1 = z_d1 + offsets[i].second[2];
       }
     }
+    std::cout << "\n=== FINAL HIERARCHY OFFSETS ===" << std::endl;
+    std::cout << "x_cal=" << x_cal << ", y_cal=" << y_cal << ", z_cal=" << z_cal << std::endl;
+    std::cout << "x_wrapper=" << x_wrapper << ", y_wrapper=" << y_wrapper << ", z_wrapper=" << z_wrapper << std::endl;
+    std::cout << "x_d0=" << x_d0 << ", y_d0=" << y_d0 << ", z_d0=" << z_d0 << std::endl;
+    std::cout << "x_d1=" << x_d1 << ", y_d1=" << y_d1 << ", z_d1=" << z_d1 << std::endl;
+    std::cout << "z_d0 - z_wrapper = " << (z_d0 - z_wrapper) << std::endl;
+    std::cout << "z_d1 - z_wrapper = " << (z_d1 - z_wrapper) << std::endl;
+    std::cout << "================================\n" << std::endl;
     std::vector<double> shift;
 
     shift.push_back(0);
@@ -513,9 +559,9 @@ void MainWindow::GeomDrawerNominal(TGeoNode* node, REX::REveTrans& trans, REX::R
       if(geomOpt.showCaloCrystals){
         static std::vector <std::string> substrings_crystals  {"CaloWrapper"};
         for(auto& i: substrings_crystals){
-          shift.at(0) = x_cal - x_trk;
-          shift.at(1) = y_cal - y_trk;
-          shift.at(2) = z_cal - z_trk;
+          shift.at(0) = x_wrapper - x_trk;
+          shift.at(1) = y_wrapper - y_trk;
+          shift.at(2) = z_wrapper - z_trk;
           showNodesByName(node,i,kFALSE, 0, trans, crystalsholder, maxlevel, level, true, true, shift, true, false, drawconfigf.getInt("CALColor"));
         }
       }
