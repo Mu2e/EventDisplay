@@ -51,13 +51,11 @@ root_v=int(major)*1000000+int(minor)*10000+int(patch)*100+int(iletter)
 numeric_root_version='-DNUMERIC_ROOT_VERSION='+str(root_v)
 # end of transformation of ROOT_VERSION
 
-babarlibs = env['BABARLIBS']
 rootlibs = env['ROOTLIBS']
 extrarootlibs = [ 'Geom', 'Geom', 'GeomPainter', 'Ged', 'Graf3d', 'Eve','EG', 'RGL','Gui', 'Gdml' , 'Core', 'Rint', 'ROOTEve','ROOTWebDisplay']
 
 userlibs = [ rootlibs,
              extrarootlibs,
-             babarlibs,
             'mu2e_DataProducts',
             'mu2e_TrkReco',
             'mu2e_Mu2eUtilities',
@@ -137,7 +135,6 @@ helper.make_plugins( [
      [ numeric_root_version ],
  )
 
-# Fixme: do I need all of babarlibs below?
 helper.make_dict_and_map( [
         mainlib,
         'Core'
