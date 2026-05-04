@@ -788,10 +788,9 @@ void MainWindow::showEvents(REX::REveManager *eveMng, REX::REveElement* &eventSc
     std::vector<const BkgClusterCollection*> bkgcluster_list = std::get<1>(data.bkgcluster_tuple);
     if(bkgcluster_list.size() !=0 ) pass_data->AddBkgClusters(eveMng, firstLoop, data.bkgcluster_tuple, eventScene);
   }
-  if(drawOpts.addCrvRecoPulse){
-    std::vector<const CrvRecoPulseCollection*> crvpulse_list = std::get<1>(data.crvpulse_tuple);
-    if(crvpulse_list.size() !=0) pass_data->AddCrvInfo(eveMng, firstLoop, data.crvpulse_tuple, eventScene, geomOpts.extracted, drawOpts.addCrvBars);
-  }
+    if(drawOpts.addCrvRecoPulse){
+      // removed AddCrvInfo call
+    }
 
   /*if(drawOpts.addCrvClusters){
     std::vector<const CrvCoincidenceClusterCollection*> crvcoin_list = std::get<1>(data.crvcoin_tuple);

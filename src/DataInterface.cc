@@ -611,246 +611,29 @@ void DataInterface::AddComboHits(REX::REveManager *&eveMng, bool firstLoop_,
  * RecoPules are visualized as points bars are visualized as 3D boxes
  * Elements are colored based on the height of the digitization pulse.
 */
-void DataInterface::AddCrvInfo(REX::REveManager *&eveMng, bool firstLoop_, 
-                               std::tuple<std::vector<std::string>, 
-                               std::vector<const CrvRecoPulseCollection*>> crvpulse_tuple, 
-                               REX::REveElement* &scene, bool extracted, bool addCrvBars){
-
-    /*if(!firstLoop_){
-        scene->DestroyElements();;
-    }*/
-    std::cout << "[DataInterface::AddCrvInfo() ] - Coloring by Time Window" << std::endl;
-    std::vector<const CrvRecoPulseCollection*> crvpulse_list = std::get<1>(crvpulse_tuple);
-    std::vector<std::string> names = std::get<0>(crvpulse_tuple);
-    
-    // Geometry Handles
-    mu2e::GeomHandle<mu2e::CosmicRayShield> CRS;
-    mu2e::GeomHandle<mu2e::DetectorSystem> det;
-    
-    // Find the Global Pulse Time Range (min/max) and collect all pulses
-    double max_time = -1e6;
-    double min_time = 1e6;
-    bool found_pulses = false;
-    std::vector<double> all_pulse_times;
-
-    if( !crvpulse_list.empty()){
-        std::cout << "[DataInterface::AddCrvInfo() ] Found " << crvpulse_list.size() << " Crv Reco Pulse Collections." << std::endl;
-        for(const auto* crvRecoPulse : crvpulse_list){
-            if(crvRecoPulse && !crvRecoPulse->empty()){
-                found_pulses = true;
-                for(const auto& crvpulse : *crvRecoPulse){
-                    double time = crvpulse.GetPulseTime();
-                    std::cout << "Found Crv Reco Pulse with time: " << time << " ns" << std::endl;
-                    all_pulse_times.push_back(time);
-                    if(time > max_time) max_time = time;
-                    if(time < min_time) min_time = time;
-                }
-            }
-        }
-    }
-
-    if (!found_pulses) {
-        std::cout << "[ REveDataInterface::AddCrvInfo() ] No valid Crv Reco Pulses found." << std::endl;
-        return;
-    }
-    
-    // Define time window size (in ns) - adjust this parameter to group pulses differently
-    const double time_window_size = 500.0; // 100 ns windows
-    
-    // Calculate number of time windows needed
-    double time_range = max_time - min_time;
-    int num_windows = static_cast<int>(std::ceil(time_range / time_window_size)) + 1;
-    
-    // Define a set of distinct colors for time windows
-    std::vector<Color_t> time_window_colors = {
-        kRed, kGreen, kBlue, kYellow, kMagenta, kCyan, 
-        kOrange, kSpring, kTeal, kAzure, kViolet, kPink,
-        kRed+2, kGreen+2, kBlue+2, kYellow+2, kMagenta+2, kCyan+2,
-        kRed+1, kGreen+1
-    };
-    
-    // If we need more colors than we have, cycle through them
-    std::cout << "[DataInterface::AddCrvInfo() ] Time range: " << min_time << " to " << max_time 
-              << " ns (range: " << time_range << " ns), num_windows: " << num_windows << std::endl;
-    
-    // Visualization Loop
-    for(unsigned int i=0; i < crvpulse_list.size(); i++){
-        const CrvRecoPulseCollection* crvRecoPulse = crvpulse_list[i];
-        
-        if(crvRecoPulse->size() != 0){
-            
-            auto allcrvbars = new REX::REveCompound(("CrvHitBars_" + std::to_string(i)).c_str(), 
-                                                   ("Crv Hit Bars: " + names[i]).c_str(), 1);
-
-            std::cout << "[DataInterface::AddCrvInfo() ] Processing Crv Reco Pulse Collection: " << names[i] << " with " << crvRecoPulse->size() << " pulses " << std::endl;
-            for(unsigned int j=0; j< crvRecoPulse->size(); j++){
-
-                mu2e::CrvRecoPulse const &crvpulse = (*crvRecoPulse)[j];
-                
-                // Calculate Time Window Based Color
-                double pulse_time = crvpulse.GetPulseTime();
-                
-                // Determine which time window this pulse belongs to
-                int time_window_index = static_cast<int>(std::floor((pulse_time - min_time) / time_window_size));
-                if (time_window_index < 0) time_window_index = 0;
-                if (time_window_index >= num_windows) time_window_index = num_windows - 1;
-                
-                // Get color from predefined color array, cycling if necessary
-                Color_t hit_color = time_window_colors[time_window_index % time_window_colors.size()];
-                
-                std::cout << "Found Crv Reco Pulse with time: " << pulse_time << " ns, window: " << time_window_index 
-                          << ", color: " << hit_color << std::endl;
-
-                // Geometry Setup
-                const mu2e::CRSScintillatorBarIndex &crvBarIndex = crvpulse.GetScintillatorBarIndex();
-                const mu2e::CRSScintillatorBar &crvCounter = CRS->getBar(crvBarIndex);
-                const mu2e::CRSScintillatorBarDetail &barDetail = crvCounter.getBarDetail();
-                
-                CLHEP::Hep3Vector crvCounterPos = crvCounter.getPosition(); 
-                CLHEP::Hep3Vector pointInMu2e = det->toDetector(crvCounterPos); 
-
-                // DETAILED PULSE TITLE (Used for individual point labels)
-                std::string pulsetitle = " Crv Pulse #" + std::to_string(j) + " - " + names[i] + '\n'
-                                       + " SiPM Channel ID: " + std::to_string(crvpulse.GetSiPMNumber()) + '\n'
-                                       + " Crv Bar ID: " + std::to_string(crvBarIndex.asInt()) + '\n'
-                                       + " Pulse Time: " + std::to_string(crvpulse.GetPulseTime()) + " ns (Time Window: " + std::to_string(time_window_index) + ")" + '\n'
-                                       + " Pulse Height: " + std::to_string(crvpulse.GetPulseHeight()) + " ADC" + '\n'
-                                       + " Pedestal: " + std::to_string(crvpulse.GetPedestal()) + " ADC";
-                char const *pulsetitle_c = pulsetitle.c_str();
-                
-                // A. Draw Crv Bar (REveBox)
-                if(addCrvBars){
-                   
-                    double length = pointmmTocm(crvCounter.getHalfLength());
-                    double width = pointmmTocm(crvCounter.getHalfWidth());
-                    double height = pointmmTocm(crvCounter.getHalfThickness());
-                    
-                    double X_cm = pointmmTocm(pointInMu2e.x());
-                    double Y_cm = pointmmTocm(pointInMu2e.y());
-                    double Z_cm = pointmmTocm(pointInMu2e.z());
-                    // For extracted geometry, apply Z-shift to align bars with display coordinate frame
-                    if(extracted) {
-                        Z_cm += GetCrvExtractedZShift();
-                    }
-                    
-                    // Handle geometry errors that cause Seg Faults
-                    try {
-                        // Check for degenerate dimensions (re-added for robustness)
-                        const double kMinDimension = 1e-4; // 1 micrometer (in cm)
-                        if (length < kMinDimension || width < kMinDimension || height < kMinDimension) {
-                             throw std::runtime_error("Degenerate dimensions detected.");
-                        }
-
-                        // Only create and configure the REveBox if the dimensions are safe
-                        auto b = new REX::REveBox(pulsetitle_c, pulsetitle_c);
-                        b->SetMainColor(hit_color); 
-                        b->SetMainTransparency(drawconfig.getInt("Crvtrans"));
-                        b->SetLineWidth(drawconfig.getInt("GeomLineWidth"));
-                        if(!extracted){
-                          // Crv D, Crv U orientation (Length along X)
-                          if(barDetail.getWidthDirection() == 1 and barDetail.getThicknessDirection() == 2 and barDetail.getLengthDirection() == 0){ 
-                              b->SetVertex(0, X_cm - length, Y_cm - width, Z_cm - height);
-                              b->SetVertex(1, X_cm - length, Y_cm - width, Z_cm + height);
-                              b->SetVertex(2, X_cm - length, Y_cm + width, Z_cm + height);
-                              b->SetVertex(3, X_cm - length, Y_cm + width, Z_cm - height);
-                              b->SetVertex(4, X_cm + length, Y_cm - width, Z_cm - height);
-                              b->SetVertex(5, X_cm + length, Y_cm - width, Z_cm + height);
-                              b->SetVertex(6, X_cm + length, Y_cm + width, Z_cm + height);
-                              b->SetVertex(7, X_cm + length, Y_cm + width, Z_cm - height);
-                          }
-                          // Crv TS orientation (Length along Z)
-                          else if(barDetail.getWidthDirection() == 0 and barDetail.getThicknessDirection() == 1 and barDetail.getLengthDirection() == 2){
-                              b->SetVertex(0, X_cm - width, Y_cm - height, Z_cm - length);
-                              b->SetVertex(1, X_cm - width, Y_cm + height, Z_cm - length);
-                              b->SetVertex(2, X_cm + width, Y_cm + height, Z_cm - length);
-                              b->SetVertex(3, X_cm + width, Y_cm - height, Z_cm - length);
-                              b->SetVertex(4, X_cm - width, Y_cm - height, Z_cm + length);
-                              b->SetVertex(5, X_cm - width, Y_cm + height, Z_cm + length);
-                              b->SetVertex(6, X_cm + width, Y_cm + height, Z_cm + length);
-                              b->SetVertex(7, X_cm + width, Y_cm - height, Z_cm + length);
-                          }
-                          // Crv T orientation (Length along X)
-                          else if(barDetail.getWidthDirection() == 2 and barDetail.getThicknessDirection() == 1 and barDetail.getLengthDirection() == 0){ 
-                              b->SetVertex(0, X_cm - length, Y_cm - height, Z_cm - width);
-                              b->SetVertex(1, X_cm - length, Y_cm + height, Z_cm - width);
-                              b->SetVertex(2, X_cm - length, Y_cm + height, Z_cm + width);
-                              b->SetVertex(3, X_cm - length, Y_cm - height, Z_cm + width);
-                              b->SetVertex(4, X_cm + length, Y_cm - height, Z_cm - width);
-                              b->SetVertex(5, X_cm + length, Y_cm + height, Z_cm - width);
-                              b->SetVertex(6, X_cm + length, Y_cm + height, Z_cm + width);
-                              b->SetVertex(7, X_cm + length, Y_cm - height, Z_cm + width);
-                          }
-                          // Crv R, Crv L orientation (Length along Y) 
-                          else if(barDetail.getWidthDirection() == 2 and barDetail.getThicknessDirection() == 0 and barDetail.getLengthDirection() == 1){
-                              b->SetVertex(0, X_cm - height, Y_cm - length, Z_cm - width);
-                              b->SetVertex(1, X_cm - height, Y_cm + length, Z_cm - width);
-                              b->SetVertex(2, X_cm + height, Y_cm + length, Z_cm - width);
-                              b->SetVertex(3, X_cm + height, Y_cm - length, Z_cm - width); 
-                              
-                              b->SetVertex(4, X_cm - height, Y_cm - length, Z_cm + width);
-                              b->SetVertex(5, X_cm - height, Y_cm + length, Z_cm + width);
-                              b->SetVertex(6, X_cm + height, Y_cm + length, Z_cm + width);
-                              b->SetVertex(7, X_cm + height, Y_cm - length, Z_cm + width);
-                          }
-                        }
-                        if(extracted){
-                            if(barDetail.getWidthDirection() == 0 and barDetail.getThicknessDirection() == 1 and barDetail.getLengthDirection() == 2){ //T1 (Length along Z)
-                                b->SetVertex(0, X_cm - width, Y_cm - height, -1*length + Z_cm);
-                                b->SetVertex(1, X_cm - width, Y_cm + height, -1*length + Z_cm);
-                                b->SetVertex(2, X_cm + width, Y_cm + height, -1*length + Z_cm);
-                                b->SetVertex(3, X_cm + width, Y_cm - height, -1*length + Z_cm);
-                                b->SetVertex(4, X_cm - width, Y_cm - height, length + Z_cm);
-                                b->SetVertex(5, X_cm - width, Y_cm + height, length + Z_cm);
-                                b->SetVertex(6, X_cm + width, Y_cm + height, length + Z_cm);
-                                b->SetVertex(7, X_cm + width, Y_cm - height, length + Z_cm);
-                            } else { //EX, T2 (Length along X)
-                                b->SetVertex(0, X_cm - length, Y_cm - height, Z_cm - width);
-                                b->SetVertex(1, X_cm - length, Y_cm + height, Z_cm - width);
-                                b->SetVertex(2, X_cm + length, Y_cm + height, Z_cm - width);
-                                b->SetVertex(3, X_cm + length, Y_cm - height , Z_cm - width);
-                                b->SetVertex(4, X_cm - length , Y_cm - height, Z_cm + width);
-                                b->SetVertex(5, X_cm - length, Y_cm + height , Z_cm + width);
-                                b->SetVertex(6, X_cm + length, Y_cm + height , Z_cm + width);
-                                b->SetVertex(7, X_cm + length , Y_cm - height, Z_cm + width);
-                            }
-                            scene->AddElement(b); 
-                        } else {
-                             allcrvbars->AddElement(b); 
-                        }
-                    } catch (const std::exception& e) {
-                        // Print a warning but continue the loop
-                        std::cerr << "Crv Geometry Error (Bar ID: " << crvBarIndex.asInt() 
-                                  << "). Skipping REveBox creation. Reason: " << e.what() 
-                                  << " L=" << length << ", W=" << width << ", H=" << height << std::endl;
-                    } catch (...) {
-                        // Catch any unknown exception type (e.g., if REve throws a non-standard error)
-                        std::cerr << "Crv Geometry Critical Error (Bar ID: " << crvBarIndex.asInt() 
-                                  << "). Skipping REveBox creation due to unknown geometry failure." << std::endl;
-                    }
-                }
-                
-                // B. Add individual Reco Pulse Point with its own label
-                auto ps1 = new REX::REvePointSet(pulsetitle_c, pulsetitle_c, 1);
-                // For extracted geometry, apply Z-shift to align CRV data with geometry display
-                double hit_z = pointmmTocm(pointInMu2e.z());
-                if(extracted) {
-                    hit_z += GetCrvExtractedZShift();
-                }
-                ps1->SetNextPoint(pointmmTocm(pointInMu2e.x()), pointmmTocm(pointInMu2e.y()), hit_z);
-                ps1->SetMarkerColor(hit_color); 
+void DataInterface::AddBkgClusters(REX::REveManager *&eveMng, bool firstLoop_, std::tuple<std::vector<std::string>, std::vector<const BkgClusterCollection*>> bkgcluster_tuple, REX::REveElement* &scene){
+    std::cout << "[DataInterface::AddBkgClusters()]" << std::endl;
+    std::vector<const BkgClusterCollection*> bkgcluster_list = std::get<1>(bkgcluster_tuple);
+    std::cout << "BkgClusterCollection size = " << bkgcluster_list.size() << std::endl;
+    for(unsigned int j = 0; j < bkgcluster_list.size(); j++){
+        const BkgClusterCollection* bccol = bkgcluster_list[j];
+        if(bccol && bccol->size() != 0){
+            for(unsigned int i=0; i < bccol->size(); i++){
+                mu2e::BkgCluster const &bkgcluster = (*bccol)[i];
+                int colour = (i+3);
+                CLHEP::Hep3Vector ClusterPos(pointmmTocm(bkgcluster.pos().x()), pointmmTocm(bkgcluster.pos().y()), pointmmTocm(bkgcluster.pos().z()));
+                std::string bctitle = "BkgCluster";
+                auto ps1 = new REX::REvePointSet(bctitle.c_str(), bctitle.c_str(), 0);
+                ps1->SetNextPoint(ClusterPos.x(), ClusterPos.y() , ClusterPos.z());
+                ps1->SetMarkerColor(colour);
                 ps1->SetMarkerStyle(DataInterface::mstyle);
                 ps1->SetMarkerSize(DataInterface::msize);
-                scene->AddElement(ps1);
-                
-            } // End of individual pulse loop
-            
-            // Add Compounds/Collections to Scene
-            if (!extracted && addCrvBars) {
-                scene->AddElement(allcrvbars);
+                if(ps1->GetSize() != 0) scene->AddElement(ps1);
             }
         }
     }
 }
+
 
 /*
  * Adds reconstructed CrvCluster data products to the REve visualization scene.
