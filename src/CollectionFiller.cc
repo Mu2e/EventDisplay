@@ -25,6 +25,7 @@ namespace mu2e{
     addBkgClusters_(conf.addBkgClusters()),
     addCrvRecoPulse_(conf.addCrvRecoPulse()),
     addCrvClusters_(conf.addCrvClusters()),
+    addCrvTrack_(conf.addCrvTrack()),
     addTimeClusters_(conf.addTimeClusters()),
     addTrkHits_(conf.addTrkHits()),
     addCaloDigis_(conf.addCaloDigis()),

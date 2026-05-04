@@ -124,9 +124,10 @@ namespace mu2e {
 
       bool addBkgClusters = false;
       bool addCrvRecoPulse = false;
-      bool addCrvClusters = false;
-
-      bool addTimeClusters = false;
+       bool addCrvClusters = false;
+       bool addCrvTrack = false;
+ 
+       bool addTimeClusters = false;
       bool addTrkHits = false; // legacy
       bool addMCTrajectories = false;
       bool addSurfaceSteps = false;
@@ -136,8 +137,8 @@ namespace mu2e {
       bool addCrvBars = true;
       DrawOptions(){};
 
-      DrawOptions(bool cosmictracks, bool helices, bool tracks, bool calodigis, bool clusters, bool combohits, bool bkgclusters, bool crv, bool crvclu, bool timeclusters, bool trkhits, bool mctraj, bool surfsteps, bool simparts, bool errbar, bool crys, bool crvbars)
-      : addCosmicTracks(cosmictracks), addHelices(helices), addTracks(tracks), addCaloDigis(calodigis), addClusters(clusters), addComboHits(combohits), addBkgClusters(bkgclusters), addCrvRecoPulse(crv), addCrvClusters(crvclu), addTimeClusters(timeclusters), addTrkHits(trkhits), addMCTrajectories(mctraj), addSurfaceSteps(surfsteps), addSimParts(simparts), addTrkErrBar(errbar), addCrystalDraw(crys), addCrvBars(crvbars) {};
+       DrawOptions(bool cosmictracks, bool helices, bool tracks, bool calodigis, bool clusters, bool combohits, bool bkgclusters, bool crv, bool crvclu, bool crvtrack, bool timeclusters, bool trkhits, bool mctraj, bool surfsteps, bool simparts, bool errbar, bool crys, bool crvbars)
+       : addCosmicTracks(cosmictracks), addHelices(helices), addTracks(tracks), addCaloDigis(calodigis), addClusters(clusters), addComboHits(combohits), addBkgClusters(bkgclusters), addCrvRecoPulse(crv), addCrvClusters(crvclu), addCrvTrack(crvtrack), addTimeClusters(timeclusters), addTrkHits(trkhits), addMCTrajectories(mctraj), addSurfaceSteps(surfsteps), addSimParts(simparts), addTrkErrBar(errbar), addCrystalDraw(crys), addCrvBars(crvbars) {};
 
      };
 
