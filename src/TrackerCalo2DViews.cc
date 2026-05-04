@@ -9,6 +9,7 @@
 #include <TBase64.h>
 #include <iostream>
 #include <map>
+#include "Offline/GeometryService/inc/GeomHandle.hh"
 #include "Offline/TrackerGeom/inc/Tracker.hh"
 #include "Offline/TrackerGeom/inc/Plane.hh"
 #include "Offline/TrackerGeom/inc/Panel.hh"

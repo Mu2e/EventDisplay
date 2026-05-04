@@ -192,7 +192,7 @@ namespace mu2e {
             
             TrackerCalo2DViews *fTrackerCalo2DViews = nullptr;
 
-            TrackerCalo2DViews *fTrackerCalo2DViews = nullptr;
+            REX::REveProjectionManager *mngTrackerXY   = nullptr;
             REX::REveProjectionManager *mngXYCaloDisk0 = nullptr;
             REX::REveProjectionManager *mngXYCaloDisk1 = nullptr;
             REX::REveProjectionManager *mngRhoZ   = nullptr;
@@ -205,8 +205,8 @@ namespace mu2e {
             REX::REveViewer *XYCaloDisk1View = nullptr;
             REX::REveViewer *rhoZView = nullptr;
 
-            REX::REvePointSet* fCanvasHolder{nullptr};
-            TCanvas* fCanvas{nullptr};
+      /*REX::REvePointSet* fCanvasHolder{nullptr};
+        TCanvas* fCanvas{nullptr};*/
 
             #else
                 ClassDef(MainWindow, 0);

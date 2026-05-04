@@ -718,18 +718,6 @@ void MainWindow::projectEvents(REX::REveManager *eveMng)
   }
 }
 
-/*void MainWindow::createHistogramView(){
-  fTrackerCalo2DViews->createHistogramView();
-}
-
-void MainWindow::drawTrackerStation(const mu2e::KalSeedPtrCollection* seedcol){
-  fTrackerCalo2DViews->drawTrackerStation(seedcol);
-}
-
-void MainWindow::redrawCanvas(const mu2e::KalSeedPtrCollection* seedcol){
-  fTrackerCalo2DViews->redrawCanvas(seedcol);
-}*/
-
 void MainWindow::createProjectionStuff(REX::REveManager *eveMng)
 {
   // -------------------Tracker XY View ----------------------------------
@@ -781,7 +769,6 @@ void MainWindow::createProjectionStuff(REX::REveManager *eveMng)
   }
   fTrackerCalo2DViews = new TrackerCalo2DViews();
   fTrackerCalo2DViews->createHistogramView();
-  //createHistogramView();
 }
 
 
