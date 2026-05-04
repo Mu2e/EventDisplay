@@ -37,18 +37,6 @@ void TrackerCalo2DViews::drawTrackerStation(const mu2e::KalSeedPtrCollection* se
     
     mu2e::GeomHandle<mu2e::Tracker> tracker;
     int planeId = 22;
-    int panelId = 5;
-    const mu2e::Plane& plane = tracker->getPlane(planeId);
-    const mu2e::Panel& panel = plane.getPanel(panelId);
-    
-    TPad* pad = new TPad("p_0_0", "First Panel", 0.05, 0.05, 0.95, 0.95);
-    pad->Draw();
-    pad->cd();
-    
-    std::string frameTitle = "Plane" + std::to_string(planeId) + "Panel" + std::to_string(panelId) + "YZ view; Z [mm]; Y [mm]";
-    TH2F* frame = new TH2F("frame", frameTitle.c_str(), 100, -20, 20, 100, -200, 200);
-    frame->SetStats(0);
-    frame->Draw();
     
     std::map<mu2e::StrawId, const mu2e::TrkStrawHitSeed*> hitDataMap;
     if(seedcol != nullptr){
@@ -56,51 +44,70 @@ void TrackerCalo2DViews::drawTrackerStation(const mu2e::KalSeedPtrCollection* se
             const mu2e::KalSeed& kseed = *kseedptr; 
             for (auto const& hit : kseed.hits()){
                 hitDataMap[hit.strawId()] = &hit;
-                std::cout << "Hit straw ID = " << hit.strawId() << std::endl;
             }
         }
     }
     
+    const mu2e::Plane& plane = tracker->getPlane(planeId);
     double strawRadius = tracker->strawProperties()._strawOuterRadius;
-    for (size_t iStraw=0; iStraw < panel.nStraws(); ++iStraw){
-        const mu2e::Straw& straw = panel.getStraw(iStraw);
-        CLHEP::Hep3Vector pos_l = panel.dsToPanel()*straw.getMidPoint();
+
+    for (int panelId = 0; panelId < 12; ++panelId) {
+        const mu2e::Panel& panel = plane.getPanel(panelId);
         
-        std::cout << "iStraw = " << iStraw << " pos_l x = " << pos_l.x() << " y = " << pos_l.y() << " z = " << pos_l.z() << " radius = " << strawRadius << " ID = " << straw.id() << std::endl;
+        int row = panelId / 4;
+        int col = panelId % 4;
+        double x1 = col * 0.25;
+        double x2 = (col + 1) * 0.25;
+        double y1 = (2 - row) * 0.333;
+        double y2 = (3 - row) * 0.333;
         
-        TEllipse *circ = new TEllipse(pos_l.z(), pos_l.y(), strawRadius, strawRadius);
-        circ->SetLineColor(kGray+2);
-        circ->SetFillStyle(0);
-        circ->Draw();
+        TPad* pad = new TPad(Form("p_%d_%d", row, col), Form("Panel %d", panelId), x1, y1, x2, y2);
+        pad->Draw();
+        pad->cd();
         
-        if(hitDataMap.count(straw.id())){
-            const auto* hit = hitDataMap[straw.id()];
-            TEllipse *hitcirc = new TEllipse(pos_l.z(), pos_l.y(), strawRadius, strawRadius);
-            hitcirc->SetLineColor(kBlack);
-            hitcirc->SetFillStyle(0);
-            hitcirc->Draw();
+        std::string frameTitle = "Plane" + std::to_string(planeId) + "Panel" + std::to_string(panelId) + "YZ view; Z [mm]; Y [mm]";
+        TH2F* frame = new TH2F("frame", frameTitle.c_str(), 100, -20, 20, 100, -200, 200);
+        frame->SetStats(0);
+        frame->Draw();
+        
+        for (size_t iStraw=0; iStraw < panel.nStraws(); ++iStraw){
+            const mu2e::Straw& straw = panel.getStraw(iStraw);
+            CLHEP::Hep3Vector pos_l = panel.dsToPanel()*straw.getMidPoint();
             
-            double rdrift = hit->driftRadius();
-            TEllipse *rcirc = new TEllipse(pos_l.z(), pos_l.y(), rdrift, rdrift);
-            rcirc->SetLineColor(kRed);
-            rcirc->SetFillStyle(0);
-            rcirc->Draw();
+            TEllipse *circ = new TEllipse(pos_l.z(), pos_l.y(), strawRadius, strawRadius);
+            circ->SetLineColor(kGray+2);
+            circ->SetFillStyle(0);
+            circ->Draw();
             
-            double sz = pos_l.z();
-            double sy = pos_l.y();
-            TGraph *g = new TGraph(1, &sz, &sy);
-            g->SetMarkerColorAlpha(kWhite,0);
-            g->SetName(Form("Straw %d: %.2f MeV",straw.id().getStraw(), hit->energyDep()));
-            g->Draw("P SAME");
+            if(hitDataMap.count(straw.id())){
+                const auto* hit = hitDataMap[straw.id()];
+                TEllipse *hitcirc = new TEllipse(pos_l.z(), pos_l.y(), strawRadius, strawRadius);
+                hitcirc->SetLineColor(kBlack);
+                hitcirc->SetFillStyle(0);
+                hitcirc->Draw();
+                
+                double rdrift = hit->driftRadius();
+                TEllipse *rcirc = new TEllipse(pos_l.z(), pos_l.y(), rdrift, rdrift);
+                rcirc->SetLineColor(kRed);
+                rcirc->SetFillStyle(0);
+                rcirc->Draw();
+                
+                double sz = pos_l.z();
+                double sy = pos_l.y();
+                TGraph *g = new TGraph(1, &sz, &sy);
+                g->SetMarkerColorAlpha(kWhite,0);
+                g->SetName(Form("Straw %d: %.2f MeV",straw.id().getStraw(), hit->energyDep()));
+                g->Draw("P SAME");
+            }
         }
+        
+        TLatex *tex = new TLatex();
+        tex->SetNDC();
+        tex->SetTextSize(0.03);
+        tex->DrawLatex(0.6, 0.9, Form("Plane %d : Panel %d", planeId, panelId));
+        pad->Modified();
+        pad->Update();
     }
-    
-    TLatex *tex = new TLatex();
-    tex->SetNDC();
-    tex->SetTextSize(0.04);
-    tex->DrawLatex(0.7, 0.92, Form("Plane %d : Panel %d", planeId, panelId));
-    pad->Modified();
-    pad->Update();
 }
 
 void TrackerCalo2DViews::redrawCanvas(const mu2e::KalSeedPtrCollection* seedcol) {
