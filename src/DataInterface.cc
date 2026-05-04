@@ -605,36 +605,6 @@ void DataInterface::AddComboHits(REX::REveManager *&eveMng, bool firstLoop_,
     }
 }
 
-
-/*
- * Adds reconstructed CaloRecoPulse data products to the REve visualization scene.
- * RecoPules are visualized as points bars are visualized as 3D boxes
- * Elements are colored based on the height of the digitization pulse.
-*/
-void DataInterface::AddBkgClusters(REX::REveManager *&eveMng, bool firstLoop_, std::tuple<std::vector<std::string>, std::vector<const BkgClusterCollection*>> bkgcluster_tuple, REX::REveElement* &scene){
-    std::cout << "[DataInterface::AddBkgClusters()]" << std::endl;
-    std::vector<const BkgClusterCollection*> bkgcluster_list = std::get<1>(bkgcluster_tuple);
-    std::cout << "BkgClusterCollection size = " << bkgcluster_list.size() << std::endl;
-    for(unsigned int j = 0; j < bkgcluster_list.size(); j++){
-        const BkgClusterCollection* bccol = bkgcluster_list[j];
-        if(bccol && bccol->size() != 0){
-            for(unsigned int i=0; i < bccol->size(); i++){
-                mu2e::BkgCluster const &bkgcluster = (*bccol)[i];
-                int colour = (i+3);
-                CLHEP::Hep3Vector ClusterPos(pointmmTocm(bkgcluster.pos().x()), pointmmTocm(bkgcluster.pos().y()), pointmmTocm(bkgcluster.pos().z()));
-                std::string bctitle = "BkgCluster";
-                auto ps1 = new REX::REvePointSet(bctitle.c_str(), bctitle.c_str(), 0);
-                ps1->SetNextPoint(ClusterPos.x(), ClusterPos.y() , ClusterPos.z());
-                ps1->SetMarkerColor(colour);
-                ps1->SetMarkerStyle(DataInterface::mstyle);
-                ps1->SetMarkerSize(DataInterface::msize);
-                if(ps1->GetSize() != 0) scene->AddElement(ps1);
-            }
-        }
-    }
-}
-
-
 /*
  * Adds reconstructed CrvCluster data products to the REve visualization scene.
  * Clusters are visualized as points, RecoPulses used to access bar info, bars visualized as boxes in 3D
