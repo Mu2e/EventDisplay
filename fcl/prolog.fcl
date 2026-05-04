@@ -41,8 +41,9 @@ Mu2eEventDisplay : {
       addHits : false
       addBkgClusters : false
       addCrvRecoPulse : false
-      addCrvClusters : false
-      addTimeClusters : false
+       addCrvClusters : false
+       addCrvTrack : false
+       addTimeClusters : false
       addTrkHits : false //Combo hits?
       addCaloDigis : false
       addClusters : true

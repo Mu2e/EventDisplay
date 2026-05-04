@@ -777,9 +777,9 @@ void MainWindow::showEvents(REX::REveManager *eveMng, REX::REveElement* &eventSc
   if(drawOpts.addTracks and track_list.size() !=0) {
     pass_data->FillKinKalTrajectory(eveMng, firstLoop, eventScene, data.track_tuple, KKOpts.addKalInter,  KKOpts.addTrkStrawHits, KKOpts.addTrkCaloHits, t1, t2);
   }
-  if(drawOpts.addTracks and track_list.size() !=0 and drawOpts.addCrvClusters) {
-    pass_data->AddCRVKalIntersection(eveMng, firstLoop, eventScene, data.track_tuple, KKOpts.addKalInter,  KKOpts.addTrkStrawHits, KKOpts.addTrkCaloHits, t1, t2, data.crvcoin_tuple, geomOpts.extracted, drawOpts.addCrvBars);
-  }
+   if(drawOpts.addCrvTrack) {
+     pass_data->AddCRVKalIntersection(eveMng, firstLoop, eventScene, data.track_tuple, KKOpts.addKalInter,  KKOpts.addTrkStrawHits, KKOpts.addTrkCaloHits, t1, t2, data.crvcoin_tuple, geomOpts.extracted, drawOpts.addCrvBars);
+   }
   if(drawOpts.addComboHits) {
     std::vector<const ComboHitCollection*> combohit_list = std::get<1>(data.combohit_tuple);
     if(combohit_list.size() !=0 ) pass_data->AddComboHits(eveMng, firstLoop, data.combohit_tuple, eventScene, strawdisplay, drawOpts.addTrkErrBar);

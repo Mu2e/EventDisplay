@@ -77,6 +77,7 @@ namespace mu2e{
             fhicl::Atom<bool> addBkgClusters{Name("addBkgClusters"), Comment("set to add the bkg clusters"),false}; // Corresponds to bkg clusters
             fhicl::Atom<bool> addCrvRecoPulse{Name("addCrvRecoPulse"), Comment("set to add crv hits"),false}; // Corresponds to CrvRecoPulses
             fhicl::Atom<bool> addCrvClusters{Name("addCrvClusters"), Comment("set to add crv clusters"),false}; // Corresponds to CrvCoincidenceCluster
+            fhicl::Atom<bool> addCrvTrack{Name("addCrvTrack"), Comment("set to add crv track intersections"),false};
             fhicl::Atom<bool> addTimeClusters{Name("addTimeClusters"), Comment("set to add the Crv hits"),false};
             fhicl::Atom<bool> addTrkHits{Name("addTrkHits"), Comment("set to add the Trk hits"),false}; // Alias for ComboHits/TrkHits
             fhicl::Atom<bool> addCaloDigis{Name("addCaloDigis"), Comment("set to add calodigis"),false};
@@ -125,7 +126,7 @@ namespace mu2e{
         art::Run *_run;
         
         // --- Boolean Control Flags (Copied from FHiCL Config) ---
-        bool addHits_, addBkgClusters_, addCrvRecoPulse_, addCrvClusters_, addTimeClusters_, addTrkHits_, addCaloDigis_, 
+        bool addHits_, addBkgClusters_, addCrvRecoPulse_, addCrvClusters_, addCrvTrack_, addTimeClusters_, addTrkHits_, addCaloDigis_, 
              addClusters_, addHelixSeeds_, addKalSeeds_, addCosmicTrackSeeds_, addMCTraj_,
              addSurfSteps_, addSimParts_, FillAll_;
              
