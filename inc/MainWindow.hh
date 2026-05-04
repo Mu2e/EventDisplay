@@ -53,6 +53,7 @@
 #include <ROOT/REveViewContext.hxx>
 #include "art/Framework/Principal/Event.h"
 #include "EventDisplay/inc/DataCollections.hh"
+#include "EventDisplay/inc/TrackerCalo2DViews.hh"
 #include "EventDisplay/inc/DataInterface.hh"
 #include "EventDisplay/inc/MCInterface.hh"
 #include "Offline/StoppingTargetGeom/inc/StoppingTarget.hh"
@@ -188,11 +189,10 @@ namespace mu2e {
             void projectScenes(REX::REveManager *eveMng, bool geomp, bool eventp);
             void projectEvents(REX::REveManager *eveMng);
             void maketable(REX::REveManager *eveMng);
-            void createHistogramView();
-            void redrawCanvas(const mu2e::KalSeedPtrCollection* seedcol);
-            void drawTrackerStation(const mu2e::KalSeedPtrCollection* seedcol);
+            
+            TrackerCalo2DViews *fTrackerCalo2DViews = nullptr;
 
-            REX::REveProjectionManager *mngTrackerXY = nullptr;
+            TrackerCalo2DViews *fTrackerCalo2DViews = nullptr;
             REX::REveProjectionManager *mngXYCaloDisk0 = nullptr;
             REX::REveProjectionManager *mngXYCaloDisk1 = nullptr;
             REX::REveProjectionManager *mngRhoZ   = nullptr;

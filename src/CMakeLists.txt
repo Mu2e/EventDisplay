@@ -11,6 +11,7 @@ cet_make_library(
     SOURCE
       CollectionFiller.cc
       DataInterface.cc
+      TrackerCalo2DViews.cc
       EventDisplayManager.cc
       GUI.cc
       MCInterface.cc
