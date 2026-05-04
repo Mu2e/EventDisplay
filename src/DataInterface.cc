@@ -754,26 +754,6 @@ void DataInterface::AddCrvClusters(REX::REveManager *&eveMng, bool firstLoop_,
     }
 }
 
-            }
-            ps1->SetMarkerColor(drawconfig.getInt("CrvHitColor"));
-            ps1->SetMarkerStyle(DataInterface::mstyle);
-            ps1->SetMarkerSize(DataInterface::msize);
-            if(ps1->GetSize() !=0 ) scene->AddElement(ps1); 
-        }
-        if(!extracted && addCrvBars) scene->AddElement(allcrvbars_collection); 
-    }
-}
-
-            }
-            ps1->SetMarkerColor(drawconfig.getInt("CrvHitColor"));
-            ps1->SetMarkerStyle(DataInterface::mstyle);
-            ps1->SetMarkerSize(DataInterface::msize);
-            if(ps1->GetSize() !=0 ) scene->AddElement(ps1); 
-        }
-        if(!extracted && addCrvBars) scene->AddElement(allcrvbars_collection); 
-    }
-}
-
 /*------------Function to add TimeCluster Collection in 3D and 2D displays:-------------*/
 void DataInterface::AddTimeClusters(REX::REveManager *&eveMng, bool firstLoop_, std::tuple<std::vector<std::string>, std::vector<const TimeClusterCollection*>>  timecluster_tuple, std::tuple<std::vector<std::string>, std::vector<const ComboHitCollection*>> combohit_tuple, REX::REveElement* &scene){
 
