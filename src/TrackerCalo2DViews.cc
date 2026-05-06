@@ -34,7 +34,8 @@ void TrackerCalo2DViews::drawTrackerStation(const mu2e::KalSeedPtrCollection* se
     if (!fCanvas || !fCanvasHolder) return;
     fCanvas->cd();
     fCanvas->Clear();
-    
+
+    fCanvas->Divide(2, 3, 0.005, 0.005);
     mu2e::GeomHandle<mu2e::Tracker> tracker;
     int planeId = 22;
     
@@ -51,25 +52,17 @@ void TrackerCalo2DViews::drawTrackerStation(const mu2e::KalSeedPtrCollection* se
     const mu2e::Plane& plane = tracker->getPlane(planeId);
     double strawRadius = tracker->strawProperties()._strawOuterRadius;
 
-    for (int panelId = 0; panelId < 12; ++panelId) {
+    for (int panelId = 0; panelId < 6; ++panelId) {
         const mu2e::Panel& panel = plane.getPanel(panelId);
-        
-        int row = panelId / 4;
-        int col = panelId % 4;
-        double x1 = col * 0.25;
-        double x2 = (col + 1) * 0.25;
-        double y1 = (2 - row) * 0.333;
-        double y2 = (3 - row) * 0.333;
-        
-        TPad* pad = new TPad(Form("p_%d_%d", row, col), Form("Panel %d", panelId), x1, y1, x2, y2);
-        pad->Draw();
-        pad->cd();
-        
-        std::string frameTitle = "Plane" + std::to_string(planeId) + "Panel" + std::to_string(panelId) + "YZ view; Z [mm]; Y [mm]";
-        TH2F* frame = new TH2F("frame", frameTitle.c_str(), 100, -20, 20, 100, -200, 200);
+        std::cout<<"Plane ID = "<<planeId<<" panel = "<<panelId<<std::endl;
+        fCanvas->cd(panelId+1);
+        gPad->SetBottomMargin(0.15);
+        gPad->SetLeftMargin(0.15);
+        std::string frameTitle = "Plane " + std::to_string(planeId) + " Panel " + std::to_string(panelId);
+        TH2F* frame = new TH2F(Form("h_%d", panelId), frameTitle.c_str(), 100, -20, 20, 100, -200, 200);
         frame->SetStats(0);
         frame->Draw();
-        
+        std::cout<<"nstraws = "<<panel.nStraws()<<std::endl;
         for (size_t iStraw=0; iStraw < panel.nStraws(); ++iStraw){
             const mu2e::Straw& straw = panel.getStraw(iStraw);
             CLHEP::Hep3Vector pos_l = panel.dsToPanel()*straw.getMidPoint();
@@ -103,10 +96,8 @@ void TrackerCalo2DViews::drawTrackerStation(const mu2e::KalSeedPtrCollection* se
         
         TLatex *tex = new TLatex();
         tex->SetNDC();
-        tex->SetTextSize(0.03);
-        tex->DrawLatex(0.6, 0.9, Form("Plane %d : Panel %d", planeId, panelId));
-        pad->Modified();
-        pad->Update();
+        tex->SetTextSize(0.05);
+        tex->DrawLatex(0.25, 0.85, Form("Panel %d", panelId));
     }
 }
 
