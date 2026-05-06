@@ -9,6 +9,7 @@
 #include <TBase64.h>
 #include <iostream>
 #include <map>
+#include "Offline/Mu2eKinKal/inc/WireHitState.hh"
 #include "Offline/GeometryService/inc/GeomHandle.hh"
 #include "Offline/TrackerGeom/inc/Tracker.hh"
 #include "Offline/TrackerGeom/inc/Plane.hh"
@@ -82,7 +83,14 @@ void TrackerCalo2DViews::drawTrackerStation(const mu2e::KalSeedPtrCollection* se
                 double rdrift = hit->driftRadius();
                 TEllipse *rcirc = new TEllipse(pos_l.z(), pos_l.y(), rdrift, rdrift);
                 rcirc->SetLineColor(kRed);
-                rcirc->SetFillStyle(0);
+                
+                mu2e::WireHitState whs(mu2e::WireHitState::State(hit->strawHitState()), mu2e::StrawHitUpdaters::algorithm(hit->strawHitAlgo()), hit->strawHitKkshFlag());
+                if (whs.active() && whs.driftConstraint()) {
+                    rcirc->SetFillColor(kLightCyan);
+                    rcirc->SetFillStyle(1);
+                } else {
+                    rcirc->SetFillStyle(0);
+                }
                 rcirc->Draw();
                 
                 double sz = pos_l.z();
