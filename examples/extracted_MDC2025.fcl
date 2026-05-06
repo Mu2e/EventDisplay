@@ -46,6 +46,7 @@ physics.analyzers.Mu2eEventDisplay.filler.addCrvRecoPulse : false
 physics.analyzers.Mu2eEventDisplay.filler.addCaloDigis : false
 physics.analyzers.Mu2eEventDisplay.filler.addClusters : false
 physics.analyzers.Mu2eEventDisplay.filler.addKalSeeds : true
+physics.analyzers.Mu2eEventDisplay.filler.addTrackerHist : true
 physics.analyzers.Mu2eEventDisplay.extracted : true
 physics.analyzers.Mu2eEventDisplay.specifyTag : false
 

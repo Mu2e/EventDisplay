@@ -25,7 +25,7 @@ void TrackerCalo2DViews::createHistogramView() {
     auto histScene = evMng.SpawnNewScene("Histograms", "Histogram Scene");
     fCanvasHolder = new REX::REvePointSet("CanvasData");
     histScene->AddElement(fCanvasHolder);
-    fCanvas = new TCanvas("Mu2eCanvas", "Mu2e stats", 800, 600);
+    fCanvas = new TCanvas("Mu2eCanvas", "Tracker Plane Y v/s Z View", 800, 600);
     auto canvasViewer = evMng.SpawnNewViewer("Histogram viewer", "Mu2e Histogram");
     canvasViewer->AddScene(histScene);
 }
@@ -93,11 +93,6 @@ void TrackerCalo2DViews::drawTrackerStation(const mu2e::KalSeedPtrCollection* se
                 g->Draw("P SAME");
             }
         }
-        
-        TLatex *tex = new TLatex();
-        tex->SetNDC();
-        tex->SetTextSize(0.05);
-        tex->DrawLatex(0.25, 0.85, Form("Panel %d", panelId));
     }
 }
 
