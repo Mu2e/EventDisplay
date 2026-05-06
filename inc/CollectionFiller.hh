@@ -88,6 +88,7 @@ namespace mu2e{
             fhicl::Atom<bool> addMCTraj{Name("addMCTraj"), Comment("set to add MCTrajectories"),false};
             fhicl::Atom<bool> addSurfSteps{Name("addSurfSteps"), Comment("set to add SurfaceStep MC"),false};
             fhicl::Atom<bool> addSimParts{Name("addSimParts"), Comment("set to add SimParticles MC"),false};
+            fhicl::Atom<bool> addTrackerHist{Name("addTrackerHist"), Comment("set to add tracker histogram"),false};
             
             // Global flag to attempt retrieval of all collections found in the event
             fhicl::Atom<bool> FillAll{Name("FillAll"), Comment("to see all available products"), false};
@@ -126,9 +127,9 @@ namespace mu2e{
         art::Run *_run;
         
         // --- Boolean Control Flags (Copied from FHiCL Config) ---
-        bool addHits_, addBkgClusters_, addCrvRecoPulse_, addCrvClusters_, addCrvTrack_, addTimeClusters_, addTrkHits_, addCaloDigis_, 
-             addClusters_, addHelixSeeds_, addKalSeeds_, addCosmicTrackSeeds_, addMCTraj_,
-             addSurfSteps_, addSimParts_, FillAll_;
+         bool addHits_, addBkgClusters_, addCrvRecoPulse_, addCrvClusters_, addCrvTrack_, addTimeClusters_, addTrkHits_, addCaloDigis_, 
+              addClusters_, addHelixSeeds_, addKalSeeds_, addCosmicTrackSeeds_, addMCTraj_,
+              addSurfSteps_, addSimParts_, addTrackerHist_, FillAll_;
              
         // --- Collection Retrieval Methods ---
         

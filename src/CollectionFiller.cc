@@ -36,6 +36,7 @@ namespace mu2e{
     addMCTraj_(conf.addMCTraj()),
     addSurfSteps_(conf.addSurfSteps()),
     addSimParts_(conf.addSimParts()),
+    addTrackerHist_(conf.addTrackerHist()),
     FillAll_(conf.FillAll())
   {}
 
