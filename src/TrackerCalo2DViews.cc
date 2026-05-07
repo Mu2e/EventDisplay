@@ -32,87 +32,127 @@ void TrackerCalo2DViews::createHistogramView() {
 }
 
 void TrackerCalo2DViews::drawTrackerStation(const mu2e::KalSeedPtrCollection* seedcol) {
-    if (!fCanvas || !fCanvasHolder) return;
-    fCanvas->cd();
-    fCanvas->Clear();
-
-    fCanvas->Divide(2, 3, 0.005, 0.005);
+    // Note: We can draw without fCanvas/fCanvasHolder since you want offline viewing
     mu2e::GeomHandle<mu2e::Tracker> tracker;
-    int planeId = 22;
     
     std::map<mu2e::StrawId, const mu2e::TrkStrawHitSeed*> hitDataMap;
-    if(seedcol != nullptr){
-        for (auto const& kseedptr : *seedcol){
+    std::set<int> uniquePlanes;
+
+    if (seedcol != nullptr) {
+        for (auto const& kseedptr : *seedcol) {
             const mu2e::KalSeed& kseed = *kseedptr; 
-            for (auto const& hit : kseed.hits()){
-                hitDataMap[hit.strawId()] = &hit;
+            for (auto const& hit : kseed.hits()) {
+                mu2e::StrawId sid = hit.strawId();
+                uniquePlanes.insert(sid.getPlane());
+                hitDataMap[sid] = &hit;
             }
         }
     }
-    
-    const mu2e::Plane& plane = tracker->getPlane(planeId);
-    double strawRadius = tracker->strawProperties()._strawOuterRadius;
 
-    for (int panelId = 0; panelId < 6; ++panelId) {
-        const mu2e::Panel& panel = plane.getPanel(panelId);
-        std::cout<<"Plane ID = "<<planeId<<" panel = "<<panelId<<std::endl;
-        fCanvas->cd(panelId+1);
-        gPad->SetBottomMargin(0.15);
-        gPad->SetLeftMargin(0.15);
-        std::string frameTitle = "Plane " + std::to_string(planeId) + " Panel " + std::to_string(panelId);
-        TH2F* frame = new TH2F(Form("h_%d", panelId), frameTitle.c_str(), 100, -20, 20, 100, -200, 200);
-        frame->SetStats(0);
-        frame->Draw();
-        std::cout<<"nstraws = "<<panel.nStraws()<<std::endl;
-        for (size_t iStraw=0; iStraw < panel.nStraws(); ++iStraw){
-            const mu2e::Straw& straw = panel.getStraw(iStraw);
-            CLHEP::Hep3Vector pos_l = panel.dsToPanel()*straw.getMidPoint();
+    double strawRadius = tracker->strawProperties()._strawOuterRadius;
+    std::array<int, 6> padMap = {5, 4, 1, 2, 3, 6};
+
+    for (const auto& planeId : uniquePlanes) {
+        std::cout << "Processing Canvas for Plane " << planeId << std::endl;
+        
+        // Fix: Proper TCanvas name and title string formatting
+        TString canvasName = Form("Canvas_Plane_%d", planeId);
+        TString canvasTitle = Form("Mu2e Tracker Plane %d - Y vs Z View", planeId);
+        
+        TCanvas* planeCanvas = new TCanvas(canvasName, canvasTitle, 1000, 800);
+        planeCanvas->Divide(2, 3, 0.005, 0.005);
+
+        const mu2e::Plane& plane = tracker->getPlane(planeId);
+
+        for (int panelId = 0; panelId < 6; ++panelId) {
+            const mu2e::Panel& panel = plane.getPanel(panelId);
             
-            TEllipse *circ = new TEllipse(pos_l.z(), pos_l.y(), strawRadius, strawRadius);
-            circ->SetLineColor(kGray+2);
-            circ->SetFillStyle(0);
-            circ->Draw();
+            // 1. Calculate Bounds for this specific panel
+            double ymin = 1e9, ymax = -1e9, zmin = 1e9, zmax = -1e9;
+            for (size_t iStraw = 0; iStraw < panel.nStraws(); ++iStraw) {
+                const mu2e::Straw& straw = panel.getStraw(iStraw);
+                CLHEP::Hep3Vector pos_l = straw.getMidPoint();
+                ymin = std::min(ymin, pos_l.y());
+                ymax = std::max(ymax, pos_l.y());
+                zmin = std::min(zmin, pos_l.z());
+                zmax = std::max(zmax, pos_l.z());
+            }
+
+            // 2. Prepare the Pad
+            planeCanvas->cd(padMap[panelId]);
+            gPad->SetBottomMargin(0.15);
+            gPad->SetLeftMargin(0.15);
+
+            TString frameName = Form("h_plane%d_panel%d", planeId, panelId);
+            TString frameTitle = Form("Plane %d: Panel %d;Z (mm);Y (mm)", planeId, panelId);
             
-            if(hitDataMap.count(straw.id())){
-                const auto* hit = hitDataMap[straw.id()];
-                TEllipse *hitcirc = new TEllipse(pos_l.z(), pos_l.y(), strawRadius, strawRadius);
-                hitcirc->SetLineColor(kBlack);
-                hitcirc->SetFillStyle(0);
-                hitcirc->Draw();
+            TH2F* frame = new TH2F(frameName, frameTitle, 100, zmin - 20, zmax + 20, 100, ymin - 10, ymax + 10);
+            frame->SetStats(0);
+            frame->Draw();
+
+            // 3. Draw Straws and Hits
+            for (size_t iStraw = 0; iStraw < panel.nStraws(); ++iStraw) {
+                const mu2e::Straw& straw = panel.getStraw(iStraw);
+                CLHEP::Hep3Vector pos_l = straw.getMidPoint();
                 
-                double rdrift = hit->driftRadius();
-                TEllipse *rcirc = new TEllipse(pos_l.z(), pos_l.y(), rdrift, rdrift);
-                rcirc->SetLineColor(kRed);
+                // Base Straw Geometry
+                TEllipse *circ = new TEllipse(pos_l.z(), pos_l.y(), strawRadius, strawRadius);
+                circ->SetLineColor(kGray + 1);
+                circ->SetFillStyle(0);
+                circ->Draw();
                 
-                mu2e::WireHitState whs(mu2e::WireHitState::State(hit->strawHitState()), mu2e::StrawHitUpdaters::algorithm(hit->strawHitAlgo()), hit->strawHitKkshFlag());
-                if (whs.active() && whs.driftConstraint()) {
-                    rcirc->SetFillColor(kLightCyan);
-                    rcirc->SetFillStyle(1);
-                } else {
-                    rcirc->SetFillStyle(0);
+                // Check for Hits
+                if (hitDataMap.count(straw.id())) {
+                    const auto* hit = hitDataMap[straw.id()];
+                    
+                    // Hit Outline
+                    TEllipse *hitcirc = new TEllipse(pos_l.z(), pos_l.y(), strawRadius, strawRadius);
+                    hitcirc->SetLineColor(kBlack);
+                    hitcirc->SetLineWidth(2);
+                    hitcirc->SetFillStyle(0);
+                    hitcirc->Draw();
+                    
+                    // Drift Circle
+                    double rdrift = hit->driftRadius();
+                    TEllipse *rcirc = new TEllipse(pos_l.z(), pos_l.y(), rdrift, rdrift);
+                    
+                    mu2e::WireHitState whs = hit->wireHitState();
+                    if (whs.active() && whs.driftConstraint()) {
+                        rcirc->SetFillColor(kAzure - 9);
+                        rcirc->SetFillStyle(1001);
+                        rcirc->SetLineColor(kBlue);
+                    } else {
+                        rcirc->SetFillStyle(0);
+                        rcirc->SetLineColor(kRed);
+                        rcirc->SetLineStyle(2); // Dashed for inactive/unconstrained
+                    }
+                    rcirc->Draw();
+
+                    // Tooltip/Data Graph
+                    double sz = pos_l.z();
+                    double sy = pos_l.y();
+                    TGraph *g = new TGraph(1, &sz, &sy);
+                    g->SetMarkerStyle(1);
+                    g->SetMarkerColorAlpha(kWhite, 0);
+                    g->SetName(Form("Straw %d: %.2f MeV", straw.id().getStraw(), hit->energyDep()));
+                    g->Draw("P SAME");
                 }
-                rcirc->Draw();
-                
-                double sz = pos_l.z();
-                double sy = pos_l.y();
-                TGraph *g = new TGraph(1, &sz, &sy);
-                g->SetMarkerColorAlpha(kWhite,0);
-                g->SetName(Form("Straw %d: %.2f MeV",straw.id().getStraw(), hit->energyDep()));
-                g->Draw("P SAME");
             }
         }
+        // Update the canvas for offline viewing
+        planeCanvas->Update();
+        // Optional: planeCanvas->SaveAs(Form("Plane_%d.png", planeId));
     }
 }
-
+  
 void TrackerCalo2DViews::redrawCanvas(const mu2e::KalSeedPtrCollection* seedcol) {
-    if (!fCanvas || !fCanvasHolder) return;
+  //if (!fCanvas || !fCanvasHolder) return;
     drawTrackerStation(seedcol);
-    fCanvas->Modified();
+    /* fCanvas->Modified();
     fCanvas->Update();
-    
     TString json = TBufferJSON::ToJSON(fCanvas);
     fCanvasHolder->SetTitle(TBase64::Encode(json).Data());
-    fCanvasHolder->StampObjProps();
+    fCanvasHolder->StampObjProps();*/
 }
 
 } // namespace mu2e

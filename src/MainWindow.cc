@@ -786,7 +786,7 @@ void MainWindow::showEvents(REX::REveManager *eveMng, REX::REveElement* &eventSc
     const mu2e::KalSeedPtrCollection* seedcol = track_list[0];
     if(drawOpts.addTrackerHist) {
       fTrackerCalo2DViews = new TrackerCalo2DViews();
-      fTrackerCalo2DViews->createHistogramView();
+      //fTrackerCalo2DViews->createHistogramView();
       fTrackerCalo2DViews->redrawCanvas(seedcol);
     }
     //redrawCanvas(seedcol);

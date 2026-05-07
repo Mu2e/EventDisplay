@@ -2,6 +2,7 @@
 #define TrackerCalo2DViews_hh
 
 #include <TCanvas.h>
+#include <TColor.h>
 #include <ROOT/REvePointSet.hxx>
 #include <ROOT/REveViewer.hxx>
 #include <ROOT/REveManager.hxx>
