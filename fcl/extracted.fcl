@@ -22,6 +22,7 @@ Mu2eEventDisplay.addTrkStrawHits : true
 Mu2eEventDisplay.addTrkCaloHits : true
 Mu2eEventDisplay.filler.addCosmicTrackSeeds : false
 Mu2eEventDisplay.filler.addMCTraj : true
+Mu2eEventDisplay.filler.addTrackerHist : true
 Mu2eEventDisplay.filler.addHelixSeeds : false
 Mu2eEventDisplay.specifyTag : false
 

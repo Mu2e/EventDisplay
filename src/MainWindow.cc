@@ -762,6 +762,11 @@ void MainWindow::createProjectionStuff(REX::REveManager *eveMng)
   XYCaloDisk1View = eveMng->SpawnNewViewer("XYCaloDisk1 View", "");
   XYCaloDisk1View->AddScene(XYCaloDisk1GeomScene);
   XYCaloDisk1View->AddScene(XYCaloDisk1EventScene);
+
+  for (auto v: {TrackerXYView, XYCaloDisk0View, XYCaloDisk1View, rhoZView}){
+    v->SetAxesType(REX::REveViewer::kAxesOrigin);
+    v->StampObjProps();
+  }
 }
 
 
@@ -776,6 +781,15 @@ void MainWindow::showEvents(REX::REveManager *eveMng, REX::REveElement* &eventSc
   std::vector<const KalSeedPtrCollection*> track_list = std::get<1>(data.track_tuple);
   if(drawOpts.addTracks and track_list.size() !=0) {
     pass_data->FillKinKalTrajectory(eveMng, firstLoop, eventScene, data.track_tuple, KKOpts.addKalInter,  KKOpts.addTrkStrawHits, KKOpts.addTrkCaloHits, t1, t2);
+
+    auto const& track_list = std::get<1>(data.track_tuple);
+    const mu2e::KalSeedPtrCollection* seedcol = track_list[0];
+    if(drawOpts.addTrackerHist) {
+      fTrackerCalo2DViews = new TrackerCalo2DViews();
+      //fTrackerCalo2DViews->createHistogramView();
+      fTrackerCalo2DViews->redrawCanvas(seedcol);
+    }
+    //redrawCanvas(seedcol);
   }
    if(drawOpts.addCrvTrack) {
      pass_data->AddCRVKalIntersection(eveMng, firstLoop, eventScene, data.track_tuple, KKOpts.addKalInter,  KKOpts.addTrkStrawHits, KKOpts.addTrkCaloHits, t1, t2, data.crvcoin_tuple, geomOpts.extracted, drawOpts.addCrvBars);

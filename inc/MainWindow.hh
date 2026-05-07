@@ -18,9 +18,21 @@
 #include "TTimer.h"
 #include "TGeoMatrix.h"
 #include "TError.h"
+#include <TPad.h>
+#include <TCanvas.h>
+#include <TBufferJSON.h>
+#include <TBase64.h>
 #include <TApplication.h>
 #include <TSystem.h>
 #include <TGTextEntry.h>
+#include <TH1F.h>
+#include <TH2F.h>
+#include <TRandom3.h>
+#include <TBox.h>
+#include <TEllipse.h>
+#include <TLine.h>
+#include <TLatex.h>
+#include <TGraph.h>
 #include <ROOT/REveGeoShape.hxx>
 #include <ROOT/REveScene.hxx>
 #include <ROOT/REveViewer.hxx>
@@ -41,9 +53,17 @@
 #include <ROOT/REveViewContext.hxx>
 #include "art/Framework/Principal/Event.h"
 #include "EventDisplay/inc/DataCollections.hh"
+#include "EventDisplay/inc/TrackerCalo2DViews.hh"
 #include "EventDisplay/inc/DataInterface.hh"
 #include "EventDisplay/inc/MCInterface.hh"
 #include "Offline/StoppingTargetGeom/inc/StoppingTarget.hh"
+#include "Offline/CalorimeterGeom/inc/DiskCalorimeter.hh"
+#include "Offline/CalorimeterGeom/inc/Disk.hh"
+#include "Offline/CalorimeterGeom/inc/Crystal.hh"
+#include "Offline/TrackerGeom/inc/Panel.hh"
+#include "Offline/TrackerGeom/inc/Plane.hh"
+#include "Offline/TrackerGeom/inc/Straw.hh"
+#include "Offline/TrackerGeom/inc/Tracker.hh"
 
 #include <utility>
 namespace REX = ROOT::Experimental;
@@ -131,14 +151,15 @@ namespace mu2e {
       bool addTrkHits = false; // legacy
       bool addMCTrajectories = false;
       bool addSurfaceSteps = false;
-      bool addSimParts = false;
-      bool addTrkErrBar = true;
+       bool addSimParts = false;
+       bool addTrackerHist = false;
+       bool addTrkErrBar = true;
       bool addCrystalDraw = false;
       bool addCrvBars = true;
       DrawOptions(){};
 
-       DrawOptions(bool cosmictracks, bool helices, bool tracks, bool calodigis, bool clusters, bool combohits, bool bkgclusters, bool crv, bool crvclu, bool crvtrack, bool timeclusters, bool trkhits, bool mctraj, bool surfsteps, bool simparts, bool errbar, bool crys, bool crvbars)
-       : addCosmicTracks(cosmictracks), addHelices(helices), addTracks(tracks), addCaloDigis(calodigis), addClusters(clusters), addComboHits(combohits), addBkgClusters(bkgclusters), addCrvRecoPulse(crv), addCrvClusters(crvclu), addCrvTrack(crvtrack), addTimeClusters(timeclusters), addTrkHits(trkhits), addMCTrajectories(mctraj), addSurfaceSteps(surfsteps), addSimParts(simparts), addTrkErrBar(errbar), addCrystalDraw(crys), addCrvBars(crvbars) {};
+        DrawOptions(bool cosmictracks, bool helices, bool tracks, bool calodigis, bool clusters, bool combohits, bool bkgclusters, bool crv, bool crvclu, bool crvtrack, bool timeclusters, bool trkhits, bool mctraj, bool surfsteps, bool simparts, bool trackerhist, bool errbar, bool crys, bool crvbars)
+        : addCosmicTracks(cosmictracks), addHelices(helices), addTracks(tracks), addCaloDigis(calodigis), addClusters(clusters), addComboHits(combohits), addBkgClusters(bkgclusters), addCrvRecoPulse(crv), addCrvClusters(crvclu), addCrvTrack(crvtrack), addTimeClusters(timeclusters), addTrkHits(trkhits), addMCTrajectories(mctraj), addSurfaceSteps(surfsteps), addSimParts(simparts), addTrackerHist(trackerhist), addTrkErrBar(errbar), addCrystalDraw(crys), addCrvBars(crvbars) {};
 
      };
 
@@ -169,8 +190,10 @@ namespace mu2e {
             void projectScenes(REX::REveManager *eveMng, bool geomp, bool eventp);
             void projectEvents(REX::REveManager *eveMng);
             void maketable(REX::REveManager *eveMng);
+            
+            TrackerCalo2DViews *fTrackerCalo2DViews = nullptr;
 
-            REX::REveProjectionManager *mngTrackerXY = nullptr;
+            REX::REveProjectionManager *mngTrackerXY   = nullptr;
             REX::REveProjectionManager *mngXYCaloDisk0 = nullptr;
             REX::REveProjectionManager *mngXYCaloDisk1 = nullptr;
             REX::REveProjectionManager *mngRhoZ   = nullptr;
@@ -182,6 +205,9 @@ namespace mu2e {
             REX::REveViewer *XYCaloDisk0View = nullptr;
             REX::REveViewer *XYCaloDisk1View = nullptr;
             REX::REveViewer *rhoZView = nullptr;
+
+      /*REX::REvePointSet* fCanvasHolder{nullptr};
+        TCanvas* fCanvas{nullptr};*/
 
             #else
                 ClassDef(MainWindow, 0);
