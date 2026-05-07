@@ -50,11 +50,16 @@ void TrackerCalo2DViews::drawTrackerStation(const mu2e::KalSeedPtrCollection* se
     }
 
     double strawRadius = tracker->strawProperties()._strawOuterRadius;
-    std::array<int, 6> padMap = {5, 4, 1, 2, 3, 6};
+
+    std::vector<int> planeIdA = {0,3,4,7,8,11,12,15,16,19,20,23,24,27,28,31,32,35};
 
     for (const auto& planeId : uniquePlanes) {
         std::cout << "Processing Canvas for Plane " << planeId << std::endl;
-        
+        std::array<int, 6> padMap;
+        if(std::find(planeIdA.begin(), planeIdA.end(), planeId) != planeIdA.end())
+          padMap = {2, 3, 6, 5, 4, 1};
+        else
+          padMap = {5, 4, 1, 2, 3, 6};
         // Fix: Proper TCanvas name and title string formatting
         TString canvasName = Form("Canvas_Plane_%d", planeId);
         TString canvasTitle = Form("Mu2e Tracker Plane %d - Y vs Z View", planeId);
