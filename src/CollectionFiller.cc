@@ -37,6 +37,7 @@ namespace mu2e{
     addSurfSteps_(conf.addSurfSteps()),
     addSimParts_(conf.addSimParts()),
     addTrackerHist_(conf.addTrackerHist()),
+    addCaloHist_(conf.addCaloHist()),
     FillAll_(conf.FillAll())
   {}
 

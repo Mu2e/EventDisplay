@@ -50,7 +50,9 @@ Mu2eEventDisplay : {
       addKalSeeds : true
       addCosmicTrackSeeds : false
        addMCTraj : true
-       addTrackerHist : false
+        addTrackerHist : false
+        addCaloHist : false
+
       addSurfSteps : true
       addSimParts : false
       addHelixSeeds : false

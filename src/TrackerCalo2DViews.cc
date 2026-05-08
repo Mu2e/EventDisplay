@@ -155,6 +155,10 @@ void TrackerCalo2DViews::drawTrackerStation(const mu2e::KalSeedPtrCollection* se
         // Optional: planeCanvas->SaveAs(Form("Plane_%d.png", planeId));
     }
 }
+
+void TrackerCalo2DViews::drawCalorimeterDisk() {
+  // Empty for now
+}
   
   /*void TrackerCalo2DViews::redrawCanvas(const mu2e::KalSeedPtrCollection* seedcol) {
     if (!fCanvas || !fCanvasHolder) return;

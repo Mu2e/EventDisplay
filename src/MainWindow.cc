@@ -784,12 +784,17 @@ void MainWindow::showEvents(REX::REveManager *eveMng, REX::REveElement* &eventSc
 
     auto const& track_list = std::get<1>(data.track_tuple);
     const mu2e::KalSeedPtrCollection* seedcol = track_list[0];
-    if(drawOpts.addTrackerHist) {
-      fTrackerCalo2DViews = new TrackerCalo2DViews();
-      //fTrackerCalo2DViews->createHistogramView();
-      //fTrackerCalo2DViews->redrawCanvas(seedcol);
-      fTrackerCalo2DViews->drawTrackerStation(seedcol);
-    }
+     if(drawOpts.addTrackerHist) {
+       fTrackerCalo2DViews = new TrackerCalo2DViews();
+       //fTrackerCalo2DViews->createHistogramView();
+       //fTrackerCalo2DViews->redrawCanvas(seedcol);
+       fTrackerCalo2DViews->drawTrackerStation(seedcol);
+     }
+     if(drawOpts.addCaloHist) {
+       if(!fTrackerCalo2DViews) fTrackerCalo2DViews = new TrackerCalo2DViews();
+       fTrackerCalo2DViews->drawCalorimeterDisk();
+     }
+
     //redrawCanvas(seedcol);
   }
    if(drawOpts.addCrvTrack) {
