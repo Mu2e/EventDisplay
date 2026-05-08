@@ -162,51 +162,86 @@ void TrackerCalo2DViews::drawTrackerStation(const mu2e::KalSeedPtrCollection* se
 }
 
 void TrackerCalo2DViews::drawCalorimeterDisk() {
+
   mu2e::GeomHandle<mu2e::DiskCalorimeter> calo;
-  // Draw first disk
+
+  // draw first disk
   const mu2e::Disk& disk = calo->disk(0);
-  // Crystal transverse size
-  double crystalHalfSize = calo->caloInfo().getDouble("crystalXYLength") / 2.0;
-  TCanvas* c = new TCanvas("calo_disk", "Calorimeter Disk", 1200, 1200);
+
+  TCanvas* c =
+      new TCanvas("calo_disk", "Calorimeter Disk", 1200, 1200);
+
   c->cd();
   gPad->SetFixedAspectRatio();
-  double rmax = disk.geomInfo().outerRadius();
-  double rmin = disk.geomInfo().innerRadius();
 
-  TH2F* frame = new TH2F("calo_frame","Calorimeter Disk;X (mm);Y (mm)",100,-rmax - 50,rmax + 50,100,-rmax - 50,rmax + 50);
+  // Disk boundaries
+  double rmax = disk.radiusOutCrystal();
+  double rmin = disk.radiusInCrystal();
+
+  TH2F* frame = new TH2F(
+      "calo_frame",
+      "Calorimeter Disk;X (mm);Y (mm)",
+      100,
+      -rmax - 50,
+       rmax + 50,
+      100,
+      -rmax - 50,
+       rmax + 50);
+
   frame->SetStats(0);
   frame->Draw();
-  // Optional: draw inner/outer disk boundaries
+
+  // Outer boundary
   TEllipse* outer = new TEllipse(0, 0, rmax, rmax);
   outer->SetFillStyle(0);
   outer->SetLineColor(kBlack);
   outer->SetLineWidth(2);
   outer->Draw();
+
+  // Inner hole
   TEllipse* inner = new TEllipse(0, 0, rmin, rmin);
   inner->SetFillStyle(0);
   inner->SetLineColor(kBlack);
   inner->SetLineWidth(2);
   inner->Draw();
-  // Loop over crystals
-  for (int icr = 0; icr < disk.nCrystals(); ++icr) {
+
+  // Draw crystals
+  for (size_t icr = 0; icr < disk.nCrystals(); ++icr) {
+
     const mu2e::Crystal& crystal = disk.crystal(icr);
-    // Crystal center position
-    CLHEP::Hep3Vector pos = crystal.position();
-    double x = pos.x();
-    double y = pos.y();
-    // Draw square crystal
-    TBox* box = new TBox(x - crystalHalfSize,y - crystalHalfSize,x + crystalHalfSize,y + crystalHalfSize);
+
+    CLHEP::Hep3Vector pos  = crystal.localPosition();
+    CLHEP::Hep3Vector size = crystal.size();
+
+    double x  = pos.x();
+    double y  = pos.y();
+
+    double dx = size.x() / 2.0;
+    double dy = size.y() / 2.0;
+
+    TBox* box = new TBox(
+        x - dx,
+        y - dy,
+        x + dx,
+        y + dy);
+
     box->SetFillStyle(0);
     box->SetLineColor(kBlue + 1);
     box->SetLineWidth(1);
+
     box->Draw();
-    // Invisible graph for hover/tooltips if desired
+
+    // Invisible hover point
     TGraph* g = new TGraph(1, &x, &y);
+
     g->SetMarkerStyle(1);
     g->SetMarkerColorAlpha(kWhite, 0);
-    g->SetName(Form("Crystal %d",crystal.id()));
+
+    g->SetName(Form("Crystal %zu", icr));
+
     g->Draw("P SAME");
   }
+
   c->Update();
 }
   
