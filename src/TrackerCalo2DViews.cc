@@ -36,10 +36,64 @@ void TrackerCalo2DViews::createHistogramView() {
     canvasViewer->AddScene(histScene);
 }
 
+template<class KTRAJ>
+void TrackerCalo2DViews::drawTrajectory2D(const KTRAJ& trajectory, const mu2e::Plane& plane, std::map<int, TPad*>& panelPads, const std::set<int>& activePanels)
+{
+    double t1 = trajectory.range().begin();
+    double t2 = trajectory.range().end();
+    double step = 0.5;
+
+    // one graph per panel
+    std::map<int, TGraph*> panelGraphs;
+    for (int pid : activePanels) {
+        panelGraphs[pid] = new TGraph();
+    }
+    for(double t = t1; t <= t2; t += step) {
+
+        auto pos = trajectory.position3(t);
+
+        CLHEP::Hep3Vector global(pos.x(), pos.y(), pos.z());
+
+        // determine which panel this point belongs to
+        for (int pid : activePanels) {
+
+            const mu2e::Panel& panel = plane.getPanel(pid);
+
+            CLHEP::Hep3Vector local =
+                panel.dsToPanel() * global;
+
+            double w = local.z();
+            double v = local.y();
+
+            // optional acceptance cuts
+            if (std::abs(w) > 25.0) continue;
+            if (std::abs(v) > 180.0) continue;
+
+            auto* g = panelGraphs[pid];
+
+            int n = g->GetN();
+
+            g->SetPoint(n, w, v);
+        }
+    }
+
+    // draw
+    for (auto& [pid, graph] : panelGraphs) {
+
+        panelPads[pid]->cd();
+
+        graph->SetLineColor(kRed);
+        graph->SetLineWidth(3);
+
+        graph->Draw("L SAME");
+    }
+}
+
   void TrackerCalo2DViews::drawTrackerStation(const mu2e::KalSeedPtrCollection* seedcol){ //, const CaloDigiCollection* calodigicol) {
     // Note: We can draw without fCanvas/fCanvasHolder since you want offline viewing
      std::map<mu2e::StrawId, const mu2e::TrkStrawHitSeed*> hitDataMap;
      std::set<int> uniquePlanes;
+     std::map<int, std::set<int>> activePanelsPerPlane;
     if (seedcol != nullptr) {
       for (auto const& kseedptr : *seedcol) {
         const mu2e::KalSeed& kseed = *kseedptr;
@@ -47,6 +101,7 @@ void TrackerCalo2DViews::createHistogramView() {
           mu2e::StrawId sid = hit.strawId();
           uniquePlanes.insert(sid.getPlane());
           hitDataMap[sid] = &hit;
+	  activePanelsPerPlane[sid.getPlane()].insert(sid.getPanel());
         }
       }
     }
@@ -67,6 +122,7 @@ void TrackerCalo2DViews::createHistogramView() {
         TCanvas* planeCanvas = new TCanvas(canvasName, canvasTitle, 1000, 800);
         planeCanvas->Divide(2, 3, 0.005, 0.005);
         const mu2e::Plane& plane = tracker->getPlane(planeId);
+	std::map<int, TPad*> panelPads;
         for (int panelId = 0; panelId < 6; ++panelId) {
           const mu2e::Panel& panel = plane.getPanel(panelId);
           // 1. Calculate Bounds for this specific panel
@@ -82,6 +138,7 @@ void TrackerCalo2DViews::createHistogramView() {
            //std::cout<<"Plane = "<<planeId<<" panel = "<<panelId<<" ymin = "<<ymin<<" max = "<<ymax<<" zmin = "<<zmin<<" max = "<<zmax<<std::endl;
            // 2. Prepare the Pad
            planeCanvas->cd(padMap[panelId]);
+	   panelPads[panelId] = dynamic_cast<TPad*>(gPad);
            gPad->SetBottomMargin(0.15);
            gPad->SetLeftMargin(0.15);
            gPad->SetFixedAspectRatio();
@@ -137,7 +194,46 @@ void TrackerCalo2DViews::createHistogramView() {
              }
            }
         }
-        planeCanvas->Update();
+
+	if(seedcol != nullptr) {
+
+    for (auto const& kseedptr : *seedcol) {
+
+        const mu2e::KalSeed& kseed = *kseedptr;
+
+        if(kseed.loopHelixFit()) {
+
+            auto traj = kseed.loopHelixFitTrajectory();
+
+            drawTrajectory2D(
+                *traj,
+                plane,
+                panelPads,
+                activePanelsPerPlane[planeId]);
+
+        } else if(kseed.centralHelixFit()) {
+
+            auto traj = kseed.centralHelixFitTrajectory();
+
+            drawTrajectory2D(
+                *traj,
+                plane,
+                panelPads,
+                activePanelsPerPlane[planeId]);
+
+        } else if(kseed.kinematicLineFit()) {
+
+            auto traj = kseed.kinematicLineFitTrajectory();
+
+            drawTrajectory2D(
+                *traj,
+                plane,
+                panelPads,
+                activePanelsPerPlane[planeId]);
+        }
+    }
+	}
+	planeCanvas->Update();
       }
     //Try calo here
       /*if(calodigicol && !calodigicol->empty()){
