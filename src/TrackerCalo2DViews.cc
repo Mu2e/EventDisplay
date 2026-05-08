@@ -62,7 +62,7 @@ void TrackerCalo2DViews::drawTrackerStation(const mu2e::KalSeedPtrCollection* se
           padMap = {5, 4, 1, 2, 3, 6};
         // Fix: Proper TCanvas name and title string formatting
         TString canvasName = Form("Canvas_Plane_%d", planeId);
-        TString canvasTitle = Form("Mu2e Tracker Plane %d - Y vs Z View", planeId);
+        TString canvasTitle = Form("Plane %d - V vs W View", planeId);
         
         TCanvas* planeCanvas = new TCanvas(canvasName, canvasTitle, 1000, 800);
         planeCanvas->Divide(2, 3, 0.005, 0.005);
@@ -73,32 +73,38 @@ void TrackerCalo2DViews::drawTrackerStation(const mu2e::KalSeedPtrCollection* se
             const mu2e::Panel& panel = plane.getPanel(panelId);
             
             // 1. Calculate Bounds for this specific panel
-            double ymin = 1e9, ymax = -1e9, zmin = 1e9, zmax = -1e9;
+            /*double ymin = 1e9, ymax = -1e9, zmin = 1e9, zmax = -1e9;
             for (size_t iStraw = 0; iStraw < panel.nStraws(); ++iStraw) {
                 const mu2e::Straw& straw = panel.getStraw(iStraw);
-                CLHEP::Hep3Vector pos_l = straw.getMidPoint();
+                CLHEP::Hep3Vector pos_l = plane.dsToPlane()*straw.getMidPoint();
                 ymin = std::min(ymin, pos_l.y());
                 ymax = std::max(ymax, pos_l.y());
                 zmin = std::min(zmin, pos_l.z());
                 zmax = std::max(zmax, pos_l.z());
-            }
-
+                }*/
+            //std::cout<<"Plane = "<<planeId<<" panel = "<<panelId<<" ymin = "<<ymin<<" max = "<<ymax<<" zmin = "<<zmin<<" max = "<<zmax<<std::endl;
             // 2. Prepare the Pad
             planeCanvas->cd(padMap[panelId]);
             gPad->SetBottomMargin(0.15);
             gPad->SetLeftMargin(0.15);
+            gPad->SetFixedAspectRatio();
 
             TString frameName = Form("h_plane%d_panel%d", planeId, panelId);
-            TString frameTitle = Form("Plane %d: Panel %d;Z (mm);Y (mm)", planeId, panelId);
+            TString frameTitle = Form("Plane %d: Panel %d;W (mm);V (mm)", planeId, panelId);
+
+            //double dz = zmax - zmin;
+            //double dy = ymax - ymin;
+            //double margin = std::max(dz, dy) * 0.1;
             
-            TH2F* frame = new TH2F(frameName, frameTitle, 100, zmin - 20, zmax + 20, 100, ymin - 10, ymax + 10);
+            //TH2F* frame = new TH2F(frameName, frameTitle, 100, zmin - margin, zmax + margin, 100, ymin - margin, ymax + margin);
+            TH2F* frame = new TH2F(frameName, frameTitle, 100, -20, 20, 100, -170, 170);
             frame->SetStats(0);
             frame->Draw();
 
             // 3. Draw Straws and Hits
             for (size_t iStraw = 0; iStraw < panel.nStraws(); ++iStraw) {
                 const mu2e::Straw& straw = panel.getStraw(iStraw);
-                CLHEP::Hep3Vector pos_l = straw.getMidPoint();
+                CLHEP::Hep3Vector pos_l = panel.dsToPanel()*straw.getMidPoint();
                 
                 // Base Straw Geometry
                 TEllipse *circ = new TEllipse(pos_l.z(), pos_l.y(), strawRadius, strawRadius);
@@ -150,14 +156,14 @@ void TrackerCalo2DViews::drawTrackerStation(const mu2e::KalSeedPtrCollection* se
     }
 }
   
-void TrackerCalo2DViews::redrawCanvas(const mu2e::KalSeedPtrCollection* seedcol) {
-  //if (!fCanvas || !fCanvasHolder) return;
+  /*void TrackerCalo2DViews::redrawCanvas(const mu2e::KalSeedPtrCollection* seedcol) {
+    if (!fCanvas || !fCanvasHolder) return;
     drawTrackerStation(seedcol);
-    /* fCanvas->Modified();
+    fCanvas->Modified();
     fCanvas->Update();
     TString json = TBufferJSON::ToJSON(fCanvas);
     fCanvasHolder->SetTitle(TBase64::Encode(json).Data());
-    fCanvasHolder->StampObjProps();*/
-}
+    fCanvasHolder->StampObjProps();
+}*/
 
 } // namespace mu2e

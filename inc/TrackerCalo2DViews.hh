@@ -20,7 +20,7 @@ public:
 
     void createHistogramView();
     void drawTrackerStation(const mu2e::KalSeedPtrCollection* seedcol);
-    void redrawCanvas(const mu2e::KalSeedPtrCollection* seedcol);
+  //void redrawCanvas(const mu2e::KalSeedPtrCollection* seedcol);
 
 private:
     REX::REvePointSet* fCanvasHolder{nullptr};

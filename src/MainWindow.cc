@@ -787,7 +787,8 @@ void MainWindow::showEvents(REX::REveManager *eveMng, REX::REveElement* &eventSc
     if(drawOpts.addTrackerHist) {
       fTrackerCalo2DViews = new TrackerCalo2DViews();
       //fTrackerCalo2DViews->createHistogramView();
-      fTrackerCalo2DViews->redrawCanvas(seedcol);
+      //fTrackerCalo2DViews->redrawCanvas(seedcol);
+      fTrackerCalo2DViews->drawTrackerStation(seedcol);
     }
     //redrawCanvas(seedcol);
   }
