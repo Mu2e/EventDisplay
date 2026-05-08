@@ -165,7 +165,6 @@ void TrackerCalo2DViews::drawCalorimeterDisk() {
 
   mu2e::GeomHandle<mu2e::DiskCalorimeter> calo;
 
-  // draw first disk
   const mu2e::Disk& disk = calo->disk(0);
 
   TCanvas* c =
@@ -174,38 +173,54 @@ void TrackerCalo2DViews::drawCalorimeterDisk() {
   c->cd();
   gPad->SetFixedAspectRatio();
 
-  // Disk boundaries
-  double rmax = disk.radiusOutCrystal();
-  double rmin = disk.radiusInCrystal();
+  //----------------------------------------------------------------------
+  // First pass: determine plotting bounds
+  //----------------------------------------------------------------------
+
+  double xmin =  1e9;
+  double xmax = -1e9;
+  double ymin =  1e9;
+  double ymax = -1e9;
+
+  for (size_t icr = 0; icr < disk.nCrystals(); ++icr) {
+
+    const mu2e::Crystal& crystal = disk.crystal(icr);
+
+    CLHEP::Hep3Vector pos  = crystal.localPosition();
+    CLHEP::Hep3Vector size = crystal.size();
+
+    double x  = pos.x();
+    double y  = pos.y();
+
+    double dx = size.x() / 2.0;
+    double dy = size.y() / 2.0;
+
+    xmin = std::min(xmin, x - dx);
+    xmax = std::max(xmax, x + dx);
+
+    ymin = std::min(ymin, y - dy);
+    ymax = std::max(ymax, y + dy);
+  }
+
+  double margin = 20.0;
 
   TH2F* frame = new TH2F(
       "calo_frame",
       "Calorimeter Disk;X (mm);Y (mm)",
       100,
-      -rmax - 50,
-       rmax + 50,
+      xmin - margin,
+      xmax + margin,
       100,
-      -rmax - 50,
-       rmax + 50);
+      ymin - margin,
+      ymax + margin);
 
   frame->SetStats(0);
   frame->Draw();
 
-  // Outer boundary
-  TEllipse* outer = new TEllipse(0, 0, rmax, rmax);
-  outer->SetFillStyle(0);
-  outer->SetLineColor(kBlack);
-  outer->SetLineWidth(2);
-  outer->Draw();
-
-  // Inner hole
-  TEllipse* inner = new TEllipse(0, 0, rmin, rmin);
-  inner->SetFillStyle(0);
-  inner->SetLineColor(kBlack);
-  inner->SetLineWidth(2);
-  inner->Draw();
-
+  //----------------------------------------------------------------------
   // Draw crystals
+  //----------------------------------------------------------------------
+
   for (size_t icr = 0; icr < disk.nCrystals(); ++icr) {
 
     const mu2e::Crystal& crystal = disk.crystal(icr);
@@ -231,7 +246,7 @@ void TrackerCalo2DViews::drawCalorimeterDisk() {
 
     box->Draw();
 
-    // Invisible hover point
+    // optional invisible tooltip point
     TGraph* g = new TGraph(1, &x, &y);
 
     g->SetMarkerStyle(1);
