@@ -19,13 +19,14 @@ public:
     virtual ~TrackerCalo2DViews();
 
     void createHistogramView();
-    void drawTrackerStation(const mu2e::KalSeedPtrCollection* seedcol);
-    void drawCalorimeterDisk();
+  void drawTrackerStation(const mu2e::KalSeedPtrCollection* seedcol); //, const CaloDigiCollection* calodigicol);
+  //void drawCalorimeterDisk();
   //void redrawCanvas(const mu2e::KalSeedPtrCollection* seedcol);
 
 private:
     REX::REvePointSet* fCanvasHolder{nullptr};
     TCanvas* fCanvas{nullptr};
+    TCanvas* fCaloCanvas{nullptr};
 };
 
 } // namespace mu2e
