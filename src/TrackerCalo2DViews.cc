@@ -44,34 +44,22 @@ static void drawTrajectory2D(const KTRAJ& trajectory, const mu2e::Plane& plane, 
     double t1 = trajectory.range().begin();
     double t2 = trajectory.range().end();
     double step = 0.5;
-
     std::map<int, TGraph*> panelGraphs;
     for (int pid : activePanels) {
         panelGraphs[pid] = new TGraph();
     }
     for(double t = t1; t <= t2; t += step) {
-
         auto pos = trajectory.position3(t);
-
         CLHEP::Hep3Vector global(pos.x(), pos.y(), pos.z());
-
         for (int pid : activePanels) {
-
             const mu2e::Panel& panel = plane.getPanel(pid);
-
             CLHEP::Hep3Vector local = panel.dsToPanel() * global;
-
             double w = local.z();
             double v = local.y();
-
-            if (std::abs(w) > 25.0) continue;
-            if (std::abs(v) > 180.0) continue;
-
             auto* g = panelGraphs[pid];
             g->SetPoint(g->GetN(), w, v);
         }
     }
-
     for (auto& [pid, graph] : panelGraphs) {
         TPad* pad = panelPads.count(pid) ? panelPads.at(pid) : nullptr;
         if (!pad) continue;
@@ -192,32 +180,23 @@ static void drawTrajectory2D(const KTRAJ& trajectory, const mu2e::Plane& plane, 
              }
            }
         }
-
 	if(seedcol != nullptr) {
-
-    for (auto const& kseedptr : *seedcol) {
-
-        const mu2e::KalSeed& kseed = *kseedptr;
-
-        if(kseed.loopHelixFit()) {
-
-            auto traj = kseed.loopHelixFitTrajectory();
-            if (!traj) continue;
-            drawTrajectory2D(*traj, plane, panelPads, activePanelsPerPlane[planeId]);
-
-        } else if(kseed.centralHelixFit()) {
-
-            auto traj = kseed.centralHelixFitTrajectory();
-            if (!traj) continue;
-            drawTrajectory2D(*traj, plane, panelPads, activePanelsPerPlane[planeId]);
-
-        } else if(kseed.kinematicLineFit()) {
-
-            auto traj = kseed.kinematicLineFitTrajectory();
-            if (!traj) continue;
-            drawTrajectory2D(*traj, plane, panelPads, activePanelsPerPlane[planeId]);
-        }
-    }
+          for (auto const& kseedptr : *seedcol) {
+            const mu2e::KalSeed& kseed = *kseedptr;
+            if(kseed.loopHelixFit()) {
+              auto traj = kseed.loopHelixFitTrajectory();
+              if (!traj) continue;
+              drawTrajectory2D(*traj, plane, panelPads, activePanelsPerPlane[planeId]);
+            } else if(kseed.centralHelixFit()) {
+              auto traj = kseed.centralHelixFitTrajectory();
+              if (!traj) continue;
+              drawTrajectory2D(*traj, plane, panelPads, activePanelsPerPlane[planeId]);
+            } else if(kseed.kinematicLineFit()) {
+              auto traj = kseed.kinematicLineFitTrajectory();
+              if (!traj) continue;
+              drawTrajectory2D(*traj, plane, panelPads, activePanelsPerPlane[planeId]);
+            }
+          }
 	}
 	planeCanvas->Update();
       }
