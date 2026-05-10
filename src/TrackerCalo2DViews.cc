@@ -8,8 +8,11 @@
 #include <TGraph.h>
 #include <TBufferJSON.h>
 #include <TBase64.h>
+#include <algorithm>
+#include <array>
 #include <iostream>
 #include <map>
+#include <set>
 #include "Offline/Mu2eKinKal/inc/WireHitState.hh"
 #include "Offline/GeometryService/inc/GeomHandle.hh"
 #include "Offline/TrackerGeom/inc/Tracker.hh"
@@ -19,7 +22,6 @@
 #include "Offline/CalorimeterGeom/inc/DiskCalorimeter.hh"
 #include "Offline/CalorimeterGeom/inc/Disk.hh"
 #include "Offline/CalorimeterGeom/inc/Crystal.hh"
-#include "Offline/GeometryService/inc/GeomHandle.hh"
 
 namespace mu2e {
 
@@ -37,13 +39,12 @@ void TrackerCalo2DViews::createHistogramView() {
 }
 
 template<class KTRAJ>
-void TrackerCalo2DViews::drawTrajectory2D(const KTRAJ& trajectory, const mu2e::Plane& plane, std::map<int, TPad*>& panelPads, const std::set<int>& activePanels)
+static void drawTrajectory2D(const KTRAJ& trajectory, const mu2e::Plane& plane, std::map<int, TPad*>& panelPads, const std::set<int>& activePanels)
 {
     double t1 = trajectory.range().begin();
     double t2 = trajectory.range().end();
     double step = 0.5;
 
-    // one graph per panel
     std::map<int, TGraph*> panelGraphs;
     for (int pid : activePanels) {
         panelGraphs[pid] = new TGraph();
@@ -54,37 +55,29 @@ void TrackerCalo2DViews::drawTrajectory2D(const KTRAJ& trajectory, const mu2e::P
 
         CLHEP::Hep3Vector global(pos.x(), pos.y(), pos.z());
 
-        // determine which panel this point belongs to
         for (int pid : activePanels) {
 
             const mu2e::Panel& panel = plane.getPanel(pid);
 
-            CLHEP::Hep3Vector local =
-                panel.dsToPanel() * global;
+            CLHEP::Hep3Vector local = panel.dsToPanel() * global;
 
             double w = local.z();
             double v = local.y();
 
-            // optional acceptance cuts
             if (std::abs(w) > 25.0) continue;
             if (std::abs(v) > 180.0) continue;
 
             auto* g = panelGraphs[pid];
-
-            int n = g->GetN();
-
-            g->SetPoint(n, w, v);
+            g->SetPoint(g->GetN(), w, v);
         }
     }
 
-    // draw
     for (auto& [pid, graph] : panelGraphs) {
-
-        panelPads[pid]->cd();
-
+        TPad* pad = panelPads.count(pid) ? panelPads.at(pid) : nullptr;
+        if (!pad) continue;
+        pad->cd();
         graph->SetLineColor(kRed);
         graph->SetLineWidth(3);
-
         graph->Draw("L SAME");
     }
 }
@@ -116,10 +109,15 @@ void TrackerCalo2DViews::drawTrajectory2D(const KTRAJ& trajectory, const mu2e::P
           padMap = {2, 3, 6, 5, 4, 1};
         else
           padMap = {5, 4, 1, 2, 3, 6};
-        // Fix: Proper TCanvas name and title string formatting
         TString canvasName = Form("Canvas_Plane_%d", planeId);
         TString canvasTitle = Form("Plane %d - V vs W View", planeId);
+        auto cit = fPlaneCanvases.find(planeId);
+        if (cit != fPlaneCanvases.end()) {
+            delete cit->second;
+            fPlaneCanvases.erase(cit);
+        }
         TCanvas* planeCanvas = new TCanvas(canvasName, canvasTitle, 1000, 800);
+        fPlaneCanvases[planeId] = planeCanvas;
         planeCanvas->Divide(2, 3, 0.005, 0.005);
         const mu2e::Plane& plane = tracker->getPlane(planeId);
 	std::map<int, TPad*> panelPads;
@@ -204,32 +202,20 @@ void TrackerCalo2DViews::drawTrajectory2D(const KTRAJ& trajectory, const mu2e::P
         if(kseed.loopHelixFit()) {
 
             auto traj = kseed.loopHelixFitTrajectory();
-
-            drawTrajectory2D(
-                *traj,
-                plane,
-                panelPads,
-                activePanelsPerPlane[planeId]);
+            if (!traj) continue;
+            drawTrajectory2D(*traj, plane, panelPads, activePanelsPerPlane[planeId]);
 
         } else if(kseed.centralHelixFit()) {
 
             auto traj = kseed.centralHelixFitTrajectory();
-
-            drawTrajectory2D(
-                *traj,
-                plane,
-                panelPads,
-                activePanelsPerPlane[planeId]);
+            if (!traj) continue;
+            drawTrajectory2D(*traj, plane, panelPads, activePanelsPerPlane[planeId]);
 
         } else if(kseed.kinematicLineFit()) {
 
             auto traj = kseed.kinematicLineFitTrajectory();
-
-            drawTrajectory2D(
-                *traj,
-                plane,
-                panelPads,
-                activePanelsPerPlane[planeId]);
+            if (!traj) continue;
+            drawTrajectory2D(*traj, plane, panelPads, activePanelsPerPlane[planeId]);
         }
     }
 	}

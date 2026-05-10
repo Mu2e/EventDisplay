@@ -8,6 +8,7 @@
 #include <ROOT/REveManager.hxx>
 #include <ROOT/REveScene.hxx>
 #include "Offline/RecoDataProducts/inc/KalSeed.hh"
+#include <map>
 
 namespace REX = ROOT::Experimental;
 
@@ -27,6 +28,7 @@ private:
     REX::REvePointSet* fCanvasHolder{nullptr};
     TCanvas* fCanvas{nullptr};
     TCanvas* fCaloCanvas{nullptr};
+    std::map<int, TCanvas*> fPlaneCanvases;
 };
 
 } // namespace mu2e
