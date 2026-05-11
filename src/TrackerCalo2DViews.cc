@@ -283,7 +283,7 @@ void TrackerCalo2DViews::drawTrackerXYView(const mu2e::KalSeedPtrCollection* see
     innerCircle->Draw();
 
     TEllipse* outerCircle = new TEllipse(0.0, 0.0, rOuter, rOuter);
-    outerCircle->SetLineColor(kRed + 1);
+    outerCircle->SetLineColor(kBlue + 1);
     outerCircle->SetLineWidth(2);
     outerCircle->SetFillStyle(0);
     outerCircle->Draw();
@@ -333,7 +333,7 @@ void TrackerCalo2DViews::drawTrackerXYView(const mu2e::KalSeedPtrCollection* see
         // Marker at hit position
         TMarker* hitMark = new TMarker(hx, hy, 20);
         hitMark->SetMarkerSize(0.4);
-        hitMark->SetMarkerColor(kBlack);
+        hitMark->SetMarkerColor(kRed);
         hitMark->Draw();
     }
 
