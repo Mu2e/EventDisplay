@@ -792,6 +792,7 @@ void MainWindow::showEvents(REX::REveManager *eveMng, REX::REveElement* &eventSc
       //fTrackerCalo2DViews->redrawCanvas(seedcol);
       //std::cout<<"track list size = "<<track_list.size()<<" calo digi size = "<<calodigi_list.size()<<std::endl;
       fTrackerCalo2DViews->drawTrackerStation(seedcol);//, calodigicol);
+      fTrackerCalo2DViews->drawTrackerXYView();
      } 
   }
    if(drawOpts.addCrvTrack) {

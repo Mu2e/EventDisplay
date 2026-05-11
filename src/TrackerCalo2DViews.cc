@@ -257,6 +257,40 @@ static void drawTrajectory2D(const KTRAJ& trajectory, const mu2e::Plane& plane, 
       fCaloCanvas->Update();
 }
 
+void TrackerCalo2DViews::drawTrackerXYView() {
+    mu2e::GeomHandle<mu2e::Tracker> tracker;
+
+    double rInner = tracker->g4Tracker()->getInnerTrackerEnvelopeParams().innerRadius();
+    double rOuter = tracker->g4Tracker()->getInnerTrackerEnvelopeParams().outerRadius();
+
+    if (!fXYCanvas)
+        fXYCanvas = new TCanvas("TrackerXY", "Tracker X-Y View", 800, 800);
+    fXYCanvas->cd();
+    fXYCanvas->Clear();
+    gPad->SetFixedAspectRatio();
+
+    double rMax = rOuter * 1.1;
+    TH2F* frame = new TH2F("TrackerXY_frame", "Tracker X-Y View;X (mm);Y (mm)",
+                            100, -rMax, rMax, 100, -rMax, rMax);
+    frame->SetStats(0);
+    frame->Draw();
+
+    TEllipse* innerCircle = new TEllipse(0.0, 0.0, rInner, rInner);
+    innerCircle->SetLineColor(kBlue + 1);
+    innerCircle->SetLineWidth(2);
+    innerCircle->SetFillStyle(0);
+    innerCircle->Draw();
+
+    TEllipse* outerCircle = new TEllipse(0.0, 0.0, rOuter, rOuter);
+    outerCircle->SetLineColor(kRed + 1);
+    outerCircle->SetLineWidth(2);
+    outerCircle->SetFillStyle(0);
+    outerCircle->Draw();
+
+    fXYCanvas->Modified();
+    fXYCanvas->Update();
+}
+
   /*void TrackerCalo2DViews::drawCalorimeterDisk() {
 }
   

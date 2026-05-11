@@ -21,6 +21,7 @@ public:
 
     void createHistogramView();
   void drawTrackerStation(const mu2e::KalSeedPtrCollection* seedcol); //, const CaloDigiCollection* calodigicol);
+  void drawTrackerXYView();
   //void drawCalorimeterDisk();
   //void redrawCanvas(const mu2e::KalSeedPtrCollection* seedcol);
 
@@ -28,6 +29,7 @@ private:
     REX::REvePointSet* fCanvasHolder{nullptr};
     TCanvas* fCanvas{nullptr};
     TCanvas* fCaloCanvas{nullptr};
+    TCanvas* fXYCanvas{nullptr};
     std::map<int, TCanvas*> fPlaneCanvases;
 };
 
