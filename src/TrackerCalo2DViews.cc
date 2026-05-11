@@ -228,9 +228,14 @@ static void drawTrajectoryXY(const KTRAJ& trajectory)
           }
 	}
         planeCanvas->cd();
-        TLegend *leg = new TLegend(0.51, 0.0, 0.99, 0.14);
-        leg->SetTextSize(0.018);
-        leg->SetBorderSize(1);
+        TPad *legPad = new TPad("legpad", "", 0.68, 0.68, 0.99, 0.99);
+        legPad->SetFillColor(kWhite);
+        legPad->SetBorderSize(1);
+        legPad->Draw();
+        legPad->cd();
+        TLegend *leg = new TLegend(0.0, 0.0, 1.0, 1.0);
+        leg->SetTextSize(0.1);
+        leg->SetBorderSize(0);
         leg->SetHeader("Hit key", "C");
         TEllipse *dummyInactive = new TEllipse();
         dummyInactive->SetFillStyle(0);
@@ -244,10 +249,11 @@ static void drawTrajectoryXY(const KTRAJ& trajectory)
         dummyDrift->SetFillColor(kAzure - 9);
         dummyDrift->SetFillStyle(1001);
         dummyDrift->SetLineColor(kRed);
-        leg->AddEntry(dummyInactive, "Inactive (dashed, drift r)", "l");
-        leg->AddEntry(dummyNoDrift,  "Active, no drift constraint (full straw)", "f");
-        leg->AddEntry(dummyDrift,    "Active, drift constraint (drift circle)", "f");
+        leg->AddEntry(dummyInactive, "Inactive (dashed circle)", "l");
+        leg->AddEntry(dummyNoDrift,  "Active, no drift (full straw)", "f");
+        leg->AddEntry(dummyDrift,    "Active, drift constraint", "f");
         leg->Draw();
+        planeCanvas->cd();
         planeCanvas->Update();
       }
 }
