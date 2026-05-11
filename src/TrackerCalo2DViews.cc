@@ -71,6 +71,24 @@ static void drawTrajectory2D(const KTRAJ& trajectory, const mu2e::Plane& plane, 
     }
 }
 
+template<class KTRAJ>
+static void drawTrajectoryXY(const KTRAJ& trajectory)
+{
+    double t1 = trajectory.range().begin();
+    double t2 = trajectory.range().end();
+    double step = 0.5;
+
+    TGraph* graph = new TGraph();
+    for (double t = t1; t <= t2; t += step) {
+        auto pos = trajectory.position3(t);
+        graph->SetPoint(graph->GetN(), pos.x(), pos.y());
+    }
+
+    graph->SetLineColor(kRed);
+    graph->SetLineWidth(2);
+    graph->Draw("L SAME");
+}
+
   void TrackerCalo2DViews::drawTrackerStation(const mu2e::KalSeedPtrCollection* seedcol){ //, const CaloDigiCollection* calodigicol) {
     // Note: We can draw without fCanvas/fCanvasHolder since you want offline viewing
      std::map<mu2e::StrawId, const mu2e::TrkStrawHitSeed*> hitDataMap;
@@ -287,6 +305,24 @@ void TrackerCalo2DViews::drawTrackerXYView(const mu2e::KalSeedPtrCollection* see
                                 sid.getPlane(), sid.getPanel(), sid.getStraw(),
                                 hit->driftRadius()));
         hitPoint->Draw("P SAME");
+    }
+
+    // Draw track trajectory in XY for each seed
+    for (auto const& kseedptr : *seedcol) {
+        const mu2e::KalSeed& kseed = *kseedptr;
+        if (kseed.loopHelixFit()) {
+            auto traj = kseed.loopHelixFitTrajectory();
+            if (!traj) continue;
+            drawTrajectoryXY(*traj);
+        } else if (kseed.centralHelixFit()) {
+            auto traj = kseed.centralHelixFitTrajectory();
+            if (!traj) continue;
+            drawTrajectoryXY(*traj);
+        } else if (kseed.kinematicLineFit()) {
+            auto traj = kseed.kinematicLineFitTrajectory();
+            if (!traj) continue;
+            drawTrajectoryXY(*traj);
+        }
     }
 
     fXYCanvas->Modified();
