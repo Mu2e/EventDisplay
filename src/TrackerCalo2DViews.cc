@@ -201,61 +201,6 @@ static void drawTrajectory2D(const KTRAJ& trajectory, const mu2e::Plane& plane, 
 	}
 	planeCanvas->Update();
       }
-    //Try calo here
-      /*if(calodigicol && !calodigicol->empty()){
-        for(unsigned int i = 0; i < calodigicol->size(); i++){
-              mu2e::CaloDigi const &digi = (*calodigicol)[i];
-              int sipmID = digi.SiPMID();
-              int cryID = sipmID / 2;
-              std::cout<<"CaloDigi i ="<<i<<" sipmId = "<<sipmID<<" cryId = "<<cryID<<std::endl;
-            }
-            }*/
-      mu2e::GeomHandle<mu2e::DiskCalorimeter> calo;
-      const mu2e::Disk& disk = calo->disk(0);
-      if (!fCaloCanvas)
-        fCaloCanvas = new TCanvas("calo_disk", "Calorimeter Disk", 1200, 1200);
-      fCaloCanvas->cd();
-      fCaloCanvas->Clear();
-      gPad->SetFixedAspectRatio();
-      double xmin =  1e9;
-      double xmax = -1e9;
-      double ymin =  1e9;
-      double ymax = -1e9;
-      for (size_t icr = 0; icr < disk.nCrystals(); ++icr) {
-        const mu2e::Crystal& crystal = disk.crystal(icr);
-        CLHEP::Hep3Vector pos  = crystal.localPosition();
-        CLHEP::Hep3Vector size = crystal.size();
-        double x  = pos.x();
-        double y  = pos.y();
-        double dx = size.x() / 2.0;
-        double dy = size.y() / 2.0;
-        xmin = std::min(xmin, x - dx);
-        xmax = std::max(xmax, x + dx);
-        ymin = std::min(ymin, y - dy);
-        ymax = std::max(ymax, y + dy);
-      }
-      double margin = 20.0;
-      TH2F* frame = new TH2F("calo_disk", "Disk 0;X (mm);Y (mm)", 100, xmin - margin, xmax + margin, 100, ymin - margin, ymax + margin);
-      frame->SetDirectory(0);
-      frame->SetStats(0);
-      frame->Draw();
-      std::cout<<"Disk ncrystals = "<<disk.nCrystals()<<std::endl;
-      for (size_t icr = 0; icr < disk.nCrystals(); ++icr) {
-        const mu2e::Crystal& crystal = disk.crystal(icr);
-        CLHEP::Hep3Vector pos  = crystal.localPosition();
-        CLHEP::Hep3Vector size = crystal.size();
-        double x  = pos.x();
-        double y  = pos.y();
-        double dx = size.x() / 2.0;
-        double dy = size.y() / 2.0;
-        TBox* box = new TBox(x - dx,y - dy,x + dx,y + dy);
-        box->SetFillStyle(0);
-        box->SetLineColor(kBlue + 1);
-        box->SetLineWidth(1);
-        box->Draw();
-      }
-      fCaloCanvas->Modified();
-      fCaloCanvas->Update();
 }
 
 void TrackerCalo2DViews::drawTrackerXYView(const mu2e::KalSeedPtrCollection* seedcol) {
@@ -316,13 +261,14 @@ void TrackerCalo2DViews::drawTrackerXYView(const mu2e::KalSeedPtrCollection* see
         strawLine->SetLineWidth(1);
         strawLine->Draw();
 
-        // Hit position along wire (XY projection)
-        float wdist = hit->wireDist();
-        float werr  = hit->wireRes();
-        double hx = mid.x() + wdist * dir.x();
-        double hy = mid.y() + wdist * dir.y();
+        // Use the fitted POCA position (refPOCA_Upos) — bounded within the straw.
+        // wireDist() is the raw TDC measurement and can exceed halfLength().
+        CLHEP::Hep3Vector hitPos3D = straw.wirePosition(hit->refPOCA_Upos());
+        double hx = hitPos3D.x();
+        double hy = hitPos3D.y();
+        float werr = hit->wireRes();
 
-        // Longitudinal error bar: ±werr along wire direction in XY
+        // Longitudinal error bar: ±werr along wire direction, projected to XY
         TLine* errBar = new TLine(
             hx - werr * dir.x(), hy - werr * dir.y(),
             hx + werr * dir.x(), hy + werr * dir.y());
@@ -330,21 +276,75 @@ void TrackerCalo2DViews::drawTrackerXYView(const mu2e::KalSeedPtrCollection* see
         errBar->SetLineWidth(2);
         errBar->Draw();
 
-        // Marker at hit position
-        TMarker* hitMark = new TMarker(hx, hy, 20);
-        hitMark->SetMarkerSize(0.4);
-        hitMark->SetMarkerColor(kRed);
-        hitMark->Draw();
+        // Hit marker as TGraph so ROOT shows the title in the status bar on hover
+        double hx_d = hx, hy_d = hy;
+        TGraph* hitPoint = new TGraph(1, &hx_d, &hy_d);
+        hitPoint->SetMarkerStyle(20);
+        hitPoint->SetMarkerSize(0.5);
+        hitPoint->SetMarkerColor(kRed);
+        hitPoint->SetName(Form("hit_%d_%d_%d", sid.getPlane(), sid.getPanel(), sid.getStraw()));
+        hitPoint->SetTitle(Form("Plane %d  Panel %d  Straw %d  rdrift=%.3f mm",
+                                sid.getPlane(), sid.getPanel(), sid.getStraw(),
+                                hit->driftRadius()));
+        hitPoint->Draw("P SAME");
     }
 
     fXYCanvas->Modified();
     fXYCanvas->Update();
 }
 
-  /*void TrackerCalo2DViews::drawCalorimeterDisk() {
+void TrackerCalo2DViews::drawCalorimeterDisk() {
+    mu2e::GeomHandle<mu2e::DiskCalorimeter> calo;
+    const mu2e::Disk& disk = calo->disk(0);
+
+    if (!fCaloCanvas)
+        fCaloCanvas = new TCanvas("calo_disk", "Calorimeter Disk 0", 1200, 1200);
+    fCaloCanvas->cd();
+    fCaloCanvas->Clear();
+    gPad->SetFixedAspectRatio();
+
+    // Compute crystal bounds to set frame range
+    double xmin =  1e9, xmax = -1e9;
+    double ymin =  1e9, ymax = -1e9;
+    for (size_t icr = 0; icr < disk.nCrystals(); ++icr) {
+        const mu2e::Crystal& crystal = disk.crystal(icr);
+        CLHEP::Hep3Vector pos  = crystal.localPosition();
+        CLHEP::Hep3Vector size = crystal.size();
+        double dx = size.x() / 2.0;
+        double dy = size.y() / 2.0;
+        xmin = std::min(xmin, pos.x() - dx);
+        xmax = std::max(xmax, pos.x() + dx);
+        ymin = std::min(ymin, pos.y() - dy);
+        ymax = std::max(ymax, pos.y() + dy);
+    }
+    double margin = 20.0;
+    TH2F* frame = new TH2F("calo_disk_frame", "Calorimeter Disk 0;X (mm);Y (mm)",
+                            100, xmin - margin, xmax + margin,
+                            100, ymin - margin, ymax + margin);
+    frame->SetDirectory(0);
+    frame->SetStats(0);
+    frame->Draw();
+
+    for (size_t icr = 0; icr < disk.nCrystals(); ++icr) {
+        const mu2e::Crystal& crystal = disk.crystal(icr);
+        CLHEP::Hep3Vector pos  = crystal.localPosition();
+        CLHEP::Hep3Vector size = crystal.size();
+        double x  = pos.x();
+        double y  = pos.y();
+        double dx = size.x() / 2.0;
+        double dy = size.y() / 2.0;
+        TBox* box = new TBox(x - dx, y - dy, x + dx, y + dy);
+        box->SetFillStyle(0);
+        box->SetLineColor(kBlue + 1);
+        box->SetLineWidth(1);
+        box->Draw();
+    }
+
+    fCaloCanvas->Modified();
+    fCaloCanvas->Update();
 }
-  
-void TrackerCalo2DViews::redrawCanvas(const mu2e::KalSeedPtrCollection* seedcol) {
+
+  /*void TrackerCalo2DViews::redrawCanvas(const mu2e::KalSeedPtrCollection* seedcol) {
     if (!fCanvas || !fCanvasHolder) return;
     drawTrackerStation(seedcol);
     fCanvas->Modified();
@@ -352,6 +352,6 @@ void TrackerCalo2DViews::redrawCanvas(const mu2e::KalSeedPtrCollection* seedcol)
     TString json = TBufferJSON::ToJSON(fCanvas);
     fCanvasHolder->SetTitle(TBase64::Encode(json).Data());
     fCanvasHolder->StampObjProps();
-}*/
+  }*/
 
 } // namespace mu2e

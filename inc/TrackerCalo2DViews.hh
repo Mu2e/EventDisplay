@@ -22,7 +22,7 @@ public:
     void createHistogramView();
   void drawTrackerStation(const mu2e::KalSeedPtrCollection* seedcol); //, const CaloDigiCollection* calodigicol);
   void drawTrackerXYView(const mu2e::KalSeedPtrCollection* seedcol);
-  //void drawCalorimeterDisk();
+  void drawCalorimeterDisk();
   //void redrawCanvas(const mu2e::KalSeedPtrCollection* seedcol);
 
 private:
