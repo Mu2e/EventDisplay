@@ -7,6 +7,7 @@
 #include <TMarker.h>
 #include <TLatex.h>
 #include <TGraph.h>
+#include <TLegend.h>
 #include <TBufferJSON.h>
 #include <TBase64.h>
 #include <algorithm>
@@ -168,31 +169,29 @@ static void drawTrajectoryXY(const KTRAJ& trajectory)
              // Check for Hits
              if (hitDataMap.count(straw.id())) {
                const auto* hit = hitDataMap[straw.id()];
-               // Hit Outline
-               TEllipse *hitcirc = new TEllipse(pos_l.z(), pos_l.y(), strawRadius, strawRadius);
-               hitcirc->SetLineColor(kBlack);
-               hitcirc->SetLineWidth(2);
-               hitcirc->SetFillStyle(0);
-               hitcirc->Draw();
-               // Drift Circle
-               double rdrift = hit->driftRadius();
-               TEllipse *rcirc = new TEllipse(pos_l.z(), pos_l.y(), rdrift, rdrift);
                mu2e::WireHitState whs = hit->wireHitState();
                if (!whs.active()) {
+                 double rdrift = hit->driftRadius();
+                 TEllipse *rcirc = new TEllipse(pos_l.z(), pos_l.y(), rdrift, rdrift);
                  rcirc->SetFillStyle(0);
                  rcirc->SetLineColor(kBlack);
                  rcirc->SetLineStyle(2);
+                 rcirc->Draw();
+               } else if (!whs.driftConstraint()) {
+                 TEllipse *hitcirc = new TEllipse(pos_l.z(), pos_l.y(), strawRadius, strawRadius);
+                 hitcirc->SetFillColor(kAzure - 9);
+                 hitcirc->SetFillStyle(1001);
+                 hitcirc->SetLineColor(kBlue);
+                 hitcirc->Draw();
                } else {
+                 double rdrift = hit->driftRadius();
+                 TEllipse *rcirc = new TEllipse(pos_l.z(), pos_l.y(), rdrift, rdrift);
                  rcirc->SetFillColor(kAzure - 9);
                  rcirc->SetFillStyle(1001);
-                 if (!whs.driftConstraint()) {
-                   rcirc->SetLineColor(kBlue);
-                 } else {
-                   rcirc->SetLineColor(kRed);
-                   rcirc->SetLineWidth(hit->radialErr());
-                 }
+                 rcirc->SetLineColor(kRed);
+                 rcirc->SetLineWidth(hit->radialErr());
+                 rcirc->Draw();
                }
-               rcirc->Draw();
                // Tooltip/Data Graph
                double sz = pos_l.z();
                double sy = pos_l.y();
@@ -222,7 +221,28 @@ static void drawTrajectoryXY(const KTRAJ& trajectory)
             }
           }
 	}
-	planeCanvas->Update();
+        planeCanvas->cd();
+        TLegend *leg = new TLegend(0.51, 0.0, 0.99, 0.14);
+        leg->SetTextSize(0.018);
+        leg->SetBorderSize(1);
+        leg->SetHeader("Hit key", "C");
+        TEllipse *dummyInactive = new TEllipse();
+        dummyInactive->SetFillStyle(0);
+        dummyInactive->SetLineColor(kBlack);
+        dummyInactive->SetLineStyle(2);
+        TEllipse *dummyNoDrift = new TEllipse();
+        dummyNoDrift->SetFillColor(kAzure - 9);
+        dummyNoDrift->SetFillStyle(1001);
+        dummyNoDrift->SetLineColor(kBlue);
+        TEllipse *dummyDrift = new TEllipse();
+        dummyDrift->SetFillColor(kAzure - 9);
+        dummyDrift->SetFillStyle(1001);
+        dummyDrift->SetLineColor(kRed);
+        leg->AddEntry(dummyInactive, "Inactive (dashed, drift r)", "l");
+        leg->AddEntry(dummyNoDrift,  "Active, no drift constraint (full straw)", "f");
+        leg->AddEntry(dummyDrift,    "Active, drift constraint (drift circle)", "f");
+        leg->Draw();
+        planeCanvas->Update();
       }
 }
 
