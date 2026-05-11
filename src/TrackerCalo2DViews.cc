@@ -178,14 +178,19 @@ static void drawTrajectoryXY(const KTRAJ& trajectory)
                double rdrift = hit->driftRadius();
                TEllipse *rcirc = new TEllipse(pos_l.z(), pos_l.y(), rdrift, rdrift);
                mu2e::WireHitState whs = hit->wireHitState();
-               if (whs.active() && whs.driftConstraint()) {
+               if (!whs.active()) {
+                 rcirc->SetFillStyle(0);
+                 rcirc->SetLineColor(kBlack);
+                 rcirc->SetLineStyle(2);
+               } else {
                  rcirc->SetFillColor(kAzure - 9);
                  rcirc->SetFillStyle(1001);
-                 rcirc->SetLineColor(kBlue);
-               } else {
-                 rcirc->SetFillStyle(0);
-                 rcirc->SetLineColor(kRed);
-                 rcirc->SetLineStyle(2); // Dashed for inactive/unconstrained
+                 if (!whs.driftConstraint()) {
+                   rcirc->SetLineColor(kBlue);
+                 } else {
+                   rcirc->SetLineColor(kRed);
+                   rcirc->SetLineWidth(hit->radialErr());
+                 }
                }
                rcirc->Draw();
                // Tooltip/Data Graph
