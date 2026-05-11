@@ -170,28 +170,34 @@ static void drawTrajectoryXY(const KTRAJ& trajectory)
              if (hitDataMap.count(straw.id())) {
                const auto* hit = hitDataMap[straw.id()];
                mu2e::WireHitState whs = hit->wireHitState();
+               double rdrift = hit->driftRadius();
+               TEllipse *rcirc = new TEllipse(pos_l.z(), pos_l.y(), rdrift, rdrift);
+               TEllipse *hitcirc = new TEllipse(pos_l.z(), pos_l.y(), strawRadius, strawRadius);   
                if (!whs.active()) {
-                 double rdrift = hit->driftRadius();
-                 TEllipse *rcirc = new TEllipse(pos_l.z(), pos_l.y(), rdrift, rdrift);
                  rcirc->SetFillStyle(0);
                  rcirc->SetLineColor(kBlack);
                  rcirc->SetLineStyle(2);
-                 rcirc->Draw();
-               } else if (!whs.driftConstraint()) {
-                 TEllipse *hitcirc = new TEllipse(pos_l.z(), pos_l.y(), strawRadius, strawRadius);
-                 hitcirc->SetFillColor(kAzure - 9);
-                 hitcirc->SetFillStyle(1001);
-                 hitcirc->SetLineColor(kBlue);
-                 hitcirc->Draw();
-               } else {
-                 double rdrift = hit->driftRadius();
-                 TEllipse *rcirc = new TEllipse(pos_l.z(), pos_l.y(), rdrift, rdrift);
-                 rcirc->SetFillColor(kAzure - 9);
-                 rcirc->SetFillStyle(1001);
-                 rcirc->SetLineColor(kRed);
-                 rcirc->SetLineWidth(hit->radialErr());
-                 rcirc->Draw();
+                 hitcirc->SetLineColor(kBlack);
+                 hitcirc->SetLineWidth(0);
+                 hitcirc->SetFillStyle(0);
                }
+               else{
+                 if (!whs.driftConstraint()) {
+                   hitcirc->SetFillColor(kAzure - 9);
+                   hitcirc->SetFillStyle(1001);
+                   hitcirc->SetLineColor(kBlue);
+                   rcirc->SetLineColor(kWhite);
+                 } else {
+                   rcirc->SetFillStyle(0);
+                   rcirc->SetLineColor(kRed);
+                   rcirc->SetLineWidth(hit->radialErr()*10);
+                   hitcirc->SetLineColor(kBlack);
+                   hitcirc->SetLineWidth(0);
+                   hitcirc->SetFillStyle(0);
+                 }
+               }
+               rcirc->Draw();
+               hitcirc->Draw();
                // Tooltip/Data Graph
                double sz = pos_l.z();
                double sy = pos_l.y();
