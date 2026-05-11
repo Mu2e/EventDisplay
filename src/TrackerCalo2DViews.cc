@@ -209,7 +209,7 @@ static void drawTrajectory2D(const KTRAJ& trajectory, const mu2e::Plane& plane, 
               std::cout<<"CaloDigi i ="<<i<<" sipmId = "<<sipmID<<" cryId = "<<cryID<<std::endl;
             }
             }*/
-      /*mu2e::GeomHandle<mu2e::DiskCalorimeter> calo;
+      mu2e::GeomHandle<mu2e::DiskCalorimeter> calo;
       const mu2e::Disk& disk = calo->disk(0);
       if (!fCaloCanvas)
         fCaloCanvas = new TCanvas("calo_disk", "Calorimeter Disk", 1200, 1200);
@@ -254,7 +254,7 @@ static void drawTrajectory2D(const KTRAJ& trajectory, const mu2e::Plane& plane, 
         box->Draw();
       }
       fCaloCanvas->Modified();
-      fCaloCanvas->Update();*/
+      fCaloCanvas->Update();
 }
 
   /*void TrackerCalo2DViews::drawCalorimeterDisk() {
