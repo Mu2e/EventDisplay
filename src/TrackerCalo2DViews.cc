@@ -4,6 +4,7 @@
 #include <TBox.h>
 #include <TEllipse.h>
 #include <TLine.h>
+#include <TMarker.h>
 #include <TLatex.h>
 #include <TGraph.h>
 #include <TBufferJSON.h>
@@ -257,7 +258,7 @@ static void drawTrajectory2D(const KTRAJ& trajectory, const mu2e::Plane& plane, 
       fCaloCanvas->Update();
 }
 
-void TrackerCalo2DViews::drawTrackerXYView() {
+void TrackerCalo2DViews::drawTrackerXYView(const mu2e::KalSeedPtrCollection* seedcol) {
     mu2e::GeomHandle<mu2e::Tracker> tracker;
 
     double rInner = tracker->g4Tracker()->getInnerTrackerEnvelopeParams().innerRadius();
@@ -286,6 +287,55 @@ void TrackerCalo2DViews::drawTrackerXYView() {
     outerCircle->SetLineWidth(2);
     outerCircle->SetFillStyle(0);
     outerCircle->Draw();
+
+    if (seedcol == nullptr) {
+        fXYCanvas->Modified();
+        fXYCanvas->Update();
+        return;
+    }
+
+    // Collect unique hit straws across all seeds (last seed wins for duplicate straws)
+    std::map<mu2e::StrawId, const mu2e::TrkStrawHitSeed*> hitMap;
+    for (auto const& kseedptr : *seedcol) {
+        for (auto const& hit : kseedptr->hits()) {
+            hitMap[hit.strawId()] = &hit;
+        }
+    }
+
+    for (auto const& [sid, hit] : hitMap) {
+        const mu2e::Straw& straw = tracker->getStraw(sid);
+        const CLHEP::Hep3Vector& mid = straw.getMidPoint();
+        const CLHEP::Hep3Vector& dir = straw.getDirection();
+        double hlen = straw.halfLength();
+
+        // Full straw extent projected to XY, drawn in light grey
+        TLine* strawLine = new TLine(
+            mid.x() - hlen * dir.x(), mid.y() - hlen * dir.y(),
+            mid.x() + hlen * dir.x(), mid.y() + hlen * dir.y());
+        strawLine->SetLineColor(kGray);
+        strawLine->SetLineWidth(1);
+        strawLine->Draw();
+
+        // Hit position along wire (XY projection)
+        float wdist = hit->wireDist();
+        float werr  = hit->wireRes();
+        double hx = mid.x() + wdist * dir.x();
+        double hy = mid.y() + wdist * dir.y();
+
+        // Longitudinal error bar: ±werr along wire direction in XY
+        TLine* errBar = new TLine(
+            hx - werr * dir.x(), hy - werr * dir.y(),
+            hx + werr * dir.x(), hy + werr * dir.y());
+        errBar->SetLineColor(kBlack);
+        errBar->SetLineWidth(2);
+        errBar->Draw();
+
+        // Marker at hit position
+        TMarker* hitMark = new TMarker(hx, hy, 20);
+        hitMark->SetMarkerSize(0.4);
+        hitMark->SetMarkerColor(kBlack);
+        hitMark->Draw();
+    }
 
     fXYCanvas->Modified();
     fXYCanvas->Update();
