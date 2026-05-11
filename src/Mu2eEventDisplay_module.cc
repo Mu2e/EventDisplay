@@ -290,7 +290,9 @@ namespace mu2e
     <<" addClusters : "<<filler_.addClusters_
     <<" addHelices : "<<filler_.addHelixSeeds_
     <<" addTracks : "<<filler_.addKalSeeds_
-    <<" addTrackerHist : "<<filler_.addTrackerHist_
+     <<" addTrackerHist : "<<filler_.addTrackerHist_
+     <<" addCaloHist : "<<filler_.addCaloHist_
+
     <<" addCosmicTrackSeeds : "<<filler_.addCosmicTrackSeeds_ << std::endl;
   }
 
@@ -691,7 +693,7 @@ void Mu2eEventDisplay::FillAnyCollection(const art::Event& evt, std::vector<std:
       if(diagLevel_ == 1) std::cout<<"[Mu2eEventDisplay : process_single_event] -- calls to data interface "<<std::endl;
 
       // Create a structure defining which data products should be drawn (based on module configuration).
-        DrawOptions drawOpts(filler_.addCosmicTrackSeeds_, filler_.addHelixSeeds_, filler_.addKalSeeds_, filler_.addCaloDigis_, filler_.addClusters_, filler_.addHits_, filler_.addBkgClusters_, filler_.addCrvRecoPulse_, filler_.addCrvClusters_, filler_.addCrvTrack_, filler_.addTimeClusters_, filler_.addTrkHits_, filler_.addMCTraj_, filler_.addSurfSteps_, filler_.addSimParts_, filler_.addTrackerHist_, addErrBar_, addCrystalHits_, addCrvBars_);
+        DrawOptions drawOpts(filler_.addCosmicTrackSeeds_, filler_.addHelixSeeds_, filler_.addKalSeeds_, filler_.addCaloDigis_, filler_.addClusters_, filler_.addHits_, filler_.addBkgClusters_, filler_.addCrvRecoPulse_, filler_.addCrvClusters_, filler_.addCrvTrack_, filler_.addTimeClusters_, filler_.addTrkHits_, filler_.addMCTraj_, filler_.addSurfSteps_, filler_.addSimParts_, filler_.addTrackerHist_, filler_.addCaloHist_, addErrBar_, addCrystalHits_, addCrvBars_);
 
       // Create a structure defining visualization options specific to Kinematic/Kalman fitting results.
       KinKalOptions KKOpts(addKalInter_, addTrkStrawHits_, addTrkCaloHits_);

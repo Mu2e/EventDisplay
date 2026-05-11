@@ -8,6 +8,7 @@
 #include <ROOT/REveManager.hxx>
 #include <ROOT/REveScene.hxx>
 #include "Offline/RecoDataProducts/inc/KalSeed.hh"
+#include <map>
 
 namespace REX = ROOT::Experimental;
 
@@ -19,12 +20,17 @@ public:
     virtual ~TrackerCalo2DViews();
 
     void createHistogramView();
-    void drawTrackerStation(const mu2e::KalSeedPtrCollection* seedcol);
-    void redrawCanvas(const mu2e::KalSeedPtrCollection* seedcol);
+  void drawTrackerStation(const mu2e::KalSeedPtrCollection* seedcol); //, const CaloDigiCollection* calodigicol);
+  void drawTrackerXYView(const mu2e::KalSeedPtrCollection* seedcol);
+  void drawCalorimeterDisk();
+  //void redrawCanvas(const mu2e::KalSeedPtrCollection* seedcol);
 
 private:
     REX::REvePointSet* fCanvasHolder{nullptr};
     TCanvas* fCanvas{nullptr};
+    TCanvas* fCaloCanvas{nullptr};
+    TCanvas* fXYCanvas{nullptr};
+    std::map<int, TCanvas*> fPlaneCanvases;
 };
 
 } // namespace mu2e

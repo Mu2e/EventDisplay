@@ -41,16 +41,17 @@ Mu2eEventDisplay : {
       addHits : false
       addBkgClusters : false
       addCrvRecoPulse : false
-       addCrvClusters : false
-       addCrvTrack : false
-       addTimeClusters : false
+      addCrvClusters : false
+      addCrvTrack : false
+      addTimeClusters : false
       addTrkHits : false //Combo hits?
       addCaloDigis : false
       addClusters : true
       addKalSeeds : true
       addCosmicTrackSeeds : false
-       addMCTraj : true
-       addTrackerHist : false
+      addMCTraj : true
+      addTrackerHist : false
+      addCaloHist : false
       addSurfSteps : true
       addSimParts : false
       addHelixSeeds : false

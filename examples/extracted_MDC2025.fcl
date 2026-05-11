@@ -44,9 +44,10 @@ physics.analyzers.Mu2eEventDisplay.filler.addCrvClusters : true
 physics.analyzers.Mu2eEventDisplay.filler.addCrvTrack : true
 physics.analyzers.Mu2eEventDisplay.filler.addCrvRecoPulse : false
 physics.analyzers.Mu2eEventDisplay.filler.addCaloDigis : false
-physics.analyzers.Mu2eEventDisplay.filler.addClusters : false
+physics.analyzers.Mu2eEventDisplay.filler.addClusters : true
 physics.analyzers.Mu2eEventDisplay.filler.addKalSeeds : true
 physics.analyzers.Mu2eEventDisplay.filler.addTrackerHist : true
+physics.analyzers.Mu2eEventDisplay.filler.addCaloHist : false
 physics.analyzers.Mu2eEventDisplay.extracted : true
 physics.analyzers.Mu2eEventDisplay.specifyTag : false
 
