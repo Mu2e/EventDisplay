@@ -7,6 +7,7 @@
 #include <TMarker.h>
 #include <TLatex.h>
 #include <TGraph.h>
+#include <TLegend.h>
 #include <TBufferJSON.h>
 #include <TBase64.h>
 #include <algorithm>
@@ -168,37 +169,47 @@ static void drawTrajectoryXY(const KTRAJ& trajectory)
              // Check for Hits
              if (hitDataMap.count(straw.id())) {
                const auto* hit = hitDataMap[straw.id()];
-               // Hit Outline
-               TEllipse *hitcirc = new TEllipse(pos_l.z(), pos_l.y(), strawRadius, strawRadius);
-               hitcirc->SetLineColor(kBlack);
-               hitcirc->SetLineWidth(2);
-               hitcirc->SetFillStyle(0);
-               hitcirc->Draw();
-               // Drift Circle
+               mu2e::WireHitState whs = hit->wireHitState();
                double rdrift = hit->driftRadius();
                TEllipse *rcirc = new TEllipse(pos_l.z(), pos_l.y(), rdrift, rdrift);
-               mu2e::WireHitState whs = hit->wireHitState();
-               if (whs.active() && whs.driftConstraint()) {
-                 rcirc->SetFillColor(kAzure - 9);
-                 rcirc->SetFillStyle(1001);
-                 rcirc->SetLineColor(kBlue);
-               } else {
+               TEllipse *hitcirc = new TEllipse(pos_l.z(), pos_l.y(), strawRadius, strawRadius);   
+               if (!whs.active()) {
                  rcirc->SetFillStyle(0);
-                 rcirc->SetLineColor(kRed);
-                 rcirc->SetLineStyle(2); // Dashed for inactive/unconstrained
+                 rcirc->SetLineColor(kBlack);
+                 rcirc->SetLineStyle(2);
+                 hitcirc->SetLineColor(kBlack);
+                 hitcirc->SetLineWidth(0);
+                 hitcirc->SetFillStyle(0);
+               }
+               else{
+                 if (!whs.driftConstraint()) {
+                   hitcirc->SetFillColor(kAzure - 9);
+                   hitcirc->SetFillStyle(1001);
+                   hitcirc->SetLineColor(kBlue);
+                   rcirc->SetLineColor(kWhite);
+                 } else {
+                   rcirc->SetFillStyle(0);
+                   rcirc->SetLineColor(kRed);
+                   rcirc->SetLineWidth(hit->radialErr()*10);
+                   hitcirc->SetLineColor(kBlack);
+                   hitcirc->SetLineWidth(0);
+                   hitcirc->SetFillStyle(0);
+                 }
                }
                rcirc->Draw();
+               hitcirc->Draw();
                // Tooltip/Data Graph
                double sz = pos_l.z();
                double sy = pos_l.y();
                TGraph *g = new TGraph(1, &sz, &sy);
                g->SetMarkerStyle(1);
                g->SetMarkerColorAlpha(kWhite, 0);
-               g->SetName(Form("Straw %d: %.2f MeV", straw.id().getStraw(), hit->energyDep()));
+               g->SetName(Form("hit_%d_%d_%d", straw.id().getPlane(), straw.id().getPanel(), straw.id().getStraw()));
                g->Draw("P SAME");
              }
            }
         }
+        
 	if(seedcol != nullptr) {
           for (auto const& kseedptr : *seedcol) {
             const mu2e::KalSeed& kseed = *kseedptr;
@@ -217,7 +228,28 @@ static void drawTrajectoryXY(const KTRAJ& trajectory)
             }
           }
 	}
-	planeCanvas->Update();
+        /*planeCanvas->cd();
+        TLegend *leg = new TLegend(0.72, 0.82, 0.97, 0.96);
+        leg->SetTextSize(0.022);
+        leg->SetBorderSize(0);
+        //leg->SetHeader("Hit key", "C");
+        TEllipse *dummyInactive = new TEllipse();
+        dummyInactive->SetFillStyle(0);
+        dummyInactive->SetLineColor(kBlack);
+        dummyInactive->SetLineStyle(2);
+        TEllipse *dummyNoDrift = new TEllipse();
+        dummyNoDrift->SetFillColor(kAzure - 9);
+        dummyNoDrift->SetFillStyle(1001);
+        dummyNoDrift->SetLineColor(kBlue);
+        TEllipse *dummyDrift = new TEllipse();
+        dummyDrift->SetFillColor(kAzure - 9);
+        dummyDrift->SetFillStyle(1001);
+        dummyDrift->SetLineColor(kRed);
+        leg->AddEntry(dummyInactive, "Inactive (dashed circle)", "l");
+        leg->AddEntry(dummyNoDrift,  "Active, no drift (full straw)", "f");
+        leg->AddEntry(dummyDrift,    "Active, drift constraint", "f");
+        leg->Draw();*/
+        planeCanvas->Update();
       }
 }
 
@@ -298,7 +330,7 @@ void TrackerCalo2DViews::drawTrackerXYView(const mu2e::KalSeedPtrCollection* see
         double hx_d = hx, hy_d = hy;
         TGraph* hitPoint = new TGraph(1, &hx_d, &hy_d);
         hitPoint->SetMarkerStyle(20);
-        hitPoint->SetMarkerSize(0.5);
+        hitPoint->SetMarkerSize(0.95);
         hitPoint->SetMarkerColor(kRed);
         hitPoint->SetName(Form("hit_%d_%d_%d", sid.getPlane(), sid.getPanel(), sid.getStraw()));
         hitPoint->SetTitle(Form("Plane %d  Panel %d  Straw %d  rdrift=%.3f mm",
