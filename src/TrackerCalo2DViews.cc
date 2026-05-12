@@ -204,11 +204,12 @@ static void drawTrajectoryXY(const KTRAJ& trajectory)
                TGraph *g = new TGraph(1, &sz, &sy);
                g->SetMarkerStyle(1);
                g->SetMarkerColorAlpha(kWhite, 0);
-               g->SetName(Form("Straw %d: %.2f MeV", straw.id().getStraw(), hit->energyDep()));
+               g->SetName(Form("hit_%d_%d_%d", straw.id().getPlane(), straw.id().getPanel(), straw.id().getStraw()));
                g->Draw("P SAME");
              }
            }
         }
+        
 	if(seedcol != nullptr) {
           for (auto const& kseedptr : *seedcol) {
             const mu2e::KalSeed& kseed = *kseedptr;
@@ -227,16 +228,11 @@ static void drawTrajectoryXY(const KTRAJ& trajectory)
             }
           }
 	}
-        planeCanvas->cd();
-        TPad *legPad = new TPad("legpad", "", 0.68, 0.68, 0.99, 0.99);
-        legPad->SetFillColor(kWhite);
-        legPad->SetBorderSize(1);
-        legPad->Draw();
-        legPad->cd();
-        TLegend *leg = new TLegend(0.0, 0.0, 1.0, 1.0);
-        leg->SetTextSize(0.1);
+        /*planeCanvas->cd();
+        TLegend *leg = new TLegend(0.72, 0.82, 0.97, 0.96);
+        leg->SetTextSize(0.022);
         leg->SetBorderSize(0);
-        leg->SetHeader("Hit key", "C");
+        //leg->SetHeader("Hit key", "C");
         TEllipse *dummyInactive = new TEllipse();
         dummyInactive->SetFillStyle(0);
         dummyInactive->SetLineColor(kBlack);
@@ -252,8 +248,7 @@ static void drawTrajectoryXY(const KTRAJ& trajectory)
         leg->AddEntry(dummyInactive, "Inactive (dashed circle)", "l");
         leg->AddEntry(dummyNoDrift,  "Active, no drift (full straw)", "f");
         leg->AddEntry(dummyDrift,    "Active, drift constraint", "f");
-        leg->Draw();
-        planeCanvas->cd();
+        leg->Draw();*/
         planeCanvas->Update();
       }
 }
@@ -335,7 +330,7 @@ void TrackerCalo2DViews::drawTrackerXYView(const mu2e::KalSeedPtrCollection* see
         double hx_d = hx, hy_d = hy;
         TGraph* hitPoint = new TGraph(1, &hx_d, &hy_d);
         hitPoint->SetMarkerStyle(20);
-        hitPoint->SetMarkerSize(0.5);
+        hitPoint->SetMarkerSize(0.95);
         hitPoint->SetMarkerColor(kRed);
         hitPoint->SetName(Form("hit_%d_%d_%d", sid.getPlane(), sid.getPanel(), sid.getStraw()));
         hitPoint->SetTitle(Form("Plane %d  Panel %d  Straw %d  rdrift=%.3f mm",
