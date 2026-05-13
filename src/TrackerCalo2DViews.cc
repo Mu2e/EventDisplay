@@ -407,10 +407,7 @@ void TrackerCalo2DViews::drawCalorimeterDisk(const CaloClusterCollection* cluste
         for (const auto& cluster : *clustercol) {
             if (cluster.diskID() != 0) continue;
             CLHEP::Hep3Vector cog = cluster.cog3Vector();
-            std::cout<<"COG = "<<cog.x()<<"  "<<cog.y()<<std::endl; 
-            //CLHEP::Hep3Vector localPos = calo->geomUtil().mu2eToDisk(0, cog);
             energyHist->Fill(cog.x(), cog.y(), cluster.energyDep());
-            //std::cout<<"Calo Cluster Crystal position = "<<localPos.x()<<"  "<<localPos.y()<<" energy dep = "<<cluster.energyDep()<<std::endl;
         }
     }
 
@@ -466,14 +463,13 @@ void TrackerCalo2DViews::drawCalorimeterDisk(const CaloClusterCollection* cluste
     energyHist1->SetDirectory(0);
     energyHist1->SetStats(0);
     gStyle->SetPalette(kBird);
-    energyHist1->GetZaxis()->SetTitle("Energy Deposition (MeV)");
+    energyHist1->GetZaxis()->SetTitle("edep (MeV)");
 
     if (clustercol != nullptr) {
         for (const auto& cluster : *clustercol) {
             if (cluster.diskID() != 1) continue;
             CLHEP::Hep3Vector cog = cluster.cog3Vector();
-            CLHEP::Hep3Vector localPos = calo->geomUtil().mu2eToDisk(1, cog);
-            energyHist1->Fill(localPos.x(), localPos.y(), cluster.energyDep());
+            energyHist1->Fill(cog.x(), cog.y(), cluster.energyDep());
         }
     }
 
