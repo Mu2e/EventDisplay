@@ -365,6 +365,22 @@ void TrackerCalo2DViews::drawTrackerXYView(const mu2e::KalSeedPtrCollection* see
 
 void TrackerCalo2DViews::drawCalorimeterDisk(const CaloClusterCollection* clustercol) {
     mu2e::GeomHandle<mu2e::DiskCalorimeter> calo;
+
+    // Collect per-hit data from cluster hit vectors
+    struct HitInfo { int crystalID; float time; float eDep; double cx; double cy; int diskID; };
+    std::vector<HitInfo> allHits;
+    if (clustercol != nullptr) {
+        for (const auto& cluster : *clustercol) {
+            for (const auto& hitPtr : cluster.caloHitsPtrVector()) {
+                const mu2e::CaloHit& hit = *hitPtr;
+                const mu2e::Crystal& cr  = calo->crystal(hit.crystalID());
+                allHits.push_back({hit.crystalID(), hit.time(), hit.energyDep(),
+                                   cr.localPosition().x(), cr.localPosition().y(), cr.diskID()});
+            }
+        }
+    }
+
+    // --- Disk 0 ---
     const mu2e::Disk& disk = calo->disk(0);
 
     if (!fCaloCanvas)
@@ -373,7 +389,6 @@ void TrackerCalo2DViews::drawCalorimeterDisk(const CaloClusterCollection* cluste
     fCaloCanvas->Clear();
     fCaloCanvas->SetRightMargin(0.15);
 
-    // Compute exact crystal grid extent — no margin so bin edges align with crystal edges
     double xmin =  1e9, xmax = -1e9;
     double ymin =  1e9, ymax = -1e9;
     for (size_t icr = 0; icr < disk.nCrystals(); ++icr) {
@@ -388,31 +403,23 @@ void TrackerCalo2DViews::drawCalorimeterDisk(const CaloClusterCollection* cluste
         ymax = std::max(ymax, pos.y() + dy);
     }
 
-    // One bin per crystal: Fill() at any COG inside a crystal lands in exactly that crystal's bin
     double crystalSizeX = disk.crystal(0).size().x();
     double crystalSizeY = disk.crystal(0).size().y();
     int nbinsX = std::max(1, (int)std::round((xmax - xmin) / crystalSizeX));
     int nbinsY = std::max(1, (int)std::round((ymax - ymin) / crystalSizeY));
     TH2F* energyHist = new TH2F("calo_disk_energy",
-                                 "Calorimeter Disk 0 - Cluster Energy Deposition;X (mm);Y (mm)",
+                                 "Calorimeter Disk 0 - Hit Energy Deposition;X (mm);Y (mm)",
                                  nbinsX, xmin, xmax, nbinsY, ymin, ymax);
     energyHist->SetDirectory(0);
     energyHist->SetStats(0);
     gStyle->SetPalette(kBird);
     energyHist->GetZaxis()->SetTitle("edep (MeV)");
 
-    // cog3Vector() x,y are in the same frame as crystal.localPosition() x,y
-    if (clustercol != nullptr) {
-        for (const auto& cluster : *clustercol) {
-            if (cluster.diskID() != 0) continue;
-            CLHEP::Hep3Vector cog = cluster.cog3Vector();
-            energyHist->Fill(cog.x(), cog.y(), cluster.energyDep());
-        }
-    }
+    for (const auto& h : allHits)
+        if (h.diskID == 0) energyHist->Fill(h.cx, h.cy, h.eDep);
 
     energyHist->Draw("COLZ");
 
-    // Draw crystal outlines on top of the energy map
     for (size_t icr = 0; icr < disk.nCrystals(); ++icr) {
         const mu2e::Crystal& crystal = disk.crystal(icr);
         CLHEP::Hep3Vector pos  = crystal.localPosition();
@@ -426,6 +433,17 @@ void TrackerCalo2DViews::drawCalorimeterDisk(const CaloClusterCollection* cluste
         box->SetLineColor(kGray + 1);
         box->SetLineWidth(1);
         box->Draw();
+    }
+
+    for (const auto& h : allHits) {
+        if (h.diskID != 0) continue;
+        TGraph* g = new TGraph(1, &h.cx, &h.cy);
+        g->SetMarkerStyle(20);
+        g->SetMarkerSize(0.5);
+        g->SetMarkerColorAlpha(kWhite, 0);
+        g->SetName(Form("calo_hit_%d", h.crystalID));
+        g->SetTitle(Form("CrystalID %d  time=%.2f ns  eDep=%.3f MeV", h.crystalID, h.time, h.eDep));
+        g->Draw("P SAME");
     }
 
     fCaloCanvas->Modified();
@@ -459,20 +477,15 @@ void TrackerCalo2DViews::drawCalorimeterDisk(const CaloClusterCollection* cluste
     int nbinsX1 = std::max(1, (int)std::round((xmax1 - xmin1) / crystalSizeX1));
     int nbinsY1 = std::max(1, (int)std::round((ymax1 - ymin1) / crystalSizeY1));
     TH2F* energyHist1 = new TH2F("calo_disk1_energy",
-                                   "Calorimeter Disk 1 - Cluster Energy Deposition;X (mm);Y (mm)",
+                                   "Calorimeter Disk 1 - Hit Energy Deposition;X (mm);Y (mm)",
                                    nbinsX1, xmin1, xmax1, nbinsY1, ymin1, ymax1);
     energyHist1->SetDirectory(0);
     energyHist1->SetStats(0);
     gStyle->SetPalette(kBird);
     energyHist1->GetZaxis()->SetTitle("edep (MeV)");
 
-    if (clustercol != nullptr) {
-        for (const auto& cluster : *clustercol) {
-            if (cluster.diskID() != 1) continue;
-            CLHEP::Hep3Vector cog = cluster.cog3Vector();
-            energyHist1->Fill(cog.x(), cog.y(), cluster.energyDep());
-        }
-    }
+    for (const auto& h : allHits)
+        if (h.diskID == 1) energyHist1->Fill(h.cx, h.cy, h.eDep);
 
     energyHist1->Draw("COLZ");
 
@@ -489,6 +502,17 @@ void TrackerCalo2DViews::drawCalorimeterDisk(const CaloClusterCollection* cluste
         box->SetLineColor(kGray + 1);
         box->SetLineWidth(1);
         box->Draw();
+    }
+
+    for (const auto& h : allHits) {
+        if (h.diskID != 1) continue;
+        TGraph* g = new TGraph(1, &h.cx, &h.cy);
+        g->SetMarkerStyle(20);
+        g->SetMarkerSize(0.5);
+        g->SetMarkerColorAlpha(kWhite, 0);
+        g->SetName(Form("calo_hit_%d", h.crystalID));
+        g->SetTitle(Form("CrystalID %d  time=%.2f ns  eDep=%.3f MeV", h.crystalID, h.time, h.eDep));
+        g->Draw("P SAME");
     }
 
     fCaloCanvas1->Modified();
