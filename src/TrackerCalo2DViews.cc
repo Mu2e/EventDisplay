@@ -391,11 +391,14 @@ void TrackerCalo2DViews::drawCalorimeterDisk(const CaloClusterCollection* cluste
     xmin -= margin; xmax += margin;
     ymin -= margin; ymax += margin;
 
-    // 2D histogram: X-Y are disk-local crystal coordinates, fill weight = energyDep (MeV)
-    // 200x200 bins gives ~7 mm/bin, finer than a crystal (~33 mm) so COG fills the right cell
+    // Bin size = crystal face size so one Fill() at the COG covers the full crystal cell
+    double crystalSizeX = disk.crystal(0).size().x();
+    double crystalSizeY = disk.crystal(0).size().y();
+    int nbinsX = std::max(1, (int)std::round((xmax - xmin) / crystalSizeX));
+    int nbinsY = std::max(1, (int)std::round((ymax - ymin) / crystalSizeY));
     TH2F* energyHist = new TH2F("calo_disk_energy",
                                  "Calorimeter Disk 0 - Cluster Energy Deposition;X (mm);Y (mm)",
-                                 200, xmin, xmax, 200, ymin, ymax);
+                                 nbinsX, xmin, xmax, nbinsY, ymin, ymax);
     energyHist->SetDirectory(0);
     energyHist->SetStats(0);
     gStyle->SetPalette(kBird);
@@ -457,9 +460,13 @@ void TrackerCalo2DViews::drawCalorimeterDisk(const CaloClusterCollection* cluste
     xmin1 -= margin; xmax1 += margin;
     ymin1 -= margin; ymax1 += margin;
 
+    double crystalSizeX1 = disk1.crystal(0).size().x();
+    double crystalSizeY1 = disk1.crystal(0).size().y();
+    int nbinsX1 = std::max(1, (int)std::round((xmax1 - xmin1) / crystalSizeX1));
+    int nbinsY1 = std::max(1, (int)std::round((ymax1 - ymin1) / crystalSizeY1));
     TH2F* energyHist1 = new TH2F("calo_disk1_energy",
                                    "Calorimeter Disk 1 - Cluster Energy Deposition;X (mm);Y (mm)",
-                                   200, xmin1, xmax1, 200, ymin1, ymax1);
+                                   nbinsX1, xmin1, xmax1, nbinsY1, ymin1, ymax1);
     energyHist1->SetDirectory(0);
     energyHist1->SetStats(0);
     gStyle->SetPalette(kBird);
