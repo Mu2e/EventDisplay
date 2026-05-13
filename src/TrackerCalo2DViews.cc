@@ -407,9 +407,7 @@ void TrackerCalo2DViews::drawCalorimeterDisk(const CaloClusterCollection* cluste
     double crystalSizeY = disk.crystal(0).size().y();
     int nbinsX = std::max(1, (int)std::round((xmax - xmin) / crystalSizeX));
     int nbinsY = std::max(1, (int)std::round((ymax - ymin) / crystalSizeY));
-    TH2F* energyHist = new TH2F("calo_disk_energy",
-                                 "Calorimeter Disk 0 - Hit Energy Deposition;X (mm);Y (mm)",
-                                 nbinsX, xmin, xmax, nbinsY, ymin, ymax);
+    TH2F* energyHist = new TH2F("calo_disk_energy", "Calorimeter Disk 0;X (mm);Y (mm)", nbinsX, xmin, xmax, nbinsY, ymin, ymax);
     energyHist->SetDirectory(0);
     energyHist->SetStats(0);
     gStyle->SetPalette(kBird);
@@ -441,8 +439,7 @@ void TrackerCalo2DViews::drawCalorimeterDisk(const CaloClusterCollection* cluste
         g->SetMarkerStyle(20);
         g->SetMarkerSize(0.5);
         g->SetMarkerColorAlpha(kWhite, 0);
-        g->SetName(Form("calo_hit_%d", h.crystalID));
-        g->SetTitle(Form("CrystalID %d  time=%.2f ns  eDep=%.3f MeV", h.crystalID, h.time, h.eDep));
+        g->SetName(Form("Crystal %d  time=%.2f ns  eDep=%.2f MeV", h.crystalID, h.time, h.eDep));
         g->Draw("P SAME");
     }
 
