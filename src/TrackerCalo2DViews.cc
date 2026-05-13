@@ -373,7 +373,7 @@ void TrackerCalo2DViews::drawCalorimeterDisk(const CaloClusterCollection* cluste
     fCaloCanvas->Clear();
     fCaloCanvas->SetRightMargin(0.15);
 
-    // Compute crystal bounds to set histogram range
+    // Compute exact crystal grid extent — no margin so bin edges align with crystal edges
     double xmin =  1e9, xmax = -1e9;
     double ymin =  1e9, ymax = -1e9;
     for (size_t icr = 0; icr < disk.nCrystals(); ++icr) {
@@ -387,11 +387,8 @@ void TrackerCalo2DViews::drawCalorimeterDisk(const CaloClusterCollection* cluste
         ymin = std::min(ymin, pos.y() - dy);
         ymax = std::max(ymax, pos.y() + dy);
     }
-    double margin = 20.0;
-    xmin -= margin; xmax += margin;
-    ymin -= margin; ymax += margin;
 
-    // Bin size = crystal face size so one Fill() at the COG covers the full crystal cell
+    // One bin per crystal: Fill() at any COG inside a crystal lands in exactly that crystal's bin
     double crystalSizeX = disk.crystal(0).size().x();
     double crystalSizeY = disk.crystal(0).size().y();
     int nbinsX = std::max(1, (int)std::round((xmax - xmin) / crystalSizeX));
@@ -404,9 +401,8 @@ void TrackerCalo2DViews::drawCalorimeterDisk(const CaloClusterCollection* cluste
     gStyle->SetPalette(kBird);
     energyHist->GetZaxis()->SetTitle("edep (MeV)");
 
-    // Fill from disk-0 clusters using their COG projected to disk-local frame
+    // cog3Vector() x,y are in the same frame as crystal.localPosition() x,y
     if (clustercol != nullptr) {
-      
         for (const auto& cluster : *clustercol) {
             if (cluster.diskID() != 0) continue;
             CLHEP::Hep3Vector cog = cluster.cog3Vector();
@@ -457,8 +453,6 @@ void TrackerCalo2DViews::drawCalorimeterDisk(const CaloClusterCollection* cluste
         ymin1 = std::min(ymin1, pos.y() - dy);
         ymax1 = std::max(ymax1, pos.y() + dy);
     }
-    xmin1 -= margin; xmax1 += margin;
-    ymin1 -= margin; ymax1 += margin;
 
     double crystalSizeX1 = disk1.crystal(0).size().x();
     double crystalSizeY1 = disk1.crystal(0).size().y();
