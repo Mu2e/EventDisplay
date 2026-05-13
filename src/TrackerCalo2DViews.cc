@@ -8,6 +8,7 @@
 #include <TLatex.h>
 #include <TGraph.h>
 #include <TLegend.h>
+#include <TStyle.h>
 #include <TBufferJSON.h>
 #include <TBase64.h>
 #include <algorithm>
@@ -24,6 +25,7 @@
 #include "Offline/CalorimeterGeom/inc/DiskCalorimeter.hh"
 #include "Offline/CalorimeterGeom/inc/Disk.hh"
 #include "Offline/CalorimeterGeom/inc/Crystal.hh"
+#include "Offline/RecoDataProducts/inc/CaloCluster.hh"
 
 namespace mu2e {
 
@@ -361,17 +363,17 @@ void TrackerCalo2DViews::drawTrackerXYView(const mu2e::KalSeedPtrCollection* see
     fXYCanvas->Update();
 }
 
-void TrackerCalo2DViews::drawCalorimeterDisk() {
+void TrackerCalo2DViews::drawCalorimeterDisk(const CaloClusterCollection* clustercol) {
     mu2e::GeomHandle<mu2e::DiskCalorimeter> calo;
     const mu2e::Disk& disk = calo->disk(0);
 
     if (!fCaloCanvas)
-        fCaloCanvas = new TCanvas("calo_disk", "Calorimeter Disk 0", 1200, 1200);
+        fCaloCanvas = new TCanvas("calo_disk", "Calorimeter Disk 0", 1400, 1200);
     fCaloCanvas->cd();
     fCaloCanvas->Clear();
-    gPad->SetFixedAspectRatio();
+    fCaloCanvas->SetRightMargin(0.15);
 
-    // Compute crystal bounds to set frame range
+    // Compute crystal bounds to set histogram range
     double xmin =  1e9, xmax = -1e9;
     double ymin =  1e9, ymax = -1e9;
     for (size_t icr = 0; icr < disk.nCrystals(); ++icr) {
@@ -386,13 +388,32 @@ void TrackerCalo2DViews::drawCalorimeterDisk() {
         ymax = std::max(ymax, pos.y() + dy);
     }
     double margin = 20.0;
-    TH2F* frame = new TH2F("calo_disk_frame", "Calorimeter Disk 0;X (mm);Y (mm)",
-                            100, xmin - margin, xmax + margin,
-                            100, ymin - margin, ymax + margin);
-    frame->SetDirectory(0);
-    frame->SetStats(0);
-    frame->Draw();
+    xmin -= margin; xmax += margin;
+    ymin -= margin; ymax += margin;
 
+    // 2D histogram: X-Y are disk-local crystal coordinates, fill weight = energyDep (MeV)
+    // 200x200 bins gives ~7 mm/bin, finer than a crystal (~33 mm) so COG fills the right cell
+    TH2F* energyHist = new TH2F("calo_disk_energy",
+                                 "Calorimeter Disk 0 - Cluster Energy Deposition;X (mm);Y (mm)",
+                                 200, xmin, xmax, 200, ymin, ymax);
+    energyHist->SetDirectory(0);
+    energyHist->SetStats(0);
+    gStyle->SetPalette(kBird);
+    energyHist->GetZaxis()->SetTitle("Energy Deposition (MeV)");
+
+    // Fill from disk-0 clusters using their COG projected to disk-local frame
+    if (clustercol != nullptr) {
+        for (const auto& cluster : *clustercol) {
+            if (cluster.diskID() != 0) continue;
+            CLHEP::Hep3Vector cog = cluster.cog3Vector();
+            CLHEP::Hep3Vector localPos = calo->geomUtil().mu2eToDisk(0, cog);
+            energyHist->Fill(localPos.x(), localPos.y(), cluster.energyDep());
+        }
+    }
+
+    energyHist->Draw("COLZ");
+
+    // Draw crystal outlines on top of the energy map
     for (size_t icr = 0; icr < disk.nCrystals(); ++icr) {
         const mu2e::Crystal& crystal = disk.crystal(icr);
         CLHEP::Hep3Vector pos  = crystal.localPosition();
@@ -403,7 +424,7 @@ void TrackerCalo2DViews::drawCalorimeterDisk() {
         double dy = size.y() / 2.0;
         TBox* box = new TBox(x - dx, y - dy, x + dx, y + dy);
         box->SetFillStyle(0);
-        box->SetLineColor(kBlue + 1);
+        box->SetLineColor(kGray + 1);
         box->SetLineWidth(1);
         box->Draw();
     }
