@@ -434,6 +434,68 @@ void TrackerCalo2DViews::drawCalorimeterDisk(const CaloClusterCollection* cluste
 
     fCaloCanvas->Modified();
     fCaloCanvas->Update();
+
+    // --- Disk 1 ---
+    const mu2e::Disk& disk1 = calo->disk(1);
+
+    if (!fCaloCanvas1)
+        fCaloCanvas1 = new TCanvas("calo_disk1", "Calorimeter Disk 1", 1400, 1200);
+    fCaloCanvas1->cd();
+    fCaloCanvas1->Clear();
+    fCaloCanvas1->SetRightMargin(0.15);
+
+    double xmin1 =  1e9, xmax1 = -1e9;
+    double ymin1 =  1e9, ymax1 = -1e9;
+    for (size_t icr = 0; icr < disk1.nCrystals(); ++icr) {
+        const mu2e::Crystal& crystal = disk1.crystal(icr);
+        CLHEP::Hep3Vector pos  = crystal.localPosition();
+        CLHEP::Hep3Vector size = crystal.size();
+        double dx = size.x() / 2.0;
+        double dy = size.y() / 2.0;
+        xmin1 = std::min(xmin1, pos.x() - dx);
+        xmax1 = std::max(xmax1, pos.x() + dx);
+        ymin1 = std::min(ymin1, pos.y() - dy);
+        ymax1 = std::max(ymax1, pos.y() + dy);
+    }
+    xmin1 -= margin; xmax1 += margin;
+    ymin1 -= margin; ymax1 += margin;
+
+    TH2F* energyHist1 = new TH2F("calo_disk1_energy",
+                                   "Calorimeter Disk 1 - Cluster Energy Deposition;X (mm);Y (mm)",
+                                   200, xmin1, xmax1, 200, ymin1, ymax1);
+    energyHist1->SetDirectory(0);
+    energyHist1->SetStats(0);
+    gStyle->SetPalette(kBird);
+    energyHist1->GetZaxis()->SetTitle("Energy Deposition (MeV)");
+
+    if (clustercol != nullptr) {
+        for (const auto& cluster : *clustercol) {
+            if (cluster.diskID() != 1) continue;
+            CLHEP::Hep3Vector cog = cluster.cog3Vector();
+            CLHEP::Hep3Vector localPos = calo->geomUtil().mu2eToDisk(1, cog);
+            energyHist1->Fill(localPos.x(), localPos.y(), cluster.energyDep());
+        }
+    }
+
+    energyHist1->Draw("COLZ");
+
+    for (size_t icr = 0; icr < disk1.nCrystals(); ++icr) {
+        const mu2e::Crystal& crystal = disk1.crystal(icr);
+        CLHEP::Hep3Vector pos  = crystal.localPosition();
+        CLHEP::Hep3Vector size = crystal.size();
+        double x  = pos.x();
+        double y  = pos.y();
+        double dx = size.x() / 2.0;
+        double dy = size.y() / 2.0;
+        TBox* box = new TBox(x - dx, y - dy, x + dx, y + dy);
+        box->SetFillStyle(0);
+        box->SetLineColor(kGray + 1);
+        box->SetLineWidth(1);
+        box->Draw();
+    }
+
+    fCaloCanvas1->Modified();
+    fCaloCanvas1->Update();
 }
 
   /*void TrackerCalo2DViews::redrawCanvas(const mu2e::KalSeedPtrCollection* seedcol) {

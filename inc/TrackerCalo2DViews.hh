@@ -30,6 +30,7 @@ private:
     REX::REvePointSet* fCanvasHolder{nullptr};
     TCanvas* fCanvas{nullptr};
     TCanvas* fCaloCanvas{nullptr};
+    TCanvas* fCaloCanvas1{nullptr};
     TCanvas* fXYCanvas{nullptr};
     std::map<int, TCanvas*> fPlaneCanvases;
 };
