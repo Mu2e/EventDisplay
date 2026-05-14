@@ -268,24 +268,12 @@ void DataInterface::AddCaloClusters(REX::REveManager *&eveMng, bool firstLoop_,
                                   + " Pos = (" + cluster_x + "," + cluster_y + "," + cluster_z + ") mm";
 
                 std::string name = "disk" + std::to_string(cluster.diskID()) + label;
-                auto ps1 = new REX::REvePointSet(name, "CaloClusters Disk 1: " + label, 0);
-                auto ps2 = new REX::REvePointSet(name, "CaloClusters Disk 2: " + label, 0);
-
-                if(cluster.diskID() == 0)
-                    ps1->SetNextPoint(pointmmTocm(COG.x()), pointmmTocm(COG.y()), abs(pointmmTocm(pointInMu2e.z())));
-                if(cluster.diskID() == 1)
-                    ps2->SetNextPoint(pointmmTocm(COG.x()), pointmmTocm(COG.y()), abs(pointmmTocm(pointInMu2e.z())));
-
-                ps1->SetMarkerColor(color);
-                ps1->SetMarkerStyle(DataInterface::mstyle);
-                ps1->SetMarkerSize(DataInterface::msize);
-
-                ps2->SetMarkerColor(color);
-                ps2->SetMarkerStyle(DataInterface::mstyle);
-                ps2->SetMarkerSize(DataInterface::msize);
-
-                scene->AddElement(ps1);
-                scene->AddElement(ps2);
+                auto ps = new REX::REvePointSet(name, "CaloCluster: " + label, 0);
+                ps->SetNextPoint(pointmmTocm(COG.x()), pointmmTocm(COG.y()), abs(pointmmTocm(pointInMu2e.z())));
+                ps->SetMarkerColor(color);
+                ps->SetMarkerStyle(DataInterface::mstyle);
+                ps->SetMarkerSize(DataInterface::msize);
+                scene->AddElement(ps);
 
                 // Optional: Draw contributing crystals with fixed-size boxes
                 if(addCrystalDraw){
