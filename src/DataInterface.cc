@@ -248,27 +248,15 @@ void DataInterface::AddCaloClusters(REX::REveManager *&eveMng, bool firstLoop_,
             for(unsigned int i = 0; i < clustercol->size(); i++){
                 const auto& cluster = (*clustercol)[i];
                 Color_t color = clusterColors[i % nColors];
-
-                std::string cluster_energy = std::to_string(cluster.energyDep());
-                std::string cluster_time = std::to_string(cluster.time());
-                std::string cluster_x = std::to_string(cluster.cog3Vector().x());
-                std::string cluster_y = std::to_string(cluster.cog3Vector().y());
-
                 CLHEP::Hep3Vector COG(cluster.cog3Vector().x(), cluster.cog3Vector().y(), cluster.cog3Vector().z());
 
                 CLHEP::Hep3Vector crystalPos = cal.geomUtil().mu2eToDisk(cluster.diskID(), COG);
                 CLHEP::Hep3Vector pointInMu2e = det->toMu2e(crystalPos);
+                std::string label = Form(" Cluster %d \n E = %.2f MeV, Time = %.2f ns \n Pos = (%.2f,%.2f,%.2f) mm",i, cluster.energyDep(), cluster.time(),
+                                         cluster.cog3Vector().x(), cluster.cog3Vector().y(), cluster.cog3Vector().z());
+                  // " Instance = " + names[0] + '\n'
 
-                std::string cluster_z = std::to_string(abs(pointInMu2e.z()));
-
-                std::string label = " Instance = " + names[0] + '\n'
-                                  + " Cluster = " + std::to_string(i) + '\n'
-                                  + " E = " + cluster_energy + " MeV " + '\n'
-                                  + " Time = " + cluster_time + " ns " + '\n'
-                                  + " Pos = (" + cluster_x + "," + cluster_y + "," + cluster_z + ") mm";
-
-                std::string name = "disk" + std::to_string(cluster.diskID()) + label;
-                auto ps = new REX::REvePointSet(name, "CaloCluster: " + label, 0);
+                auto ps = new REX::REvePointSet(label, "CaloCluster: " + label, 0);
                 ps->SetNextPoint(pointmmTocm(COG.x()), pointmmTocm(COG.y()), abs(pointmmTocm(pointInMu2e.z())));
                 ps->SetMarkerColor(color);
                 ps->SetMarkerStyle(DataInterface::mstyle);
@@ -292,10 +280,7 @@ void DataInterface::AddCaloClusters(REX::REveManager *&eveMng, bool firstLoop_,
 
                         CLHEP::Hep3Vector cryPos = cal.geomUtil().mu2eToDisk(cluster.diskID(), crystal.position());
 
-                        std::string crytitle = "disk" + std::to_string(cal.crystal(cryID).diskID())
-                                             + " Crystal Hit = " + std::to_string(cryID) + '\n'
-                                             + " Energy Dep. = " + std::to_string(crystalhit->energyDep()) + " MeV " + '\n'
-                                             + " Time = " + std::to_string(crystalhit->time()) + " ns ";
+                        std::string crytitle = Form("Crystal = %d, E = %.2f MeV, Time = %.2f ns" ,cryID, crystalhit->energyDep(), crystalhit->time());
 
                         auto b = new REX::REveBox(crytitle.c_str(), crytitle.c_str());
                         b->SetMainColor(color);
