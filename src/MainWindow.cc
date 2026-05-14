@@ -823,11 +823,15 @@ void MainWindow::showEvents(REX::REveManager *eveMng, REX::REveElement* &eventSc
       pass_data->AddCaloDigis(eveMng, firstLoop, data.calodigi_tuple, eventScene);
     }
   }
-
   if(drawOpts.addClusters){
     std::vector<const CaloClusterCollection*> calocluster_list = std::get<1>(data.calocluster_tuple);
     if(calocluster_list.size() !=0 ) 
       pass_data->AddCaloClusters(eveMng, firstLoopCalo, data.calocluster_tuple, eventScene, drawOpts.addCrystalDraw);
+    if(drawOpts.addCaloHist and calocluster_list.size() !=0) {
+      fTrackerCalo2DViews = new TrackerCalo2DViews();
+      const CaloClusterCollection* clustercol = calocluster_list[0];
+      fTrackerCalo2DViews->drawCalorimeterDisk(clustercol);
+   }
   }
 
   std::vector<const HelixSeedCollection*> helix_list = std::get<1>(data.helix_tuple);
