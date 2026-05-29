@@ -164,6 +164,8 @@ namespace mu2e
         // Control between the main thread and event-display thread
         std::condition_variable cv_{};
         std::mutex m_{};
+        bool appStarted_{false};
+        bool eveSetupDone_{false};
 
         int  diagLevel_;
         bool showCrv_;
@@ -255,22 +257,28 @@ namespace mu2e
   void Mu2eEventDisplay::signalAppStart()
   { 
       std::unique_lock lock{m_};
+      appStarted_ = true;
       cv_.notify_all();
   }
 
   void Mu2eEventDisplay::beginJob(){
       if(diagLevel_ == 1) std::cout<<"[Mu2eEventDisplay : beginJob()] -- starting ..."<<std::endl;
       {      
-        std::unique_lock lock{m_};
         appThread_ = std::thread{[this] { run_application(); }};
         // Wait for app init to finish ... this will process pending timer events.
         XThreadTimer sut([this]{ signalAppStart(); });
-        if(diagLevel_ == 1) std::cout<<"[Mu2eEventDisplay : beginJob()] -- starting wait on app start"<<std::endl;
-        cv_.wait(lock);
+        {
+          std::unique_lock lock{m_};
+          if(diagLevel_ == 1) std::cout<<"[Mu2eEventDisplay : beginJob()] -- starting wait on app start"<<std::endl;
+          cv_.wait(lock, [this]{ return appStarted_; });
+        }
         if(diagLevel_ == 1) std::cout<<"[Mu2eEventDisplay : beginJob()] -- app start signal received, starting eve init"<<std::endl;
         XThreadTimer suet([this]{ setup_eve(); });
-        if(diagLevel_ == 1) std::cout<<"[Mu2eEventDisplay : beginJob()] -- starting wait on eve setup"<<std::endl;
-        cv_.wait(lock);
+        {
+          std::unique_lock lock{m_};
+          if(diagLevel_ == 1) std::cout<<"[Mu2eEventDisplay : beginJob()] -- starting wait on eve setup"<<std::endl;
+          cv_.wait(lock, [this]{ return eveSetupDone_; });
+        }
         if(diagLevel_ == 1) std::cout<<"[Mu2eEventDisplay : beginJob()] -- eve setup apparently complete"<<std::endl;
       }
   }
@@ -643,6 +651,7 @@ void Mu2eEventDisplay::FillAnyCollection(const art::Event& evt, std::vector<std:
     std::unique_lock lock{m_}; 
     // Signal the waiting Art thread (in analyze() or beginRun()) to continue processing 
     // now that the REve display is fully initialized.
+    eveSetupDone_ = true;
     cv_.notify_all();
     //std::cout << "[DEBUG] TextSelect object ID assigned: " << fText->GetElementId() << std::endl; 
 }
