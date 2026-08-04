@@ -72,8 +72,6 @@ void MainWindow::showNodesByName(TGeoNode* n, const std::string& str, bool onOff
   }
   std::string name(n->GetName());
   j++;
-  //std::cout<<j<<" "<<name<<std::endl;
-  //if(print) std::cout<<j<<" "<<name<<std::endl;
   bool cry1 = false; // these help us know which disk and to draw crystals
   bool cry2 = false;
   int ndau = n->GetNdaughters();
@@ -89,7 +87,6 @@ void MainWindow::showNodesByName(TGeoNode* n, const std::string& str, bool onOff
       t(2,1) = rm[3]; t(2,2) = rm[4]; t(2,3) = rm[5];
       t(3,1) = rm[6]; t(3,2) = rm[7]; t(3,3) = rm[8];
       t(1,4) = tv[0] + shift[0]; t(2,4) = tv[1]  + shift[1]; t(3,4) = tv[2] + shift[2];
-      //std::cout<<name<<"  "<<tv[0] + shift[0]<<" "<<tv[1]  + shift[1] << " "<< tv[2] + shift[2]<<std::endl;
       ctrans *= t;
     }
     n->ls();
@@ -109,7 +106,6 @@ void MainWindow::showNodesByName(TGeoNode* n, const std::string& str, bool onOff
         t(2,1) = rm[3]; t(2,2) = rm[4]; t(2,3) = rm[5];
         t(3,1) = rm[6]; t(3,2) = rm[7]; t(3,3) = rm[8];
         t(1,4) = tv[0] + shift[0]; t(2,4) = tv[1]  + shift[1]; t(3,4) = tv[2] + shift[2];
-        //std::cout<<name<<"  "<<tv[0] + shift[0]<<" "<<tv[1]  + shift[1] << " "<< tv[2] + shift[2]<<std::endl;
 
         if(name.find("TrackerPlaneEnvelope_00") != string::npos) {
           FrontTracker_gdmltag = j;
@@ -140,7 +136,6 @@ void MainWindow::getOffsets(TGeoNode* n,const std::string& str, REX::REveTrans& 
   }
   std::string name(n->GetName());
   j++;
-  //std::cout<<n->GetName()<<std::endl;
   REX::REveTrans ctrans;
   ctrans.SetFrom(trans.Array());
   TGeoMatrix     *gm = n->GetMatrix();
@@ -153,7 +148,6 @@ void MainWindow::getOffsets(TGeoNode* n,const std::string& str, REX::REveTrans& 
   t(1,4) = tv[0]  ; t(2,4) = tv[1]  ; t(3,4) = tv[2] ;
 
   ctrans *= t;
-  //std::cout<<j<<" "<<name<<" located at "<<tv[0]<<" "<< tv[1]<<" "<<tv[2]<<std::endl;
   std::vector<float> pos;
   std::pair<std::string, std::vector<float>> offset;
   pos.push_back(tv[0]);
@@ -178,7 +172,6 @@ void MainWindow::getOffsets(TGeoNode* n,const std::string& str, REX::REveTrans& 
         t(1,4) = tv[0]  ; t(2,4) = tv[1]  ; t(3,4) = tv[2] ;
 
         ctrans *= t;
-       // std::cout<<j<<" "<<name<<" located at "<<tv[0]<<" "<< tv[1]<<" "<<tv[2]<<std::endl;
         std::vector<float> pos;
         std::pair<std::string, std::vector<float>> offset;
         pos.push_back(tv[0]);
@@ -707,14 +700,17 @@ void MainWindow::projectEvents(REX::REveManager *eveMng)
     XYCaloDisk0View->SetCameraType(REX::REveViewer::kCameraOrthoXOY);
     XYCaloDisk1View->SetCameraType(REX::REveViewer::kCameraOrthoXOY);
     rhoZView->SetCameraType(REX::REveViewer::kCameraOrthoXOY);
+
     mngTrackerXY->ImportElements(ie, TrackerXYEventScene);
 
     mngRhoZ  ->ImportElements(ie, rhoZEventScene);
 
-    if(ie->GetName().find("disk0") != string::npos )
+    if(ie->GetName().find("Cluster 0_") != string::npos ){
       mngXYCaloDisk0->ImportElements(ie, XYCaloDisk0EventScene);
-    if(ie->GetName().find("disk1") != string::npos )
+    }
+    if(ie->GetName().find("Cluster 1_") != string::npos ){
       mngXYCaloDisk1->ImportElements(ie, XYCaloDisk1EventScene);
+    }
   }
 }
 
