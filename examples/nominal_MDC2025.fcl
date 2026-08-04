@@ -20,11 +20,11 @@ physics :
 }
 
 # print statements
-physics.analyzers.Mu2eEventDisplay.diagLevel : 10
+physics.analyzers.Mu2eEventDisplay.diagLevel : 0
 physics.analyzers.Mu2eEventDisplay.filler.addCrvClusters : true
 physics.analyzers.Mu2eEventDisplay.filler.addCrvRecoPulse : true
 physics.analyzers.Mu2eEventDisplay.filler.addSimParts : true
-physics.analyzers.Mu2eEventDisplay.filler.addCaloDigis : true
+physics.analyzers.Mu2eEventDisplay.filler.addCaloDigis : false
 # the path
 physics.EndPath  : [ @sequence::REveDis.seqBase]
 physics.REvePath : @local::REvePath
