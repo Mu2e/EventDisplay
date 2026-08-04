@@ -32,9 +32,9 @@ double GetCrvExtractedZShift() {
  * Digis are visualized as points (crystal center) and 3D boxes.
  * Elements are colored based on the t0 time of the digitization pulse.
 */
-void DataInterface::AddCaloDigis(REX::REveManager *&eveMng, bool firstLoop_, 
-                                 std::tuple<std::vector<std::string>, 
-                                 std::vector<const CaloDigiCollection*>> calodigi_tuple, 
+void DataInterface::AddCaloDigis(REX::REveManager *&eveMng, bool firstLoop_,
+                                 std::tuple<std::vector<std::string>,
+                                 std::vector<const CaloDigiCollection*>> calodigi_tuple,
                                  REX::REveElement* &scene){
     /*if(!firstLoop_){
         scene->DestroyElements();;
@@ -68,25 +68,25 @@ void DataInterface::AddCaloDigis(REX::REveManager *&eveMng, bool firstLoop_,
         std::cout << "[DataInterface] No valid CaloDigis found." << std::endl;
         return;
     }
-    
+
     if (max_amp == min_amp) {
-        max_amp += 1.0; 
+        max_amp += 1.0;
     }
 
     // Visualization Loop
     for(unsigned int j = 0; j < calodigi_list.size(); j++){
 
         const CaloDigiCollection* calodigicol = calodigi_list[j];
-        
+
         if(calodigicol->size() != 0){
             if(!firstLoop_){
                 scene->DestroyElements();;
             }
-            
+
             mu2e::Calorimeter const &cal = *(mu2e::GeomHandle<mu2e::Calorimeter>());
             GeomHandle<DetectorSystem> det;
-            
-            auto allcryhits = new REX::REveCompound(("CaloDigiCollection_" + names[j]).c_str(), 
+
+            auto allcryhits = new REX::REveCompound(("CaloDigiCollection_" + names[j]).c_str(),
                                                    ("CaloDigi Collection: " + names[j]).c_str(), 1);
 
             for(unsigned int i = 0; i < calodigicol->size(); i++){
@@ -95,18 +95,18 @@ void DataInterface::AddCaloDigis(REX::REveManager *&eveMng, bool firstLoop_,
                 int cryID = sipmID / 2;
 
                 Crystal const &crystal = cal.crystal(cryID);
-                
+
                 // Extract maximum amplitude from waveform
                 const std::vector<int>& waveform = digi.waveform();
                 double max_amplitude = 0.0;
                 for(const auto& sample : waveform){
                     if(sample > max_amplitude) max_amplitude = sample;
                 }
-                
+
                 // Calculate Color based on amplitude (ADC/Energy) using shades of orange
                 Color_t color;
                 double normalized_amp = (max_amplitude - min_amp) / (max_amp - min_amp);
-                
+
                 // Map normalized amplitude to shades of orange (light for low energy, dark for high energy)
                 if (normalized_amp < 0.2) {
                     color = TColor::GetColor(255, 200, 0);    // Very light orange
@@ -122,7 +122,7 @@ void DataInterface::AddCaloDigis(REX::REveManager *&eveMng, bool firstLoop_,
                 }
                 else {
                     color = TColor::GetColor(139, 69, 19);    // Very dark orange/brown (darkest - most energetic)
-                } 
+                }
 
                 // Geometry and Position (Matching Original Logic)
                 double crystalXLen = pointmmTocm(crystal.size().x());
@@ -140,24 +140,24 @@ void DataInterface::AddCaloDigis(REX::REveManager *&eveMng, bool firstLoop_,
                     diskID = 1;
                 }
                 // Convert fixed zpos to cm for REve
-                double fixed_zpos_cm = zpos;//pointmmTocm(zpos); 
+                double fixed_zpos_cm = zpos;//pointmmTocm(zpos);
 
                 // Get crystal position in its local Mu2e disk frame (still in mm in Hep3Vector)
-                CLHEP::Hep3Vector crystalPos_local_mm = cal.geomUtil().mu2eToDisk(diskID, crystal.position());
-                
+                CLHEP::Hep3Vector crystalPos_local_mm = cal.mu2eToDisk(diskID, crystal.position());
+
                 // Label
                 std::string label = Form(" Crystal ID = %d \n SiPM = %d \n Max Amplitude (ADC) = %.2f \n t0 = %.2d ns \n peakPos = %d",
                                          cryID, sipmID, max_amplitude, digi.t0(), digi.peakpos());
-                
+
                 std::cout << "[DataInterface] Adding CaloDigi: " << digi.t0() << std::endl;
                 // A. Draw Crystal Center (Point Set)
                 auto ps1 = new REX::REvePointSet(label.c_str(), label.c_str(), 0);
                 auto ps2 = new REX::REvePointSet(label.c_str(), label.c_str(), 0);
-                
+
                 // The point sets use the fixed global Z position.
                 if(diskID == 0)
                     ps1->SetNextPoint(pointmmTocm(crystalPos_local_mm.x()), pointmmTocm(crystalPos_local_mm.y()), fixed_zpos_cm );
-                if(diskID == 1) 
+                if(diskID == 1)
                     ps2->SetNextPoint(pointmmTocm(crystalPos_local_mm.x()), pointmmTocm(crystalPos_local_mm.y()), fixed_zpos_cm );
 
                 ps1->SetMarkerColor(color);
@@ -174,17 +174,17 @@ void DataInterface::AddCaloDigis(REX::REveManager *&eveMng, bool firstLoop_,
                 // B. Draw Crystal Volume (REveBox)
                 std::string crytitle = Form("Crystal ID = %d \n Max Amplitude (ADC) = %.2f \n Time = %.2d ns",
                                             cryID, max_amplitude, digi.t0());
-                
+
                 auto b = new REX::REveBox(crytitle.c_str(), crytitle.c_str());
                 b->SetMainColor(color);
-                
+
                 double width = crystalXLen / 2.0;
                 double height = crystalYLen / 2.0;
                 double thickness = crystalZLen / 2.0;
-                
+
                 // Z-Terms (All in cm):
                 double Z_local_cm = pointmmTocm(crystalPos_local_mm.z());
-                
+
                 // The full Z offset term from your original logic: 2*thickness + fixed_zpos_cm
                 double Z_offset = 2.0 * thickness + fixed_zpos_cm;
 
@@ -193,7 +193,7 @@ void DataInterface::AddCaloDigis(REX::REveManager *&eveMng, bool firstLoop_,
                 b->SetVertex(1, pointmmTocm(crystalPos_local_mm.x()) - width, pointmmTocm(crystalPos_local_mm.y()) + height, Z_local_cm - thickness + Z_offset);
                 b->SetVertex(2, pointmmTocm(crystalPos_local_mm.x()) + width, pointmmTocm(crystalPos_local_mm.y()) + height, Z_local_cm - thickness + Z_offset);
                 b->SetVertex(3, pointmmTocm(crystalPos_local_mm.x()) + width, pointmmTocm(crystalPos_local_mm.y()) - height, Z_local_cm - thickness + Z_offset);
-                
+
                 // Back Face (Z_local_cm + thickness + Z_offset)
                 b->SetVertex(4, pointmmTocm(crystalPos_local_mm.x()) - width, pointmmTocm(crystalPos_local_mm.y()) - height, Z_local_cm + thickness + Z_offset);
                 b->SetVertex(5, pointmmTocm(crystalPos_local_mm.x()) - width, pointmmTocm(crystalPos_local_mm.y()) + height, Z_local_cm + thickness + Z_offset);
@@ -245,11 +245,11 @@ void DataInterface::AddCaloClusters(REX::REveManager *&eveMng, bool firstLoop_,
                 Color_t color = clusterColors[i % nColors];
                 CLHEP::Hep3Vector COG(cluster.cog3Vector().x(), cluster.cog3Vector().y(), cluster.cog3Vector().z());
 
-                CLHEP::Hep3Vector crystalPos = cal.geomUtil().mu2eToDisk(cluster.diskID(), COG);
+                CLHEP::Hep3Vector crystalPos = cal.mu2eToDisk(cluster.diskID(), COG);
                 CLHEP::Hep3Vector pointInMu2e = det->toMu2e(crystalPos);
                 std::string label = Form(" Cluster %d \n E = %.2f MeV, Time = %.2f ns \n Pos = (%.2f,%.2f,%.2f) mm",i, cluster.energyDep(), cluster.time(),
                                          cluster.cog3Vector().x(), cluster.cog3Vector().y(), cluster.cog3Vector().z());
-                 
+
                 auto ps = new REX::REvePointSet(label, "CaloCluster: " + label, 0);
                 ps->SetNextPoint(pointmmTocm(COG.x()), pointmmTocm(COG.y()), abs(pointmmTocm(pointInMu2e.z())));
                 ps->SetMarkerColor(color);
@@ -272,7 +272,7 @@ void DataInterface::AddCaloClusters(REX::REveManager *&eveMng, bool firstLoop_,
                         double crystalYLen = pointmmTocm(crystal.size().y());
                         double crystalZLen = pointmmTocm(crystal.size().z());
 
-                        CLHEP::Hep3Vector cryPos = cal.geomUtil().mu2eToDisk(cluster.diskID(), crystal.position());
+                        CLHEP::Hep3Vector cryPos = cal.mu2eToDisk(cluster.diskID(), crystal.position());
 
                         std::string crytitle = Form("Crystal = %d, E = %.2f MeV, Time = %.2f ns" ,cryID, crystalhit->energyDep(), crystalhit->time());
 
@@ -349,10 +349,10 @@ void DataInterface::AddBkgClusters(REX::REveManager *&eveMng, bool firstLoop_, s
 */
 
 //FIXME if firstloop never used remove it
-void DataInterface::AddComboHits(REX::REveManager *&eveMng, bool firstLoop_, 
-                                 std::tuple<std::vector<std::string>, 
-                                 std::vector<const ComboHitCollection*>> combohit_tuple, 
-                                 REX::REveElement* &scene, 
+void DataInterface::AddComboHits(REX::REveManager *&eveMng, bool firstLoop_,
+                                 std::tuple<std::vector<std::string>,
+                                 std::vector<const ComboHitCollection*>> combohit_tuple,
+                                 REX::REveElement* &scene,
                                  bool strawdisplay, bool AddErrorBar_) {
     /*if(!firstLoop_){
         scene->DestroyElements();;
@@ -381,17 +381,17 @@ void DataInterface::AddComboHits(REX::REveManager *&eveMng, bool firstLoop_,
         return;
     }
     if (max_time == min_time) {
-        max_time += 1.0; 
+        max_time += 1.0;
     }
 
     // Define the Color Gradient (Palette)
     const Int_t NRGBs = 5;
-    const Int_t NCont = 255; 
-    Double_t stops[NRGBs] = { 0.00, 0.34, 0.61, 0.84, 1.00 }; 
-    Double_t red[NRGBs]   = { 0.00, 0.00, 0.87, 1.00, 0.51 }; 
-    Double_t green[NRGBs] = { 0.00, 0.81, 1.00, 0.20, 0.00 }; 
-    Double_t blue[NRGBs]  = { 0.51, 1.00, 0.12, 0.00, 0.00 }; 
-    
+    const Int_t NCont = 255;
+    Double_t stops[NRGBs] = { 0.00, 0.34, 0.61, 0.84, 1.00 };
+    Double_t red[NRGBs]   = { 0.00, 0.00, 0.87, 1.00, 0.51 };
+    Double_t green[NRGBs] = { 0.00, 0.81, 1.00, 0.20, 0.00 };
+    Double_t blue[NRGBs]  = { 0.51, 1.00, 0.12, 0.00, 0.00 };
+
     TColor::CreateGradientColorTable(NRGBs, stops, red, green, blue, NCont);
     gStyle->SetNumberContours(NCont);
 
@@ -414,7 +414,7 @@ void DataInterface::AddComboHits(REX::REveManager *&eveMng, bool firstLoop_,
                 Color_t hit_color;
                 double normalized_time = (hit.time() - min_time) / (max_time - min_time);
                 int colorIdx = static_cast<int>(normalized_time * (NCont - 1));
-                hit_color = gStyle->GetColorPalette(colorIdx); 
+                hit_color = gStyle->GetColorPalette(colorIdx);
                 // A. Display Hit Straws (Separate element, added directly to scene for broad context)
                 if(strawdisplay){
                     StrawId sid = hit._sid;
@@ -445,7 +445,7 @@ void DataInterface::AddComboHits(REX::REveManager *&eveMng, bool firstLoop_,
                       strawline->SetPoint(0, pointmmTocm(sposi.x()), pointmmTocm(sposi.y()), pointmmTocm(sposi.z()));
                       strawline->SetNextPoint(pointmmTocm(sposf.x()), pointmmTocm(sposf.y()), pointmmTocm(sposf.z()));
                       strawline->SetLineWidth(1);
-                      strawline->SetLineColor(1); 
+                      strawline->SetLineColor(1);
                       if(strawline->GetSize() != 0) scene->AddElement(strawline);
                     }
                 }
@@ -453,7 +453,7 @@ void DataInterface::AddComboHits(REX::REveManager *&eveMng, bool firstLoop_,
                 if(AddErrorBar_){
                     auto const& p = hit.pos();
                     auto w = hit.uDir();
-                    auto const& s = hit.wireRes(); // Wire resolution (length of error bar half-segment) 
+                    auto const& s = hit.wireRes(); // Wire resolution (length of error bar half-segment)
                     // Calculate endpoints of the error bar along the perpendicular direction (w = uDir)
                     double x1 = (p.x()+s*w.x());
                     double x2 = (p.x()-s*w.x());
@@ -466,16 +466,16 @@ void DataInterface::AddComboHits(REX::REveManager *&eveMng, bool firstLoop_,
                                                       hit.time(), s, x1, y1, z1, x2, y2, z2);
                     auto error = new REX::REveLine(errorbar_label.c_str(), errorbar_label.c_str(), 2);
                     error->SetPoint(0, pointmmTocm(x1), pointmmTocm(y1), pointmmTocm(z1));
-                    error->SetNextPoint(pointmmTocm(x2), pointmmTocm(y2), pointmmTocm(z2)); 
-                    error->SetLineColor(hit_color); 
-                    error->SetLineWidth(drawconfig.getInt("TrackLineWidth")); 
+                    error->SetNextPoint(pointmmTocm(x2), pointmmTocm(y2), pointmmTocm(z2));
+                    error->SetLineColor(hit_color);
+                    error->SetLineWidth(drawconfig.getInt("TrackLineWidth"));
                     master_compound->AddElement(error);
-                } 
+                }
                 // C. Draw ComboHit Position (REvePointSet)
                 CLHEP::Hep3Vector HitPos(pointmmTocm(hit.pos().x()), pointmmTocm(hit.pos().y()), pointmmTocm(hit.pos().z()));
                 std::string chtitle = Form("ComboHits tag = %s \n Pos = (%.2f, %.2f, %.2f) mm \n Time = %.2f ns \n E = %.2f MeV",
                                            names[j].c_str(), hit.pos().x(), hit.pos().y(), hit.pos().z(), hit.time(), hit.energyDep());
-                    
+
                 auto ps1 = new REX::REvePointSet(chtitle.c_str(), chtitle.c_str(), 0);
                 if (!hit.flag().hasAnyProperty(StrawHitFlagDetail::bkg)){
                   ps1->SetNextPoint(HitPos.x(), HitPos.y() , HitPos.z());
@@ -483,12 +483,12 @@ void DataInterface::AddComboHits(REX::REveManager *&eveMng, bool firstLoop_,
                   ps1->SetMarkerStyle(DataInterface::mstyle);
                   ps1->SetMarkerSize(DataInterface::msize);
                   master_compound->AddElement(ps1);
-                } 
+                }
                 else{
                   ps2->SetNextPoint(HitPos.x(), HitPos.y() , HitPos.z());
                   ps2->SetMarkerColor(kRed);
                 }
-            } 
+            }
             ps2->SetMarkerStyle(DataInterface::mstyle);
             ps2->SetMarkerSize(DataInterface::msize);
             if(ps2->GetSize() !=0) scene->AddElement(ps2);
@@ -571,7 +571,7 @@ void DataInterface::AddCrvBar(const mu2e::CRSScintillatorBarIndex& barIndex, con
         if(barCompound) barCompound->AddElement(b);
     }
     else {
-        if(barDetail.getWidthDirection() == 0 and barDetail.getThicknessDirection() == 1 and barDetail.getLengthDirection() == 2){ 
+        if(barDetail.getWidthDirection() == 0 and barDetail.getThicknessDirection() == 1 and barDetail.getLengthDirection() == 2){
             b->SetVertex(0, X_cm - width, Y_cm - height, Z_cm - length);
             b->SetVertex(1, X_cm - width, Y_cm + height, Z_cm - length);
             b->SetVertex(2, X_cm + width, Y_cm + height, Z_cm - length);
@@ -580,8 +580,8 @@ void DataInterface::AddCrvBar(const mu2e::CRSScintillatorBarIndex& barIndex, con
             b->SetVertex(5, X_cm - width, Y_cm + height, Z_cm + length);
             b->SetVertex(6, X_cm + width, Y_cm + height, Z_cm + length);
             b->SetVertex(7, X_cm + width, Y_cm - height, Z_cm + length);
-        } 
-        else { 
+        }
+        else {
             b->SetVertex(0, X_cm - length, Y_cm - height, Z_cm - width);
             b->SetVertex(1, X_cm - length, Y_cm + height, Z_cm - width);
             b->SetVertex(2, X_cm + length, Y_cm + height, Z_cm - width);
@@ -595,23 +595,23 @@ void DataInterface::AddCrvBar(const mu2e::CRSScintillatorBarIndex& barIndex, con
     }
 }
 
-void DataInterface::AddCrvClusters(REX::REveManager *&eveMng, bool firstLoop_, 
-                                   std::tuple<std::vector<std::string>, 
-                                   std::vector<const CrvCoincidenceClusterCollection*>> crvpulse_tuple, 
+void DataInterface::AddCrvClusters(REX::REveManager *&eveMng, bool firstLoop_,
+                                   std::tuple<std::vector<std::string>,
+                                   std::vector<const CrvCoincidenceClusterCollection*>> crvpulse_tuple,
                                    REX::REveElement* &scene, bool extracted, bool addCrvBars)
 {
     std::vector<const CrvCoincidenceClusterCollection*> crvpulse_list = std::get<1>(crvpulse_tuple);
     std::vector<std::string> names = std::get<0>(crvpulse_tuple);
     mu2e::GeomHandle<mu2e::CosmicRayShield> CRS;
     mu2e::GeomHandle<mu2e::DetectorSystem> det;
-    
+
     if (crvpulse_list.size() == 0) return;
-    
+
     for(unsigned int i=0; i < crvpulse_list.size(); i++){
         const CrvCoincidenceClusterCollection* crvClusters = crvpulse_list[i];
         if (crvClusters->size() == 0) continue;
         std::string bars_title = "Crv Cluster Bars: " + names[i];
-        auto allcrvbars_collection = new REX::REveCompound(bars_title.c_str(), bars_title.c_str(), 1); 
+        auto allcrvbars_collection = new REX::REveCompound(bars_title.c_str(), bars_title.c_str(), 1);
         for(unsigned int j=0; j< crvClusters->size(); j++){
             mu2e::CrvCoincidenceCluster const &crvclu = (*crvClusters)[j];
             std::string crvtitle = Form("CrvCoincidenceCluster %d tag: %s \n Avg Hit Time = %.2f ns \n PEs = %.2f",
@@ -621,7 +621,7 @@ void DataInterface::AddCrvClusters(REX::REveManager *&eveMng, bool firstLoop_,
             double cluster_z = pointmmTocm(pointInMu2e.z());
             if(extracted) cluster_z += GetCrvExtractedZShift();
             ps1->SetNextPoint(pointmmTocm(pointInMu2e.x()), pointmmTocm(pointInMu2e.y()) , cluster_z);
-            std::set<mu2e::CRSScintillatorBarIndex> drawn_bars; 
+            std::set<mu2e::CRSScintillatorBarIndex> drawn_bars;
             for(unsigned h =0 ; h < crvclu.GetCrvRecoPulses().size();h++) {
                 art::Ptr<mu2e::CrvRecoPulse> crvpulse = crvclu.GetCrvRecoPulses()[h];
                 const mu2e::CRSScintillatorBarIndex &crvBarIndex = crvpulse->GetScintillatorBarIndex();
@@ -636,9 +636,9 @@ void DataInterface::AddCrvClusters(REX::REveManager *&eveMng, bool firstLoop_,
             ps1->SetMarkerColor(drawconfig.getInt("CrvHitColor"));
             ps1->SetMarkerStyle(DataInterface::mstyle);
             ps1->SetMarkerSize(DataInterface::msize);
-            if(ps1->GetSize() !=0 ) scene->AddElement(ps1); 
+            if(ps1->GetSize() !=0 ) scene->AddElement(ps1);
         }
-        if(!extracted && addCrvBars) scene->AddElement(allcrvbars_collection); 
+        if(!extracted && addCrvBars) scene->AddElement(allcrvbars_collection);
     }
 }
 
@@ -677,9 +677,9 @@ void DataInterface::AddTimeClusters(REX::REveManager *&eveMng, bool firstLoop_, 
  * Adds reconstructed HelixSeed data products to the REve visualization scene.
  * Visualized as series of lines
 */
-void DataInterface::AddHelixSeedCollection(REX::REveManager *&eveMng, bool firstloop, 
-                                         std::tuple<std::vector<std::string>, 
-                                         std::vector<const HelixSeedCollection*>> helix_tuple, 
+void DataInterface::AddHelixSeedCollection(REX::REveManager *&eveMng, bool firstloop,
+                                         std::tuple<std::vector<std::string>,
+                                         std::vector<const HelixSeedCollection*>> helix_tuple,
                                          REX::REveElement* &scene)
 {
     std::cout << "[DataInterface::AddHelixSeedCollection]" << std::endl;
@@ -688,16 +688,16 @@ void DataInterface::AddHelixSeedCollection(REX::REveManager *&eveMng, bool first
     const int Z_START_MM = -1500;
     const int Z_END_MM   = 1500;
     const int Z_STEP_MM  = 100;
-    const int NUM_POINTS = (Z_END_MM - Z_START_MM) / Z_STEP_MM + 1; 
+    const int NUM_POINTS = (Z_END_MM - Z_START_MM) / Z_STEP_MM + 1;
 
     const auto& helix_list = std::get<1>(helix_tuple);
     const auto& names = std::get<0>(helix_tuple);
-    
+
     if (helix_list.empty()) return;
 
     for(unsigned int j=0; j < helix_list.size(); j++){
         const HelixSeedCollection* seedcol = helix_list[j];
-        
+
         if(seedcol != nullptr){
             std::string collection_title = "HelixSeed Collection: " + names[j];
             auto collection_compound = new REX::REveCompound(collection_title.c_str(), collection_title.c_str(), true);
@@ -705,53 +705,53 @@ void DataInterface::AddHelixSeedCollection(REX::REveManager *&eveMng, bool first
             for(unsigned int k = 0; k < seedcol->size(); k++){
                 const mu2e::HelixSeed& hseed = (*seedcol)[k];
                 const mu2e::RobustHelix& rhelix = hseed.helix();
-                
+
                 // Calculate/Extract Useful Parameters for the Title
                 double momentum = rhelix.momentum(); // Momentum magnitude
                 double lambda_pitch = rhelix._lambda; // Pitch parameter: dZ/dPhi
                 double r_center = rhelix._rcent; // Radius of center vector
-                
+
                 // Create Detailed Title String
                 std::string helix_title = Form("HelixSeed %d tag: %s \n Momentum (p): %.2f MeV/c \n Pitch (lambda): %.4f \n Center Radius (R_cent): %.2f mm",
                                                k, names[j].c_str(), momentum, lambda_pitch, r_center);
-                
-                
+
+
                 // Use the calculated number of points for the REveLine constructor
                 auto line = new REX::REveLine(helix_title.c_str(), helix_title.c_str(), NUM_POINTS);
-                
+
                 // Get Helix Parameters for Drawing
                 float helrad  = rhelix._radius;
                 float xc      = rhelix._rcent * cos(rhelix._fcent);
                 float yc      = rhelix._rcent * sin(rhelix._fcent);
                 float lambda  = rhelix._lambda;
                 float fz0     = rhelix._fz0;
-                
+
                 // Draw Synthetic Helix Points
                 for(int i = Z_START_MM; i <= Z_END_MM; i += Z_STEP_MM){
                     float z = static_cast<float>(i);
                     float circphi = 0.0;
-                    
+
                     if(lambda != 0.0f) {
                         circphi = fz0 + z / lambda;
                     } else {
-                        circphi = fz0; 
+                        circphi = fz0;
                     }
 
                     float x = xc + helrad * cos(circphi);
                     float y = yc + helrad * sin(circphi);
-                    
+
                     CLHEP::Hep3Vector HelPos(x, y, z);
-                    
+
                     line->SetNextPoint(pointmmTocm(HelPos.x()), pointmmTocm(HelPos.y()), pointmmTocm(HelPos.z()));
                 }
-                
+
                 // Update styles
                 line->SetLineColor(drawconfig.getInt("RecoTrackColor"));
                 line->SetLineWidth(drawconfig.getInt("TrackLineWidth"));
-                
+
                 collection_compound->AddElement(line);
             } // End of k-loop (HelixSeeds)
-            
+
             scene->AddElement(collection_compound);
         }
     }
@@ -768,27 +768,27 @@ void DataInterface::AddKalIntersection(mu2e::KalSeed const& kalseed, REX::REveEl
 
     // Iterate over all intersections
     for(mu2e::KalIntersection const& inter : inters){
-        
+
         const KinKal::VEC3& posKI = inter.position3();
-        
+
         // Create Detailed Title String
         std::string title = Form("KalIntersection Surface: %s \n Pos = (%.2f, %.2f, %.2f) mm \n Time = %.2f ns \n Momentum = %.2f +/- %.2f MeV/c", inter.surfaceId().name().c_str(), posKI.x(), posKI.y(), posKI.z(), inter.time(), inter.mom(), inter.dMom());
-        
+
         // Create and Style REve Point Set
         auto interpoint = new REX::REvePointSet(title.c_str(), title.c_str(), 1);
 
         // Assign color based on momentum uncertainty (dMom > 0 for material intersections)
         Color_t marker_color = (fabs(inter.dMom()) > 0.0) ? kViolet : kYellow;
-        
+
         interpoint->SetMarkerStyle(DataInterface::mstyle);
         interpoint->SetMarkerSize(DataInterface::msize);
         interpoint->SetMarkerColor(marker_color);
 
         // Set Point Position
-        interpoint->SetNextPoint(pointmmTocm(posKI.x()), 
-                                 pointmmTocm(posKI.y()), 
+        interpoint->SetNextPoint(pointmmTocm(posKI.x()),
+                                 pointmmTocm(posKI.y()),
                                  pointmmTocm(posKI.z()));
-        
+
         // Add to Products Compound
         if (interpoint->GetSize() != 0) {
             products->AddElement(interpoint);
@@ -800,7 +800,7 @@ void DataInterface::AddKalIntersection(mu2e::KalSeed const& kalseed, REX::REveEl
  * Adds reconstructed TrkStrawHits associated with KalSeed data products to the REve visualization scene.
  * Visualized as points
 */
-template<class KTRAJc> 
+template<class KTRAJc>
 void DataInterface::AddTrkStrawHit(mu2e::KalSeed const& kalseed, REX::REveElement* &scene,  std::unique_ptr<KTRAJc> &lhptr, REX::REveCompound *trackproducts)
 {
     std::cout << "[DataInterface::AddTrkStrawHit]" << std::endl;
@@ -844,7 +844,7 @@ void DataInterface::AddTrkStrawHit(mu2e::KalSeed const& kalseed, REX::REveElemen
 
             auto trkstrawpoint = new REX::REvePointSet(title.c_str(), title.c_str(), 1);
             trkstrawpoint->SetMarkerStyle(DataInterface::mstyle);
-            trkstrawpoint->SetMarkerSize(DataInterface::msize); 
+            trkstrawpoint->SetMarkerSize(DataInterface::msize);
             // Color logic: Redraw color if drift constraint wasn't used
             Color_t base_color = drawconfig.getInt("TrkHitColor");
             if (!usedrift) {
@@ -866,9 +866,9 @@ void DataInterface::AddTrkCaloHit(mu2e::KalSeed const& kalseed, REX::REveElement
     std::cout<<"[DataInterface::AddTrkCaloHit]"<<std::endl;
     // The TrkCaloHitSeed is a member of the KalSeed
     const mu2e::TrkCaloHitSeed& caloseed = kalseed.caloHit();
-    
+
     // The caloseed contains an art::Ptr to the CaloCluster
-    art::Ptr<mu2e::CaloCluster> cluster = caloseed.caloCluster(); 
+    art::Ptr<mu2e::CaloCluster> cluster = caloseed.caloCluster();
 
     // Check if a valid CaloCluster is associated with the track
     if (cluster) {
@@ -883,21 +883,21 @@ void DataInterface::AddTrkCaloHit(mu2e::KalSeed const& kalseed, REX::REveElement
         std::string cluster_title = Form("TrkCaloHit CaloCluster \n Pos = (%.2f, %.2f, %.2f) mm \n E = %.2f MeV \n Time = %.2f ns",
                                          clusterPos.x(), clusterPos.y(), clusterPos.z(), energy, time);
 
-        CLHEP::Hep3Vector crystalPos = cal.geomUtil().mu2eToDisk(cluster->diskID(),clusterPos);
+        CLHEP::Hep3Vector crystalPos = cal.mu2eToDisk(cluster->diskID(),clusterPos);
         CLHEP::Hep3Vector pointInMu2e = det->toMu2e(crystalPos);
 
         // Create REve Point Set
-        auto ps1 = new REX::REvePointSet(cluster_title.c_str(), cluster_title.c_str(), 1); 
+        auto ps1 = new REX::REvePointSet(cluster_title.c_str(), cluster_title.c_str(), 1);
 
         // Set Positions, Color, and Size
-        if(cluster->diskID() == 0)    
+        if(cluster->diskID() == 0)
             ps1->SetNextPoint(pointmmTocm(clusterPos.x()), pointmmTocm(clusterPos.y()) , abs(pointmmTocm(pointInMu2e.z())));
         if(cluster->diskID() == 1)
             ps1->SetNextPoint(pointmmTocm(clusterPos.x()), pointmmTocm(clusterPos.y()) , abs(pointmmTocm(pointInMu2e.z())));
 
 
         // Styling
-        ps1->SetMarkerColor(drawconfig.getInt("TrkHitColor")); 
+        ps1->SetMarkerColor(drawconfig.getInt("TrkHitColor"));
         ps1->SetMarkerStyle(kFullDiamond);
         ps1->SetMarkerSize(DataInterface::msize * 3.0);
 
@@ -915,11 +915,11 @@ void DataInterface::AddTrkCaloHit(mu2e::KalSeed const& kalseed, REX::REveElement
 using LHPT = KalSeed::LHPT;
 using CHPT = KalSeed::CHPT;
 using KLPT = KalSeed::KLPT;
-template<class KTRAJ> 
-void DataInterface::AddKinKalTrajectory(std::unique_ptr<KTRAJ> &trajectory, 
-                                        REX::REveElement* &scene, 
-                                        unsigned int j, 
-                                        std::string kaltitle, 
+template<class KTRAJ>
+void DataInterface::AddKinKalTrajectory(std::unique_ptr<KTRAJ> &trajectory,
+                                        REX::REveElement* &scene,
+                                        unsigned int j,
+                                        std::string kaltitle,
                                         double& t1, // event range will be updated
                                         double& t2)
 {
@@ -936,21 +936,21 @@ void DataInterface::AddKinKalTrajectory(std::unique_ptr<KTRAJ> &trajectory,
     // Create the REveLine with the pre-calculated title and required size
     auto line = new REX::REveLine(kaltitle.c_str(), kaltitle.c_str(), num_steps);
 
-    // Iterate Through Time and Plot Points 
-    
+    // Iterate Through Time and Plot Points
+
     // Set the first point explicitly (t = t1)
     const auto &p_start = trajectory->position3(t1);
     line->SetPoint(0, pointmmTocm(p_start.x()), pointmmTocm(p_start.y()), pointmmTocm(p_start.z()));
-    
+
     // Loop from t1 + step up to t2
     for(double t = t1 + time_step; t <= t2; t += time_step)
     {
         // Get the position vector once
         const auto &p = trajectory->position3(t);
-        
+
         // Add the point, converting units
-        line->SetNextPoint(pointmmTocm(p.x()), 
-                           pointmmTocm(p.y()), 
+        line->SetNextPoint(pointmmTocm(p.x()),
+                           pointmmTocm(p.y()),
                            pointmmTocm(p.z()));
     }
 
@@ -964,45 +964,45 @@ void DataInterface::AddKinKalTrajectory(std::unique_ptr<KTRAJ> &trajectory,
 /*
  * Adds reconstructed KTRAJ
 */
-void DataInterface::FillKinKalTrajectory(REX::REveManager *&eveMng, bool firstloop, REX::REveElement* &scene, 
-                                         std::tuple<std::vector<std::string>, 
-                                         std::vector<const KalSeedPtrCollection*>> track_tuple, 
-                                         bool plotKalIntersection, bool addTrkHits, bool addTrkCaloHits, 
+void DataInterface::FillKinKalTrajectory(REX::REveManager *&eveMng, bool firstloop, REX::REveElement* &scene,
+                                         std::tuple<std::vector<std::string>,
+                                         std::vector<const KalSeedPtrCollection*>> track_tuple,
+                                         bool plotKalIntersection, bool addTrkHits, bool addTrkCaloHits,
                                          double& t1, double& t2)
 {
     std::cout << "[DataInterface::FillKinKalTrajectory()]" << std::endl;
-    
-    // Critical Logic: Scene Cleanup 
+
+    // Critical Logic: Scene Cleanup
     if (!firstloop) {
         scene->DestroyElements();
     }
 
-    // Setup and Data Extraction 
+    // Setup and Data Extraction
     const auto& ptable = GlobalConstantsHandle<ParticleDataList>();
-    const auto& track_list = std::get<1>(track_tuple);    
+    const auto& track_list = std::get<1>(track_tuple);
     if (track_list.empty()) return;
 
-    // Loop over KalSeed Collections 
+    // Loop over KalSeed Collections
     for(unsigned int j = 0; j < track_list.size(); j++){
         const mu2e::KalSeedPtrCollection* seedcol = track_list[j];
-        
+
         if(seedcol == nullptr) continue;
-        
-        // Loop over individual KalSeeds 
+
+        // Loop over individual KalSeeds
         for(const auto& kseedptr : *seedcol){
             if (!kseedptr) continue;
-            
+
             const mu2e::KalSeed& kseed = *kseedptr;
             std::string particle_name = ptable->particle(kseed.particle()).name();
 
-            // Determine active hits for display info 
+            // Determine active hits for display info
             unsigned nactive = 0;
-            for (auto const& hit : kseed.hits()){ 
+            for (auto const& hit : kseed.hits()){
                 if (hit.strawHitState() > mu2e::WireHitState::inactive) {
-                    ++nactive; 
+                    ++nactive;
                 }
             }
-            
+
             // Find t0 and Setup Output Container
             double t0;
             kseed.t0Segment(t0);
@@ -1010,17 +1010,17 @@ void DataInterface::FillKinKalTrajectory(REX::REveManager *&eveMng, bool firstlo
             // Container for all points, hits, and intersections for THIS track
             std::string compound_name = "Track Products for KalSeed " + particle_name;
             REX::REveCompound *trackproducts = new REX::REveCompound(compound_name.c_str(), compound_name.c_str(), 1);
-            
+
             std::stringstream ksstream;
             std::string tag = particle_name;
 
-            // Loop Helix Fit 
+            // Loop Helix Fit
             if(kseed.loopHelixFit()) {
                 tag += " Loop Helix";
                 auto trajectory = kseed.loopHelixFitTrajectory();
                 const auto& lh = trajectory->nearestPiece(t0);
                 auto momvec = lh.momentum3(t0);
-                
+
                 ksstream << particle_name << " LoopHelix "
                     << std::setw(6) << std::setprecision(3) << momvec.R() << " MeV/c, cos(Theta) " << cos(momvec.Theta()) << '\n'
                     << "t0 " << lh.t0() << " ns, "
@@ -1030,21 +1030,21 @@ void DataInterface::FillKinKalTrajectory(REX::REveManager *&eveMng, bool firstlo
                     << "cy " << lh.cy() << " mm, "
                     << "phi0 " << lh.phi0() << " rad" << '\n'
                          << "N active hits: " << nactive << ", Fit cons: " << kseed.fitConsistency();
-                
+
                 AddKinKalTrajectory<LHPT>(trajectory, scene, j, ksstream.str(), t1, t2);
                 if(addTrkHits) {
                     AddTrkStrawHit<LHPT>(kseed, scene, trajectory, trackproducts);
                     if(addTrkCaloHits) AddTrkCaloHit(kseed, scene);
                 }
             }
-            
-            // Central Helix Fit 
+
+            // Central Helix Fit
             else if(kseed.centralHelixFit()) {
                 tag += " Central Helix";
                 auto trajectory = kseed.centralHelixFitTrajectory();
                 const auto& ch = trajectory->nearestPiece(t0);
                 auto momvec = ch.momentum3(t0);
-                
+
                 ksstream << particle_name << " CentralHelix "
                     << std::setw(6) << std::setprecision(3) << momvec.R() << " MeV/c, cos(Theta) " << cos(momvec.Theta()) << '\n'
                     << "t0 " << ch.t0() << " ns, "
@@ -1054,21 +1054,21 @@ void DataInterface::FillKinKalTrajectory(REX::REveManager *&eveMng, bool firstlo
                     << "phi0 " << ch.phi0() << " rad" << '\n'
                     << "omega " << ch.omega() << " mm^-1" << '\n'
                     << "Track arrival time " << t1;
-                
+
                 AddKinKalTrajectory<CHPT>(trajectory, scene, j, ksstream.str(), t1, t2);
                 if(addTrkHits) {
                     AddTrkStrawHit<CHPT>(kseed, scene, trajectory, trackproducts);
                     if(addTrkCaloHits) AddTrkCaloHit(kseed, scene);
                 }
             }
-            
-            // Kinematic Line Fit 
+
+            // Kinematic Line Fit
             else if(kseed.kinematicLineFit()) {
                 tag += " Kinematic Line";
                 auto trajectory = kseed.kinematicLineFitTrajectory();
                 const auto& kl = trajectory->nearestPiece(t0);
                 auto momvec = kl.momentum3(t0);
-                
+
                 ksstream << particle_name << " Momentum "
                     << std::setw(6) << std::setprecision(3) << momvec.R() << " MeV/c, cos(Theta) " << cos(momvec.Theta()) << '\n'
                     << "t0 " << kl.t0() << " ns, "
@@ -1077,19 +1077,19 @@ void DataInterface::FillKinKalTrajectory(REX::REveManager *&eveMng, bool firstlo
                     << "phi0 " << kl.phi0() << " rad, "
                     << "theta " << kl.theta() << " rad" << '\n'
                     << "Track arrival time " << t1;
-                
+
                 AddKinKalTrajectory<KLPT>(trajectory, scene, j, ksstream.str(), t1, t2);
                 if(addTrkHits) {
                     AddTrkStrawHit<KLPT>(kseed, scene, trajectory, trackproducts);
                     if(addTrkCaloHits) AddTrkCaloHit(kseed, scene);
                 }
             }
-            
-            // Final Additions for the Current KalSeed 
+
+            // Final Additions for the Current KalSeed
             if(plotKalIntersection) {
                 AddKalIntersection(kseed, scene, trackproducts, tag);
             }
-            
+
             // Add the compound of all hits/intersections if we added anything to it
             // The logic implies we add it if hits OR intersections were requested.
             if(addTrkHits || plotKalIntersection) {
@@ -1104,86 +1104,86 @@ void DataInterface::FillKinKalTrajectory(REX::REveManager *&eveMng, bool firstlo
  * Adds reconstructed CosmicTrackSeed product, visualized as line
 */
 /*Function to visualize CosmicTrackSeed fits (straight lines)-*/
-void DataInterface::AddCosmicTrackFit(REX::REveManager *&eveMng, bool firstLoop_, 
-                                      const mu2e::CosmicTrackSeedCollection *cosmiccol, 
+void DataInterface::AddCosmicTrackFit(REX::REveManager *&eveMng, bool firstLoop_,
+                                      const mu2e::CosmicTrackSeedCollection *cosmiccol,
                                       REX::REveElement* &scene)
 {
     std::cout << "[DataInterface] AddCosmicTrackSeed" << std::endl;
 
-    
+
     if (cosmiccol == nullptr) return;
-    
+
     // Create a compound to hold all individual cosmic tracks for organization
     auto all_tracks_compound = new REX::REveCompound("Cosmic Tracks", "Cosmic Tracks", true);
-    
-    // Loop over individual CosmicTrackSeeds 
+
+    // Loop over individual CosmicTrackSeeds
     for(size_t i = 0; i < cosmiccol->size(); i++){
         const mu2e::CosmicTrackSeed& sts = (*cosmiccol)[i];
         const mu2e::CosmicTrack& st = sts._track;
-        
+
         // Ensure there are enough hits to define a track segment
         if (sts._straw_chits.size() < 2) continue;
 
-        // Define Track Segment Endpoints 
+        // Define Track Segment Endpoints
         // The track is parameterized as: X(y) = A0 - A1*y, Z(y) = B0 - B1*y.
         // We plot the line segment between the Y-positions of the first and last hits.
-        
+
         const mu2e::ComboHit& first_hit = sts._straw_chits.front();
         const mu2e::ComboHit& last_hit = sts._straw_chits.back();
-        
+
         double ty1 = first_hit.pos().y();
         double ty2 = last_hit.pos().y();
-        
+
         // Calculate the (X, Z) coordinates at Y1 and Y2 using the fit parameters
         double tx1 = st.MinuitParams.A0 - st.MinuitParams.A1 * ty1;
         double tx2 = st.MinuitParams.A0 - st.MinuitParams.A1 * ty2;
         double tz1 = st.MinuitParams.B0 - st.MinuitParams.B1 * ty1;
         double tz2 = st.MinuitParams.B0 - st.MinuitParams.B1 * ty2;
-        
-        // Create and Populate REveLine for the Current Track 
-        std::string track_title = "Cosmic Track " + std::to_string(i) 
+
+        // Create and Populate REveLine for the Current Track
+        std::string track_title = "Cosmic Track " + std::to_string(i)
                                 + " N_Hits: " + std::to_string(sts._straw_chits.size());
         auto line = new REX::REveLine(track_title.c_str(), track_title.c_str(), 2);
-        
+
         // Set Point 1 (Start)
         line->SetNextPoint(pointmmTocm(tx1), pointmmTocm(ty1), pointmmTocm(tz1));
-        
+
         // Set Point 2 (End)
         line->SetNextPoint(pointmmTocm(tx2), pointmmTocm(ty2), pointmmTocm(tz2));
 
-        // 3. Styling and Addition 
+        // 3. Styling and Addition
         line->SetLineColor(drawconfig.getInt("RecoTrackColor"));
         line->SetLineWidth(drawconfig.getInt("TrackLineWidth"));
-        
+
         all_tracks_compound->AddElement(line);
     }
-    
+
     // Add the compound of all tracks to the scene
     scene->AddElement(all_tracks_compound);
 }
 
-void DataInterface::AddCRVKalIntersection(REX::REveManager *&eveMng, bool firstloop, REX::REveElement* &scene, 
-                                         std::tuple<std::vector<std::string>, 
+void DataInterface::AddCRVKalIntersection(REX::REveManager *&eveMng, bool firstloop, REX::REveElement* &scene,
+                                         std::tuple<std::vector<std::string>,
                                          std::vector<const KalSeedPtrCollection*>> track_tuple, bool plotKalIntersection,
-                                         bool addTrkHits, bool addTrkCaloHits, 
+                                         bool addTrkHits, bool addTrkCaloHits,
                                          double& t1, double& t2, std::tuple<std::vector<std::string>, std::vector<const CrvCoincidenceClusterCollection*>> crvpulse_tuple, bool extracted, bool addCrvBars)
 {
     std::cout << "[DataInterface::AddCRVKalIntersection()]" << std::endl;
-    // Critical Logic: Scene Cleanup 
+    // Critical Logic: Scene Cleanup
     if (!firstloop) {
         scene->DestroyElements();
     }
-    // Setup and Data Extraction 
+    // Setup and Data Extraction
     //const auto& ptable = GlobalConstantsHandle<ParticleDataList>();
     const auto& track_list = std::get<1>(track_tuple);
     //const auto& names = std::get<0>(track_tuple);
     if (track_list.empty()) return;
     std::vector<double> tcrv_times;
-    // Loop over KalSeed Collections 
+    // Loop over KalSeed Collections
     for(unsigned int j = 0; j < track_list.size(); j++){
         const mu2e::KalSeedPtrCollection* seedcol = track_list[j];
         if(seedcol == nullptr) continue;
-        // Loop over individual KalSeeds 
+        // Loop over individual KalSeeds
         for(const auto& kseedptr : *seedcol){
             if (!kseedptr) continue;
             const mu2e::KalSeed& kseed = *kseedptr;
@@ -1220,16 +1220,16 @@ void DataInterface::AddCRVKalIntersection(REX::REveManager *&eveMng, bool firstl
         const CrvCoincidenceClusterCollection* crvClusters = crvpulse_list[i];
         if (crvClusters->size() == 0) continue;
         std::string bars_title = "Crv Cluster Bars: " + names[i];
-        auto allcrvbars_collection = new REX::REveCompound(bars_title.c_str(), bars_title.c_str(), 1); 
+        auto allcrvbars_collection = new REX::REveCompound(bars_title.c_str(), bars_title.c_str(), 1);
 
         for(unsigned int j=0; j< crvClusters->size(); j++){
-            
+
             mu2e::CrvCoincidenceCluster const &crvclu = (*crvClusters)[j];
             // Make title
             std::string crvtitle = Form("CrvCoincidenceCluster %d Avg Hit Time = %.2f ns \n PEs = %.2f",
                                         j, crvclu.GetAvgHitTime(), crvclu.GetPEs());
             auto ps1 = new REX::REvePointSet(crvtitle.c_str(), crvtitle.c_str(), 0);
-            
+
             CLHEP::Hep3Vector pointInMu2e = det->toDetector(crvclu.GetAvgHitPos());
             // For extracted geometry, apply Z-shift to align CRV cluster points with geometry display
             double cluster_z = pointmmTocm(pointInMu2e.z());
@@ -1237,11 +1237,11 @@ void DataInterface::AddCRVKalIntersection(REX::REveManager *&eveMng, bool firstl
                 cluster_z += GetCrvExtractedZShift();
             }
             ps1->SetNextPoint(pointmmTocm(pointInMu2e.x()), pointmmTocm(pointInMu2e.y()) , cluster_z);
-            
-            std::set<mu2e::CRSScintillatorBarIndex> drawn_bars; 
+
+            std::set<mu2e::CRSScintillatorBarIndex> drawn_bars;
 
             for(unsigned h =0 ; h < crvclu.GetCrvRecoPulses().size();h++) {
-                
+
                 art::Ptr<mu2e::CrvRecoPulse> crvpulse = crvclu.GetCrvRecoPulses()[h];
                 const mu2e::CRSScintillatorBarIndex &crvBarIndex = crvpulse->GetScintillatorBarIndex();
 
@@ -1265,19 +1265,19 @@ void DataInterface::AddCRVKalIntersection(REX::REveManager *&eveMng, bool firstl
                     AddCrvBar(crvBarIndex, pulsetitle, hit_color, extracted, scene, allcrvbars_collection);
                 }
             } // End of inner h loop (pulses)
-            
+
             // Cluster Point Set Configuration
             ps1->SetMarkerColor(kBlue); // Marker color based on configuration
             ps1->SetMarkerStyle(DataInterface::mstyle);
             ps1->SetMarkerSize(DataInterface::msize);
-            
-            if(ps1->GetSize() !=0 ) scene->AddElement(ps1); 
-            
+
+            if(ps1->GetSize() !=0 ) scene->AddElement(ps1);
+
         } // End of j loop (clusters)
 
         // Final Additions to Scene
         if(!extracted && addCrvBars) {
-            scene->AddElement(allcrvbars_collection); 
-        } 
+            scene->AddElement(allcrvbars_collection);
+        }
     }
 }

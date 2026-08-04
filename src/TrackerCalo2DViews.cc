@@ -365,7 +365,7 @@ void TrackerCalo2DViews::drawCalorimeterDisk(const CaloClusterCollection* cluste
                 allHits.push_back({hit.crystalID(), hit.time(), hit.energyDep(),
                                    cr.localPosition().x(), cr.localPosition().y(),
                                    cr.size().x() / 2.0, cr.size().y() / 2.0,
-                                   cr.diskID()});
+                                   (int)cr.diskID()});
             }
         }
     }

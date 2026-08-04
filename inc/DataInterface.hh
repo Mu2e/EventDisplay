@@ -28,7 +28,6 @@
 #include "Offline/RecoDataProducts/inc/BkgClusterHit.hh"
 #include "Offline/RecoDataProducts/inc/BkgCluster.hh"
 #include "Offline/RecoDataProducts/inc/TimeCluster.hh"
-#include "Offline/CalorimeterGeom/inc/CaloGeomUtil.hh"
 #include "Offline/CalorimeterGeom/inc/Calorimeter.hh"
 #include "Offline/GeometryService/inc/DetectorSystem.hh"
 #include "Offline/Mu2eInterfaces/inc/Detector.hh"
