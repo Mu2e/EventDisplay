@@ -25,8 +25,11 @@ physics.analyzers.Mu2eEventDisplay.filler.addCrvClusters : true
 physics.analyzers.Mu2eEventDisplay.filler.addCrvRecoPulse : true
 physics.analyzers.Mu2eEventDisplay.filler.addSimParts : true
 physics.analyzers.Mu2eEventDisplay.filler.addCaloDigis : true
-physics.analyzers.Mu2eEventDisplay.filler.addTrackerHist : false
 physics.analyzers.Mu2eEventDisplay.filler.addCaloHist : false
+physics.analyzers.Mu2eEventDisplay.filler.shiftTracker : false
+physics.analyzers.Mu2eEventDisplay.filler.addTrackerHist : false
+physics.analyzers.Mu2eEventDisplay.filler.useAlignedTracker : false
+
 # the path
 physics.EndPath  : [ @sequence::REveDis.seqBase]
 physics.REvePath : @local::REvePath
@@ -48,3 +51,5 @@ services.ProditionsService.trackerStatus.Settings.useDb: true
 services.ProditionsService.trackerStatus.Settings.verbose: 0
 services.ProditionsService.strawElectronics.useDb: true
 services.ProditionsService.strawElectronics.verbose: 0
+
+

@@ -537,13 +537,14 @@ void MainWindow::GeomDrawerNominal(TGeoNode* node, REX::REveTrans& trans, REX::R
   }
 }
 
-void MainWindow::GeomDrawerExtracted(TGeoNode* node, REX::REveTrans& trans, REX::REveElement* beamlineholder, REX::REveElement* trackerholder, REX::REveElement* caloholder, REX::REveElement* crystalsholder, REX::REveElement* crvholder, REX::REveElement* targetholder, int maxlevel, int level, GeomOptions geomOpt, std::vector<std::pair<std::string, std::vector<float>>>& offsets){
+void MainWindow::GeomDrawerExtracted(TGeoNode* node, REX::REveTrans& trans, REX::REveElement* beamlineholder, REX::REveElement* trackerholder, REX::REveElement* caloholder, REX::REveElement* crystalsholder, REX::REveElement* crvholder, REX::REveElement* targetholder, int maxlevel, int level, GeomOptions geomOpt, std::vector<std::pair<std::string, std::vector<float>>>& offsets, DrawOptions drawOpts){
     // Load tracker geometry for CRV Z-shift calculation in extracted mode
     std::string trackerfilename("Offline/Mu2eG4/geom/tracker_v7.txt");
     SimpleConfig trackerconfig(trackerfilename);
 
     // Get CRV Z-shift for extracted geometry alignment
-    double tracker_half_length_cm = 0.0; //125.0; //trackerconfig.getDouble("tracker.mother.halfLength")/10.0;
+    double tracker_half_length_cm = 0.0; 
+    if(drawOpts.shiftTracker) tracker_half_length_cm = -125.0;
     double x_world = 0;
     double y_world = 0;
     double z_world = 0;
@@ -623,7 +624,7 @@ void MainWindow::GeomDrawerExtracted(TGeoNode* node, REX::REveTrans& trans, REX:
       for(auto& i: substring_tracker){
         shift.at(0) = 0;
         shift.at(1) = 0;
-        shift.at(2) = 0;
+        shift.at(2) = tracker_half_length_cm;
         showNodesByName(node,i,kFALSE, 0, trans, trackerholder, maxlevel, level, false, false, shift, false, true, drawconfigf.getInt("TRKColor"));
       }
     }
@@ -666,7 +667,7 @@ void MainWindow::GeomDrawerExtracted(TGeoNode* node, REX::REveTrans& trans, REX:
     static std::vector <std::string> substrings_ex {"CRSmotherLayer_CRV_EX"};
     shift.at(0) = x_crvex - x_trk  ;
     shift.at(1) = y_crvex - y_trk;
-    shift.at(2) = z_crvex - z_trk + tracker_half_length_cm;
+    shift.at(2) = z_crvex - z_trk; // + tracker_half_length_cm;
     for(auto& i: substrings_ex){
       showNodesByName(node,i,kFALSE, 0, trans, crvholder, maxlevel, level,  false, false, shift, false, true, drawconfigf.getInt("CrvColor"));
     }
@@ -674,7 +675,7 @@ void MainWindow::GeomDrawerExtracted(TGeoNode* node, REX::REveTrans& trans, REX:
     static std::vector <std::string> substrings_t1  {"CRSmotherLayer_CRV_T1"};
     shift.at(0) = x_crvt1 - x_trk;
     shift.at(1) = y_crvt1 - y_trk;
-    shift.at(2) = z_crvt1 - z_trk + tracker_half_length_cm;
+    shift.at(2) = z_crvt1 - z_trk; // + tracker_half_length_cm;
     for(auto& i: substrings_t1){
       showNodesByName(node,i,kFALSE, 0, trans, crvholder, maxlevel, level,  false, false, shift, false, true, drawconfigf.getInt("CrvColor"));
     }
@@ -682,7 +683,7 @@ void MainWindow::GeomDrawerExtracted(TGeoNode* node, REX::REveTrans& trans, REX:
     static std::vector <std::string> substrings_t2  {"CRSmotherLayer_CRV_T2"};
     shift.at(0) = x_crvt2 - x_trk;
     shift.at(1) = y_crvt2 - y_trk;
-    shift.at(2) = z_crvt2 - z_trk + tracker_half_length_cm;
+    shift.at(2) = z_crvt2 - z_trk; // + tracker_half_length_cm;
 
     for(auto& i: substrings_t2){
       showNodesByName(node,i,kFALSE, 0, trans, crvholder, maxlevel, level,  false, false, shift, false, true, drawconfigf.getInt("CrvColor"));
@@ -714,7 +715,7 @@ void MainWindow::showEvents(REX::REveManager *eveMng, REX::REveScene* &eventScen
   double t2 = 1696.;
   std::vector<const KalSeedPtrCollection*> track_list = std::get<1>(data.track_tuple);
   if(drawOpts.addTracks and track_list.size() !=0) {
-    pass_data->FillKinKalTrajectory(eveMng, eventScene, data.track_tuple, KKOpts.addKalInter,  KKOpts.addTrkStrawHits, KKOpts.addTrkCaloHits, t1, t2);
+    pass_data->FillKinKalTrajectory(eveMng, eventScene, data.track_tuple, KKOpts.addKalInter,  KKOpts.addTrkStrawHits, KKOpts.addTrkCaloHits, t1, t2, drawOpts.shiftTracker);
     //redrawCanvas(seedcol);
      if(drawOpts.addTrackerHist and track_list.size() !=0) {
       if (!fTrackerCalo2DViews) {
@@ -724,7 +725,7 @@ void MainWindow::showEvents(REX::REveManager *eveMng, REX::REveScene* &eventScen
       }
       auto const& track_list = std::get<1>(data.track_tuple);
       const mu2e::KalSeedPtrCollection* seedcol = track_list[0];
-      fTrackerCalo2DViews->drawTrackerStation(seedcol, art::EventID(run, subRun, event), drawOpts.useAlignedTracker);
+      fTrackerCalo2DViews->drawTrackerStation(seedcol, art::EventID(run, subRun, event), drawOpts.useAlignedTracker, drawOpts.shiftTracker);
       fTrackerCalo2DViews->drawTrackerXYView(seedcol, run, subRun, event);
      }
   }
@@ -823,7 +824,7 @@ void MainWindow::showEvents(REX::REveManager *eveMng, REX::REveScene* &eventScen
   eventScene->EndAcceptingChanges();
 }
 
-void MainWindow::makeGeometryScene(REX::REveManager *eveMng, GeomOptions geomOpt, std::string gdmlname)
+void MainWindow::makeGeometryScene(REX::REveManager *eveMng, GeomOptions geomOpt, std::string gdmlname, DrawOptions drawOpts)
 {
   std::vector<std::pair<std::string, std::vector<float>>> offsets; // a pair of offsets relative to the world
   TGeoManager *geom = TGeoManager::Import(gdmlname.c_str());
@@ -857,7 +858,7 @@ void MainWindow::makeGeometryScene(REX::REveManager *eveMng, GeomOptions geomOpt
     }
 
     if(!geomOpt.extracted) GeomDrawerNominal(topnode, trans, beamlineholder, trackerholder, caloholder, crystalsholder, crvholder, targetholder, drawconfigf.getInt("maxlevel"),drawconfigf.getInt("level"), geomOpt, offsets);
-    if(geomOpt.extracted) GeomDrawerExtracted(topnode, trans, beamlineholder, trackerholder, caloholder, crystalsholder, crvholder, targetholder, drawconfigf.getInt("maxlevel"),drawconfigf.getInt("level"), geomOpt, offsets);
+    if(geomOpt.extracted) GeomDrawerExtracted(topnode, trans, beamlineholder, trackerholder, caloholder, crystalsholder, crvholder, targetholder, drawconfigf.getInt("maxlevel"),drawconfigf.getInt("level"), geomOpt, offsets, drawOpts);
     if(geomOpt.showPS or geomOpt.showTS or geomOpt.showDS){
       eveMng->GetGlobalScene()->AddElement(solenoidholder);
       GeomDrawerSol(topnode, trans, solenoidholder, drawconfigf.getInt("maxlevel"),drawconfigf.getInt("level"), geomOpt, offsets);

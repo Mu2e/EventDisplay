@@ -794,7 +794,7 @@ void DataInterface::AddKalIntersection(mu2e::KalSeed const& kalseed, REX::REveSc
  * Visualized as points
 */
 template<class KTRAJc> 
-void DataInterface::AddTrkStrawHit(mu2e::KalSeed const& kalseed, REX::REveScene* &scene,  std::unique_ptr<KTRAJc> &lhptr, REX::REveCompound *trackproducts)
+void DataInterface::AddTrkStrawHit(mu2e::KalSeed const& kalseed, REX::REveScene* &scene,  std::unique_ptr<KTRAJc> &lhptr, REX::REveCompound *trackproducts, bool shifttracker)
 {
     std::cout << "[DataInterface::AddTrkStrawHit]" << std::endl;
     // Setup and Data Extraction
@@ -825,8 +825,14 @@ void DataInterface::AddTrkStrawHit(mu2e::KalSeed const& kalseed, REX::REveScene*
             auto long_end1 = tshspos + long_error*wdir;
             auto long_end2 = tshspos - long_error*wdir;
             auto long_line = new REX::REveLine("Longitudinal Error", " ", 2);
-            long_line->SetNextPoint(pointmmTocm(long_end1.x()), pointmmTocm(long_end1.y()), pointmmTocm(long_end1.z()));
-            long_line->SetNextPoint(pointmmTocm(long_end2.x()), pointmmTocm(long_end2.y()), pointmmTocm(long_end2.z()));
+            if(shifttracker){
+              long_line->SetNextPoint(pointmmTocm(long_end1.x()), pointmmTocm(long_end1.y()), pointmmTocm(long_end1.z()-1250.0));
+              long_line->SetNextPoint(pointmmTocm(long_end2.x()), pointmmTocm(long_end2.y()), pointmmTocm(long_end2.z()-1250.0));
+            }
+            else{
+              long_line->SetNextPoint(pointmmTocm(long_end1.x()), pointmmTocm(long_end1.y()), pointmmTocm(long_end1.z()));
+              long_line->SetNextPoint(pointmmTocm(long_end2.x()), pointmmTocm(long_end2.y()), pointmmTocm(long_end2.z()));
+            }
             long_line->SetLineWidth(2);
             long_line->SetLineColor(kBlack);
             // Move position out by the drift distance along the signed drift direction
@@ -844,7 +850,10 @@ void DataInterface::AddTrkStrawHit(mu2e::KalSeed const& kalseed, REX::REveScene*
               base_color = kRed; // drawconfig.getInt("TrkNoHitColor"); //Red color hit
             }
             trkstrawpoint->SetMarkerColor(base_color);
-            trkstrawpoint->SetNextPoint(pointmmTocm(tshspos.x()), pointmmTocm(tshspos.y()), pointmmTocm(tshspos.z()));
+            if(shifttracker)
+              trkstrawpoint->SetNextPoint(pointmmTocm(tshspos.x()), pointmmTocm(tshspos.y()), pointmmTocm(tshspos.z()-1250.0));
+            else
+              trkstrawpoint->SetNextPoint(pointmmTocm(tshspos.x()), pointmmTocm(tshspos.y()), pointmmTocm(tshspos.z()));
             trackproducts->AddElement(trkstrawpoint);
             trackproducts->AddElement(long_line);
         }
@@ -961,7 +970,7 @@ void DataInterface::FillKinKalTrajectory(REX::REveManager *&eveMng, REX::REveSce
                                          std::tuple<std::vector<std::string>, 
                                          std::vector<const KalSeedPtrCollection*>> track_tuple, 
                                          bool plotKalIntersection, bool addTrkHits, bool addTrkCaloHits, 
-                                         double& t1, double& t2)
+                                         double& t1, double& t2, bool shifttracker)
 {
     std::cout << "[DataInterface::FillKinKalTrajectory()]" << std::endl;
     
@@ -1021,7 +1030,7 @@ void DataInterface::FillKinKalTrajectory(REX::REveManager *&eveMng, REX::REveSce
 
                 AddKinKalTrajectory<LHPT>(trajectory, scene, j, ksstream.str(), t1, t2);
                 if(addTrkHits) {
-                    AddTrkStrawHit<LHPT>(kseed, scene, trajectory, trackproducts);
+                  AddTrkStrawHit<LHPT>(kseed, scene, trajectory, trackproducts, shifttracker);
                     if(addTrkCaloHits) AddTrkCaloHit(kseed, scene);
                 }
             }
@@ -1044,7 +1053,7 @@ void DataInterface::FillKinKalTrajectory(REX::REveManager *&eveMng, REX::REveSce
                 
                 AddKinKalTrajectory<CHPT>(trajectory, scene, j, ksstream.str(), t1, t2);
                 if(addTrkHits) {
-                    AddTrkStrawHit<CHPT>(kseed, scene, trajectory, trackproducts);
+                  AddTrkStrawHit<CHPT>(kseed, scene, trajectory, trackproducts, shifttracker);
                     if(addTrkCaloHits) AddTrkCaloHit(kseed, scene);
                 }
             }
@@ -1066,7 +1075,7 @@ void DataInterface::FillKinKalTrajectory(REX::REveManager *&eveMng, REX::REveSce
                 
                 AddKinKalTrajectory<KLPT>(trajectory, scene, j, ksstream.str(), t1, t2);
                 if(addTrkHits) {
-                    AddTrkStrawHit<KLPT>(kseed, scene, trajectory, trackproducts);
+                  AddTrkStrawHit<KLPT>(kseed, scene, trajectory, trackproducts, shifttracker);
                     if(addTrkCaloHits) AddTrkCaloHit(kseed, scene);
                 }
             }

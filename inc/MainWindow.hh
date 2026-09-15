@@ -148,22 +148,23 @@ namespace mu2e {
        bool addCrvClusters = false;
        bool addCrvTrack = false;
  
-       bool addTimeClusters = false;
+      bool addTimeClusters = false;
       bool addTrkHits = false; // legacy
       bool addMCTrajectories = false;
       bool addSurfaceSteps = false;
-       bool addSimParts = false;
-        bool addTrackerHist = false;
-        bool addCaloHist = false;
-        bool useAlignedTracker = false;
+      bool addSimParts = false;
+      bool addTrackerHist = false;
+      bool addCaloHist = false;
+      bool shiftTracker = false;
+      bool useAlignedTracker = false;
 
-       bool addTrkErrBar = true;
+      bool addTrkErrBar = true;
       bool addCrystalDraw = false;
       bool addCrvBars = true;
       DrawOptions(){};
 
-        DrawOptions(bool cosmictracks, bool helices, bool tracks, bool calodigis, bool clusters, bool combohits, bool bkgclusters, bool crv, bool crvclu, bool crvtrack, bool timeclusters, bool trkhits, bool mctraj, bool surfsteps, bool simparts, bool trackerhist, bool calohist, bool usealignedtracker, bool errbar, bool crys, bool crvbars)
-         : addCosmicTracks(cosmictracks), addHelices(helices), addTracks(tracks), addCaloDigis(calodigis), addClusters(clusters), addComboHits(combohits), addBkgClusters(bkgclusters), addCrvRecoPulse(crv), addCrvClusters(crvclu), addCrvTrack(crvtrack), addTimeClusters(timeclusters), addTrkHits(trkhits), addMCTrajectories(mctraj), addSurfaceSteps(surfsteps), addSimParts(simparts), addTrackerHist(trackerhist), addCaloHist(calohist), useAlignedTracker(usealignedtracker), addTrkErrBar(errbar), addCrystalDraw(crys), addCrvBars(crvbars) {};
+    DrawOptions(bool cosmictracks, bool helices, bool tracks, bool calodigis, bool clusters, bool combohits, bool bkgclusters, bool crv, bool crvclu, bool crvtrack, bool timeclusters, bool trkhits, bool mctraj, bool surfsteps, bool simparts, bool trackerhist, bool calohist, bool shifttracker, bool usealignedtracker, bool errbar, bool crys, bool crvbars)
+      : addCosmicTracks(cosmictracks), addHelices(helices), addTracks(tracks), addCaloDigis(calodigis), addClusters(clusters), addComboHits(combohits), addBkgClusters(bkgclusters), addCrvRecoPulse(crv), addCrvClusters(crvclu), addCrvTrack(crvtrack), addTimeClusters(timeclusters), addTrkHits(trkhits), addMCTrajectories(mctraj), addSurfaceSteps(surfsteps), addSimParts(simparts), addTrackerHist(trackerhist), addCaloHist(calohist), shiftTracker(shifttracker), useAlignedTracker(usealignedtracker), addTrkErrBar(errbar), addCrystalDraw(crys), addCrvBars(crvbars) {};
 
 
      };
@@ -186,8 +187,8 @@ namespace mu2e {
 
             void GeomDrawerNominal(TGeoNode* node, REX::REveTrans& trans, REX::REveElement* bholder, REX::REveElement* trholder, REX::REveElement* cholder,REX::REveElement* crholder, REX::REveElement* vholder, REX::REveElement* tholder, int maxlevel, int level, GeomOptions geomOpt, std::vector<std::pair<std::string, std::vector<float>>>& offsets);
             void GeomDrawerSol(TGeoNode* node, REX::REveTrans& trans, REX::REveElement* beamlineholder, int maxlevel, int level, GeomOptions geomOpt, std::vector<std::pair<std::string, std::vector<float>>>& offsets);
-            void GeomDrawerExtracted(TGeoNode* node, REX::REveTrans& trans, REX::REveElement* bholder, REX::REveElement* trholder, REX::REveElement* cholder,REX::REveElement* crholder, REX::REveElement* vholder, REX::REveElement* tholder, int maxlevel, int level, GeomOptions geomOpt, std::vector<std::pair<std::string, std::vector<float>>>& offsets);
-            void makeGeometryScene(REX::REveManager *eveMng,  GeomOptions geomOpts, std::string filename);
+      void GeomDrawerExtracted(TGeoNode* node, REX::REveTrans& trans, REX::REveElement* bholder, REX::REveElement* trholder, REX::REveElement* cholder,REX::REveElement* crholder, REX::REveElement* vholder, REX::REveElement* tholder, int maxlevel, int level, GeomOptions geomOpt, std::vector<std::pair<std::string, std::vector<float>>>& offsets, DrawOptions drawOpts);
+      void makeGeometryScene(REX::REveManager *eveMng,  GeomOptions geomOpts, std::string filename, DrawOptions drawOpts);
             void showEvents(REX::REveManager *eveMng,  REX::REveScene* &eventScene, bool firstLoop, DataCollections &data, DrawOptions drawOpts, std::vector<int> particleIds, bool strawdisplay, GeomOptions geomOpts, KinKalOptions KKOpts, int run = 0, int subRun = 0, int event = 0);
             void changeEveGeoShape(TGeoNode* node, REX::REveTrans& trans,  REX::REveElement* holder, int maxlevel, int level);
             void createProjectionStuff(REX::REveManager *eveMng);

@@ -25,7 +25,7 @@ public:
     void createHistogramView();
     void createStationView();
     void createCaloView();
-    void drawTrackerStation(const mu2e::KalSeedPtrCollection* seedcol, const art::EventID& eventID, bool useAlignedTracker = false);
+    void drawTrackerStation(const mu2e::KalSeedPtrCollection* seedcol, const art::EventID& eventID, bool useAlignedTracker = false, bool shifttracker = false);
     void drawTrackerXYView(const mu2e::KalSeedPtrCollection* seedcol, int run = 0, int subRun = 0, int event = 0);
     void drawCalorimeterDisk(const CaloClusterCollection* clustercol = nullptr, const mu2e::KalSeedPtrCollection* seedcol = nullptr);
 

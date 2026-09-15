@@ -70,7 +70,7 @@ void TrackerCalo2DViews::createCaloView() {
 }
 
 template<class KTRAJ>
-static void drawTrajectory2D(const KTRAJ& trajectory, const mu2e::Plane& plane, std::map<int, TPad*>& panelPads, const std::set<int>& activePanels)
+static void drawTrajectory2D(const KTRAJ& trajectory, const mu2e::Plane& plane, std::map<int, TPad*>& panelPads, const std::set<int>& activePanels, bool shifttracker)
 {
     double t1 = trajectory.range().begin();
     double t2 = trajectory.range().end();
@@ -81,7 +81,10 @@ static void drawTrajectory2D(const KTRAJ& trajectory, const mu2e::Plane& plane, 
     }
     for(double t = t1; t <= t2; t += step) {
         auto pos = trajectory.position3(t);
-        CLHEP::Hep3Vector global(pos.x(), pos.y(), pos.z()); //+1250.0);
+        double posz = pos.z();
+        if(shifttracker)
+          posz = pos.z()+1250.0;
+        CLHEP::Hep3Vector global(pos.x(), pos.y(), posz);
         for (int pid : activePanels) {
             const mu2e::Panel& panel = plane.getPanel(pid);
             CLHEP::Hep3Vector local = panel.dsToPanel() * global;
@@ -119,7 +122,7 @@ static void drawTrajectoryXY(const KTRAJ& trajectory)
     graph->Draw("L SAME");
 }
 
-void TrackerCalo2DViews::drawTrackerStation(const mu2e::KalSeedPtrCollection* seedcol, const art::EventID& eventID, bool useAlignedTracker) {
+  void TrackerCalo2DViews::drawTrackerStation(const mu2e::KalSeedPtrCollection* seedcol, const art::EventID& eventID, bool useAlignedTracker, bool shifttracker) {
     // Collect hit data and identify which (plane, panel) pairs have hits.
     std::map<mu2e::StrawId, const mu2e::TrkStrawHitSeed*> hitDataMap;
     std::set<std::pair<int,int>> seenPanels;
@@ -306,13 +309,13 @@ void TrackerCalo2DViews::drawTrackerStation(const mu2e::KalSeedPtrCollection* se
 
                 if (kseed.loopHelixFit()) {
                     auto traj = kseed.loopHelixFitTrajectory();
-                    if (traj) drawTrajectory2D(*traj, plane, thisPlanesPads, panelSet);
+                    if (traj) drawTrajectory2D(*traj, plane, thisPlanesPads, panelSet, shifttracker);
                 } else if (kseed.centralHelixFit()) {
                     auto traj = kseed.centralHelixFitTrajectory();
-                    if (traj) drawTrajectory2D(*traj, plane, thisPlanesPads, panelSet);
+                    if (traj) drawTrajectory2D(*traj, plane, thisPlanesPads, panelSet, shifttracker);
                 } else if (kseed.kinematicLineFit()) {
                     auto traj = kseed.kinematicLineFitTrajectory();
-                    if (traj) drawTrajectory2D(*traj, plane, thisPlanesPads, panelSet);
+                    if (traj) drawTrajectory2D(*traj, plane, thisPlanesPads, panelSet, shifttracker);
                 }
             }
         }

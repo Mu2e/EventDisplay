@@ -67,10 +67,10 @@ namespace mu2e{
            void AddCrvBar(const mu2e::CRSScintillatorBarIndex& barIndex, const std::string& title, Color_t color, bool extracted, REX::REveScene* &scene, REX::REveCompound* barCompound);
            void AddHelixSeedCollection(REX::REveManager *&eveMng, std::tuple<std::vector<std::string>, std::vector<const HelixSeedCollection*>> helix_tuple, REX::REveScene* &scene);
           void AddKalIntersection(KalSeed const& kalseed, REX::REveScene* &scene, REX::REveCompound *products, std::string track_tag);
-          template<class KTRAJc> void AddTrkStrawHit(KalSeed const& kalseed, REX::REveScene* &scene, std::unique_ptr<KTRAJc> &trajectory, REX::REveCompound *products);
+      template<class KTRAJc> void AddTrkStrawHit(KalSeed const& kalseed, REX::REveScene* &scene, std::unique_ptr<KTRAJc> &trajectory, REX::REveCompound *products, bool shifttracker);
           void AddTrkCaloHit(KalSeed const& kalseed, REX::REveScene* &scene);
           template<class KTRAJ> void AddKinKalTrajectory( std::unique_ptr<KTRAJ> &trajectory, REX::REveScene* &scene, unsigned int j, std::string kaltitle, double& t1, double& t2);
-          void FillKinKalTrajectory(REX::REveManager *&eveMng, REX::REveScene* &scene, std::tuple<std::vector<std::string>, std::vector<const KalSeedPtrCollection*>> track_tuple, bool kalinter, bool hits, bool calohits, double& t1, double& t2);
+      void FillKinKalTrajectory(REX::REveManager *&eveMng, REX::REveScene* &scene, std::tuple<std::vector<std::string>, std::vector<const KalSeedPtrCollection*>> track_tuple, bool kalinter, bool hits, bool calohits, double& t1, double& t2, bool shifttracker);
       void AddCRVKalIntersection(REX::REveManager *&eveMng, REX::REveScene* &scene, std::tuple<std::vector<std::string>, std::vector<const KalSeedPtrCollection*>> track_tuple, bool kalinter, bool hits, bool calohits, double& t1, double& t2, std::tuple<std::vector<std::string>, std::vector<const CrvCoincidenceClusterCollection*>>  crvpulse_tuple, bool extracted, bool addCrvBars);
           void AddCosmicTrackFit(REX::REveManager *&eveMng, const mu2e::CosmicTrackSeedCollection *cosmiccol, REX::REveScene* &scene);
 
