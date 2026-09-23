@@ -198,6 +198,8 @@ namespace mu2e {
             void maketable(REX::REveManager *eveMng);
             
             TrackerCalo2DViews *fTrackerCalo2DViews = nullptr;
+            REX::REveScene* eventOverlayScene = nullptr;
+            REX::REveText* eventAnnotation = nullptr;
 
 #else
                 ClassDef(MainWindow, 0);

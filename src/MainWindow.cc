@@ -801,26 +801,30 @@ void MainWindow::showEvents(REX::REveManager *eveMng, REX::REveScene* &eventScen
   // ... project these events onto 2D geometry:
   projectEvents(eveMng);
 
-  // Run/Event overlay — added to event scene so it's recreated each event.
-  // Mode 1 = NDC screen-space; position (0.005, 0.99) = top-left, TextAlign(13) = left-top anchor.
-  auto* overlayScene = eveMng->SpawnNewScene("EventOverlay", "Event Overlay Scene");
-  auto* ann = new REX::REveText("EventAnnotation");
-  ann->SetText("Run: " + std::to_string(run) + " / Event: " + std::to_string(event));
-  ann->SetMode(0);
-  //ann->SetTextColor(kBlack);
-  ann->SetMainColor(1);
-  ann->SetPosition(REX::REveVector(0.0,2500.0, 0.0));
-  ann->SetFontSize(150);
-  //ann->SetFont("LiberationSans-Bold");
-  //ann->SetTextAlign(13);
-  //ann->SetDrawFrame(false);
-  //eventScene->AddElement(ann);
-  ann->StampObjProps();
-  overlayScene->AddElement(ann);
-  eveMng->GetDefaultViewer()->AddScene(overlayScene);
-  std::string title = "Run: " + std::to_string(run) + " Event: " + std::to_string(event);
+  // ------------------------------------------------------------
+  // Run / Event annotation
+  // ------------------------------------------------------------
+  REX::REveText::AssertSdfFont("LiberationSans-Regular", "/usr/share/fonts/liberation-sans/LiberationSans-Regular.ttf");
+  // Create it only once.
+  if (!eventOverlayScene) {
+    eventOverlayScene =
+        eveMng->SpawnNewScene("EventOverlay", "Event Overlay Scene");
+
+    eventAnnotation = new REX::REveText("EventAnnotation");
+    eventAnnotation->SetMode(1);   // screen coordinates
+    // Mode 1: (0,0) = bottom-left, (1,1) = top-right
+    eventAnnotation->SetPosition(REX::REveVector(0.02, 0.96, 0.0));
+    eventAnnotation->SetFontSize(0.015);
+    eventAnnotation->SetMainColor(kWhite);
+    eventOverlayScene->AddElement(eventAnnotation);
+    eveMng->GetDefaultViewer()->AddScene(eventOverlayScene);
+  }
+
+  // Update this EVERY event.
+  eventAnnotation->SetText(std::to_string(run) + ":" + std::to_string(subRun) + ":" + std::to_string(event));
+
+  std::string title = std::to_string(run) + ":" + std::to_string(subRun) + ":" + std::to_string(event);
   eveMng->GetWorld()->SetTitle(title.c_str());
-  //eveMng->GetEventScene()->AddElement(ann); 
   eventScene->EndAcceptingChanges();
 }
 
