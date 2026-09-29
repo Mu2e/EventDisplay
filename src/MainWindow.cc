@@ -804,7 +804,8 @@ void MainWindow::showEvents(REX::REveManager *eveMng, REX::REveScene* &eventScen
   // ------------------------------------------------------------
   // Run / Event annotation
   // ------------------------------------------------------------
-  REX::REveText::AssertSdfFont("LiberationSans-Regular", "/usr/share/fonts/liberation-sans/LiberationSans-Regular.ttf");
+  REX::REveText::SetSdfFontDir("EventDisplay/sdf-fonts", false);
+  REX::REveText::AssertSdfFont("LiberationSans-Regular", "");
   // Create it only once.
   if (!eventOverlayScene) {
     eventOverlayScene =
