@@ -243,12 +243,17 @@ namespace mu2e
     specifyTag_(conf().specifyTag()),
     filler_(conf().filler()),
     particles_(conf().particles()),
-    gdmlname_(configFile(conf().gdmlname())),
     strawdisplay_(conf().strawdisplay()),
     extracted_(conf().extracted()),
     showEM_(conf().showEM()),
     seqMode_(conf().seqMode())
     {
+      try {
+	gdmlname_ = configFile(conf().gdmlname());
+      } catch(...) {
+	std::cout << "Unable to find GDML file " << conf().gdmlname();
+	throw std::runtime_error("GDML error");
+      }
       geomOpts.fill(showCrv_,showPS_, showTS_, showDS_, show2D_, caloVST_, showST_, extracted_, showSTM_, showCalo_, showTracker_, showCaloCrystals_, showEM_ );
     }
 

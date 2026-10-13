@@ -19,7 +19,7 @@ cet_make_library(
       PrintInfo.cc
       TextSelect.cc
     LIBRARIES PUBLIC
-      KinKal_Trajectory
+      KinKal::Trajectory
       Offline::CRVReco
       Offline::CRVResponse
       Offline::MCDataProducts
