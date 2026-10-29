@@ -610,7 +610,7 @@ void MainWindow::GeomDrawerExtracted(TGeoNode* node, REX::REveTrans& trans, REX:
       if(offsets[i].first.find("CaloDisk_1") != string::npos){
         x_d1 = x_cal + offsets[i].second[0];
         y_d1 = y_cal + offsets[i].second[1];
-        z_d1 = z_cal + offsets[i].second[2] + 22.5;
+        z_d1 = z_cal + offsets[i].second[2]; //+ 22.5;
       }
     }
     std::vector<double> shift;
