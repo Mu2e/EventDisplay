@@ -1,0 +1,115 @@
+# raw_to_display.fcl
+# author : merged from Combined_Pass1.fcl (PassN) and extracted_VST.fcl (EventDisplay)
+# purpose: read raw artdaq data, run full reco (tracker + calo + CRV + MSD), then display events
+
+# All prologs must come before any non-prolog content (FHiCL rule).
+#include "EventDisplay/fcl/prolog.fcl"
+#include "Offline/CRVResponse/fcl/prolog.fcl"
+
+# Non-prolog base config: services, physics block, tracker RecoPath from raw fragments.
+#include "PassN/Tracker/TrkRecoFromFragments.fcl"
+
+# EventDisplay epilog: sets physics.EndPath, physics.REvePath, trigger_paths (overridden below),
+# services.TFileService.fileName, and Mu2eEventDisplay.* geometry defaults.
+#include "EventDisplay/fcl/extracted.fcl"
+
+### Calo + CRV + MSD producers (Combined_Pass1) ###
+physics.producers :
+{
+  @table::physics.producers
+  @table::CaloReco.producers
+  @table::CaloCluster.producers
+  @table::REveDis.producers
+  CaloDigis : @local::DAQ.producers.CaloDigis
+  CrvDigi :
+  {
+    module_type   : CrvDigisFromArtdaqFragmentsFEBII
+    diagLevel     : 0
+    useROC4asROC2 : true
+  }
+  CrvRecoPulses               : @local::CrvRecoPulses
+  CrvCoincidenceClusterFinder : @local::CrvCoincidenceClusterFinder
+  MSDHitMaker :
+  {
+    module_type : MSDHitsFromDTCEvents
+    debugLevel  : 0
+  }
+  # EventHeader (EWT, mode, flags) from the CFO fragment
+  ProcessCFOData :
+  {
+    module_type : EventHeaderFromCFOFragment
+    cfoTag      : "fragmentAggregator:CFO"
+    createEWM   : false
+    diagLevel   : 0
+  }
+}
+
+### EventDisplay analyzers and filters ###
+physics.analyzers :
+{
+  @table::REveDis.analyzers
+  CrvDQMcollector : @local::CrvDQMcollector
+}
+physics.filters :
+{
+  @table::physics.filters
+  @table::REveDis.filters
+}
+
+### Reco paths (Combined_Pass1) ###
+physics.CaloRecoPath : [ CaloDigis, CaloRecoDigiMaker, CaloHitMaker, CaloProtoClusterMaker, CaloClusterMaker ]
+physics.CRVRecoPath  : [ CrvDigi, CrvRecoPulses, CrvCoincidenceClusterFinder ]
+physics.RecoPath     : [ CaloDigis, CaloRecoDigiMaker, CaloHitMaker, CaloProtoClusterMaker, CaloClusterMaker, @sequence::physics.RecoPath ]
+physics.MSDRecoPath  : [ ProcessCFOData, MSDHitMaker ]
+physics.CRVEndPath   : [ CrvDQMcollector ]
+
+# Override trigger_paths to include reco paths alongside the display path set by extracted.fcl
+physics.trigger_paths : [ RecoPath, CaloRecoPath, CRVRecoPath, MSDRecoPath, "REvePath" ]
+physics.end_paths     : [ CRVEndPath, EndPath ]
+
+physics.analyzers.Mu2eEventDisplay.SelectEvents : [ "REvePath" ]
+
+source.inputCommands : [ "keep *",
+    "drop mu2e::CaloClusters_CaloClusterFast_*_*"
+]
+
+### Geometry: extracted_v06 = commissioning_v02 renamed in Offline#2082 ###
+services.GeometryService.inputFile : "Offline/Mu2eG4/geom/geom_common_extracted_v06.txt"
+
+### Calo config (Combined_Pass1) ###
+physics.producers.CaloRecoDigiMaker.caloDigiCollection : CaloDigis
+physics.producers.CaloRecoDigiMaker.UseProtonBunchTime : false
+physics.producers.KKLine.KKFitSettings.UseCaloCluster  : true
+physics.producers.LineFinder.AddCaloClusters           : true
+
+### CRV config (Combined_Pass1) ###
+#include "Offline/CRVReco/fcl/epilog_extracted.fcl"
+physics.producers.CrvCoincidenceClusterFinder.ignoreSecondaryPulses : true
+
+### Database calibrations (Combined_Pass1) ###
+services.ProditionsService.calCalib.useDb    : true
+services.ProditionsService.crvStatus.useDb   : true
+services.ProditionsService.crvCalib.useDb    : true
+services.ProditionsService.eventTiming.useDb : true
+services.DbService.purpose      : "KPP_reco"
+services.DbService.version      : ""
+services.DbService.nearestMatch : true
+
+### EventDisplay config (extracted_VST) ###
+physics.analyzers.Mu2eEventDisplay.gdmlname :"Offline/gen/gdml/mu2e_extracted.gdml"
+physics.analyzers.Mu2eEventDisplay.addKalInter : false
+physics.analyzers.Mu2eEventDisplay.filler.addCrvClusters : true
+physics.analyzers.Mu2eEventDisplay.filler.addCrvTrack : true
+physics.analyzers.Mu2eEventDisplay.filler.addCrvRecoPulse : false
+physics.analyzers.Mu2eEventDisplay.filler.addCaloDigis : false
+physics.analyzers.Mu2eEventDisplay.filler.addClusters : true
+physics.analyzers.Mu2eEventDisplay.addTrkCaloHits : true
+physics.analyzers.Mu2eEventDisplay.filler.addKalSeeds : true
+physics.analyzers.Mu2eEventDisplay.addTrkStrawHits : true
+physics.analyzers.Mu2eEventDisplay.filler.addHits : false
+physics.analyzers.Mu2eEventDisplay.filler.addCaloHist : true
+physics.analyzers.Mu2eEventDisplay.filler.shiftTracker : false
+physics.analyzers.Mu2eEventDisplay.filler.addTrackerHist : true
+physics.analyzers.Mu2eEventDisplay.filler.useAlignedTracker : true
+physics.analyzers.Mu2eEventDisplay.extracted : true
+physics.analyzers.Mu2eEventDisplay.specifyTag : false
