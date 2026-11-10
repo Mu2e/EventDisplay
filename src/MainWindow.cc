@@ -610,7 +610,7 @@ void MainWindow::GeomDrawerExtracted(TGeoNode* node, REX::REveTrans& trans, REX:
       if(offsets[i].first.find("CaloDisk_1") != string::npos){
         x_d1 = x_cal + offsets[i].second[0];
         y_d1 = y_cal + offsets[i].second[1];
-        z_d1 = z_cal + offsets[i].second[2] + 22.5;
+        z_d1 = z_cal + offsets[i].second[2]; //+ 22.5;
       }
     }
     std::vector<double> shift;
@@ -728,6 +728,10 @@ void MainWindow::showEvents(REX::REveManager *eveMng, REX::REveScene* &eventScen
       fTrackerCalo2DViews->drawTrackerStation(seedcol, art::EventID(run, subRun, event), drawOpts.useAlignedTracker, drawOpts.shiftTracker);
       fTrackerCalo2DViews->drawTrackerXYView(seedcol, run, subRun, event);
      }
+  }
+  std::vector<const KalSeedCollection*> kkline_list = std::get<1>(data.kkline_tuple);
+  if(drawOpts.addKKLineTracks and kkline_list.size() != 0) {
+    pass_data->FillKinKalTrajectoryFromCol(eveMng, eventScene, data.kkline_tuple, KKOpts.addKalInter, KKOpts.addTrkStrawHits, KKOpts.addTrkCaloHits, t1, t2, drawOpts.shiftTracker);
   }
    if(drawOpts.addCrvTrack) {
      pass_data->AddCRVKalIntersection(eveMng, eventScene, data.track_tuple, KKOpts.addKalInter,  KKOpts.addTrkStrawHits, KKOpts.addTrkCaloHits, t1, t2, data.crvcoin_tuple, geomOpts.extracted, drawOpts.addCrvBars);

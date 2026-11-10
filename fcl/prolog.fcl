@@ -33,6 +33,7 @@ Mu2eEventDisplay : {
       CaloDigiCollection : ["CaloDigiMaker"]
       CaloClusterCollection : ["CaloClusterMaker"]
       KalSeedPtrCollection : ["MergeKK"]
+      KalSeedCollection : ["KKLine"]
       HelixSeedCollection : ["MHFinderDe"]
       CosmicTrackSeedCollection : "CosmicTrackFinderTimeFit"
       MCTrajectoryCollection :  ["compressRecoMCs"]
@@ -48,6 +49,7 @@ Mu2eEventDisplay : {
       addCaloDigis : false
       addClusters : true
       addKalSeeds : true
+      addKKLine : false
       addCosmicTrackSeeds : false
       addMCTraj : true
       addTrackerHist : false
@@ -76,6 +78,7 @@ REveDis : {
         KalSeedCollections : [ "KKDe", "KKUe", "KKDmu", "KKUmu", # loop helix fits (both charges)
         "KKLine", "KKCHmu", # straight and curved fits
         "KKDeM", "KKDeP", "KKUeM", "KKUeP", "KKDmuM", "KKDmuP", "KKUmuM", "KKUmuP" ] # legacy fits
+	debugLevel : 5
       }
   }
   filters : {
@@ -87,5 +90,6 @@ REveDis : {
   seqBase   : [Mu2eEventDisplay]
 }
 REvePath : ["eidsel", "MergeKK" ]
+REveKPPPath : ["MergeKK" ]
 
 END_PROLOG

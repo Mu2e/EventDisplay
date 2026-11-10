@@ -17,6 +17,7 @@ namespace mu2e{
     cluTag_(conf.cluTag()),
     helixSeedTag_(conf.helixSeedTag()),
     kalSeedTag_(conf.kalSeedTag()),
+    kkLineTag_(conf.kkLineTag()),
     cosmicTrackSeedTag_(conf.cosmicTrackSeedTag()),
     MCTrajTag_(conf.MCTrajTag()),
     SurfStepsTag_(conf.SurfStepsTag()),
@@ -32,6 +33,7 @@ namespace mu2e{
     addClusters_(conf.addClusters()),
     addHelixSeeds_(conf.addHelixSeeds()),
     addKalSeeds_(conf.addKalSeeds()),
+    addKKLine_(conf.addKKLine()),
     addCosmicTrackSeeds_(conf.addCosmicTrackSeeds()),
     addMCTraj_(conf.addMCTraj()),
     addSurfSteps_(conf.addSurfSteps()),
@@ -44,20 +46,20 @@ namespace mu2e{
   {}
 
   /**
- * @brief Converts any object or variable that can be streamed (via operator<<) 
+ * @brief Converts any object or variable that can be streamed (via operator<<)
  * into a standard C++ string.
  *
- * This function uses a std::ostringstream to perform the conversion in a type-safe 
+ * This function uses a std::ostringstream to perform the conversion in a type-safe
  * and generic manner, relying on the type T's definition of operator<<.
  *
  * @tparam T The type of the value to be converted (e.g., int, double, a custom class).
  * @param value The value of type T to convert.
  * @return std::string The string representation of the input value.
  */
-  template <typename T> 
+  template <typename T>
   std::string TurnNameToString( const T& value )
   {
-      // Create a std::ostringstream object. 
+      // Create a std::ostringstream object.
       std::ostringstream ss;
 
       // Insert the input 'value' into the string stream.
@@ -76,12 +78,12 @@ namespace mu2e{
  * @param CollectionName An enum value used to selectively fill one type of collection.
  */
 void CollectionFiller::FillRecoCollections(const art::Event& evt, DataCollections &data, RecoDataProductName CollectionName) {
-    
+
     // --- 1. ComboHits (Reconstructed Straw Tracker Hits) ---
     if(FillAll_ or (CollectionName == ComboHits)){
         for(const auto &tag : chTag_){
             auto chH = evt.getValidHandle<mu2e::ComboHitCollection>(tag);
-            
+
             data.chcol = chH.product();
             data.combohit_list.push_back(data.chcol);
             std::string name = TurnNameToString(tag);
@@ -117,7 +119,7 @@ void CollectionFiller::FillRecoCollections(const art::Event& evt, DataCollection
         data.crvpulse_tuple = std::make_tuple(data.crvpulse_labels,data.crvpulse_list);
     }
 
-    
+
     // --- 4. CrvCoincidenceClusters (Crv Coincidence Clusters) ---
     if(FillAll_ or (addCrvClusters_ and CollectionName==CrvCoincidenceCluster)){
         std::cout << "Fill CrvClusters " << std::endl;
@@ -132,7 +134,7 @@ void CollectionFiller::FillRecoCollections(const art::Event& evt, DataCollection
         }
         data.crvcoin_tuple = std::make_tuple(data.crvcoin_labels,data.crvcoin_list);
     }
-    
+
     // --- 5. TimeClusters (Seed Time Clusters) ---
     if(FillAll_ or (CollectionName == TimeClusters)){
         for(const auto &tag : tcTag_){
@@ -145,7 +147,7 @@ void CollectionFiller::FillRecoCollections(const art::Event& evt, DataCollection
         }
         data.timecluster_tuple = std::make_tuple(data.timecluster_labels,data.timecluster_list);
     }
-    
+
     // --- 6. TrkHits (ComboHits treated as Tracking Hits) ---
     //FIXME - is this the same as the ComboHits version?
     if(FillAll_ or (addTrkHits_ and CollectionName == TrkHits)){
@@ -159,7 +161,7 @@ void CollectionFiller::FillRecoCollections(const art::Event& evt, DataCollection
         }
         data.combohit_tuple = std::make_tuple(data.combohit_labels,data.combohit_list);
     }
-    
+
     // --- 7. CaloDigis (Raw Calorimeter Signal Samples) ---
     if(FillAll_ or (CollectionName == CaloDigis)){
         for(const auto &tag : calodigTag_){
@@ -172,7 +174,7 @@ void CollectionFiller::FillRecoCollections(const art::Event& evt, DataCollection
         }
         data.calocluster_tuple = std::make_tuple(data.calocluster_labels,data.calocluster_list);
     }
-    
+
     // --- 8. CaloClusters (Reconstructed Calorimeter Energy Clusters) ---
     if(FillAll_ or (CollectionName == CaloClusters)){
         for(const auto &tag : cluTag_){
@@ -185,7 +187,7 @@ void CollectionFiller::FillRecoCollections(const art::Event& evt, DataCollection
         }
         data.calocluster_tuple = std::make_tuple(data.calocluster_labels,data.calocluster_list);
     }
-    
+
     // --- 9. HelixSeeds (Pre-tracking Helix Fits) ---
     if(FillAll_ or (CollectionName==HelixSeeds)){
         for(const auto &tag : helixSeedTag_){
@@ -198,20 +200,37 @@ void CollectionFiller::FillRecoCollections(const art::Event& evt, DataCollection
         }
         data.helix_tuple = std::make_tuple(data.helix_labels,data.helix_list);
     }
-    
+
     // --- 10. KalSeeds (Final Kalman Filter Tracks) ---
     if(FillAll_ or (CollectionName==KalSeeds)){
         for(const auto &tag : kalSeedTag_){
-            auto chH = evt.getValidHandle<mu2e::KalSeedPtrCollection>(tag); 
-            data.kalSeedcol = chH.product();
-            data.track_list.push_back(data.kalSeedcol);
-            std::string name = TurnNameToString(tag);
-            std::cout<<"Plotting KalSeed Instance: "<<name<<std::endl;
-            data.track_labels.push_back(name);
+            auto chH = evt.getHandle<mu2e::KalSeedPtrCollection>(tag);
+            if(chH.isValid()){
+              data.kalSeedcol = chH.product();
+              data.track_list.push_back(data.kalSeedcol);
+              std::string name = TurnNameToString(tag);
+              std::cout<<"Plotting KalSeed Instance: "<<name<<std::endl;
+              data.track_labels.push_back(name);
+            }
         }
         data.track_tuple = std::make_tuple(data.track_labels,data.track_list);
     }
-    
+
+    // --- 10b. KKLine KalSeeds (KalSeedCollection, e.g. straight-line fits) ---
+    if(FillAll_ or (CollectionName==KKLineSeeds)){
+        for(const auto &tag : kkLineTag_){
+            auto chH = evt.getHandle<mu2e::KalSeedCollection>(tag);
+            if(chH.isValid()){
+              data.kkLinecol = chH.product();
+              data.kkline_list.push_back(data.kkLinecol);
+              std::string name = TurnNameToString(tag);
+              std::cout<<"Plotting KKLine KalSeed Instance: "<<name<<std::endl;
+              data.kkline_labels.push_back(name);
+            }
+        }
+        data.kkline_tuple = std::make_tuple(data.kkline_labels, data.kkline_list);
+    }
+
     // --- 11. CosmicTrackSeeds (Cosmic Ray Track Candidates) --- // FIXME - is this needed?
     if(FillAll_ or (CollectionName == CosmicTrackSeeds)){
         auto chH = evt.getValidHandle<mu2e::CosmicTrackSeedCollection>(cosmicTrackSeedTag_);
@@ -234,7 +253,7 @@ void CollectionFiller::FillMCCollections(const art::Event& evt, DataCollections 
 
         for(const auto &tag : MCTrajTag_){
             auto chH = evt.getValidHandle<mu2e::MCTrajectoryCollection>(tag);
-            
+
             data.mctrajcol = chH.product();
             data.mctrack_list.push_back(data.mctrajcol);
 
@@ -250,7 +269,7 @@ void CollectionFiller::FillMCCollections(const art::Event& evt, DataCollections 
 
         for(const auto &tag : SurfStepsTag_){
             auto chH = evt.getValidHandle<mu2e::SurfaceStepCollection>(tag);
-            
+
             data.surfstepcol = chH.product();
             data.surfstep_list.push_back(data.surfstepcol);
 
@@ -260,12 +279,12 @@ void CollectionFiller::FillMCCollections(const art::Event& evt, DataCollections 
         }
         data.surfstep_tuple = std::make_tuple(data.surfstep_labels,data.surfstep_list);
     }
-    
+
     // --- 3. SimParticles (Primary information about each simulated particle) ---
     if(FillAll_ or (CollectionName==SimParticles)){
         for(const auto &tag : SimTag_){
             auto chH = evt.getValidHandle<mu2e::SimParticleCollection>(tag);
-            
+
             data.simcol = chH.product();
             data.sim_list.push_back(data.simcol);
 

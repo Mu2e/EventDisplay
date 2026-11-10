@@ -47,6 +47,7 @@ namespace mu2e{
       const mu2e::CaloClusterCollection* clustercol = 0;
       const mu2e::HelixSeedCollection* helixSeedcol = 0;
       const mu2e::KalSeedPtrCollection* kalSeedcol = 0;
+      const mu2e::KalSeedCollection* kkLinecol = 0;
       const mu2e::CosmicTrackSeedCollection* CosmicTrackSeedcol = 0;
       const mu2e::MCTrajectoryCollection *mctrajcol = 0;
       const mu2e::SimParticleCollection *simcol = 0;
@@ -54,6 +55,7 @@ namespace mu2e{
       //lists:
       std::vector<const mu2e::HelixSeedCollection*> helix_list;
       std::vector<const mu2e::KalSeedPtrCollection*> track_list;
+      std::vector<const mu2e::KalSeedCollection*> kkline_list;
       std::vector<const mu2e::CaloDigiCollection*> calodigi_list;
       std::vector<const mu2e::CaloClusterCollection*> calocluster_list;
       std::vector<const mu2e::ComboHitCollection*> combohit_list;
@@ -67,6 +69,7 @@ namespace mu2e{
       //Input Tag Labels:
       std::vector<std::string> helix_labels;
       std::vector<std::string> track_labels;
+      std::vector<std::string> kkline_labels;
       std::vector<std::string> calodigi_labels;
       std::vector<std::string> calocluster_labels;
       std::vector<std::string> mctrack_labels;
@@ -80,6 +83,7 @@ namespace mu2e{
       //Link Labels and Lists:
       std::tuple<std::vector<std::string>, std::vector<const mu2e::HelixSeedCollection*>> helix_tuple;
       std::tuple<std::vector<std::string>, std::vector<const mu2e::KalSeedPtrCollection*>> track_tuple;
+      std::tuple<std::vector<std::string>, std::vector<const mu2e::KalSeedCollection*>> kkline_tuple;
       std::tuple<std::vector<std::string>, std::vector<const mu2e::CaloDigiCollection*>> calodigi_tuple;
       std::tuple<std::vector<std::string>, std::vector<const mu2e::CaloClusterCollection*>> calocluster_tuple;
       std::tuple<std::vector<std::string>, std::vector<const mu2e::ComboHitCollection*>> combohit_tuple;
@@ -94,6 +98,7 @@ namespace mu2e{
       void Reset(){
         this->helix_list.clear();
         this->track_list.clear();
+        this->kkline_list.clear();
         this->calodigi_list.clear();
         this->calocluster_list.clear();
         this->combohit_list.clear();
@@ -105,6 +110,7 @@ namespace mu2e{
         this->sim_list.clear();
 
         this->track_labels.clear();
+        this->kkline_labels.clear();
         this->calodigi_labels.clear();
         this->calocluster_labels.clear();
         this->mctrack_labels.clear();
