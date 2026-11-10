@@ -58,14 +58,11 @@ physics.analyzers.Mu2eEventDisplay.filler.useAlignedTracker : true
 physics.analyzers.Mu2eEventDisplay.extracted : true
 physics.analyzers.Mu2eEventDisplay.specifyTag : false
 
-# services.DbService.purpose: TRACKER_VST
-# services.DbService.version: v2_0
-# services.DbService.verbose: 2
 
-services.DbService.purpose: KPP_reco
-services.DbService.version: "v1_1"
-services.DbService.verbose : 2
-services.DbService.nearestMatch : true
-services.DbService.textFile : ["TrkPanelStatus.txt", "TrkStrawStatusShort.txt", "TrkAlignPanel.txt", "TrkAlignPlane.txt"]
-services.ProditionsService.alignedTracker.useDb: true
-services.ProditionsService.trackerStatus.Settings.useDb: true
+services.DbService.purpose : "CRV_COMMISSIONING"
+services.DbService.version: v1_0
+services.DbService.textFile : [
+"Offline/TrackerConditions/data/TrkPanelMap.txt",
+"PassN/Tracker/trackercalibrations.txt",
+"Offline/CaloConditions/data/EnergyCalib_example.txt",
+"Offline/CaloConditions/data/TimeCalib_example.txt" ]
