@@ -17,6 +17,7 @@ namespace mu2e{
     cluTag_(conf.cluTag()),
     helixSeedTag_(conf.helixSeedTag()),
     kalSeedTag_(conf.kalSeedTag()),
+    kkLineTag_(conf.kkLineTag()),
     cosmicTrackSeedTag_(conf.cosmicTrackSeedTag()),
     MCTrajTag_(conf.MCTrajTag()),
     SurfStepsTag_(conf.SurfStepsTag()),
@@ -32,6 +33,7 @@ namespace mu2e{
     addClusters_(conf.addClusters()),
     addHelixSeeds_(conf.addHelixSeeds()),
     addKalSeeds_(conf.addKalSeeds()),
+    addKKLine_(conf.addKKLine()),
     addCosmicTrackSeeds_(conf.addCosmicTrackSeeds()),
     addMCTraj_(conf.addMCTraj()),
     addSurfSteps_(conf.addSurfSteps()),
@@ -212,6 +214,21 @@ void CollectionFiller::FillRecoCollections(const art::Event& evt, DataCollection
             }
         }
         data.track_tuple = std::make_tuple(data.track_labels,data.track_list);
+    }
+
+    // --- 10b. KKLine KalSeeds (KalSeedCollection, e.g. straight-line fits) ---
+    if(FillAll_ or (CollectionName==KKLineSeeds)){
+        for(const auto &tag : kkLineTag_){
+            auto chH = evt.getHandle<mu2e::KalSeedCollection>(tag);
+            if(chH.isValid()){
+              data.kkLinecol = chH.product();
+              data.kkline_list.push_back(data.kkLinecol);
+              std::string name = TurnNameToString(tag);
+              std::cout<<"Plotting KKLine KalSeed Instance: "<<name<<std::endl;
+              data.kkline_labels.push_back(name);
+            }
+        }
+        data.kkline_tuple = std::make_tuple(data.kkline_labels, data.kkline_list);
     }
 
     // --- 11. CosmicTrackSeeds (Cosmic Ray Track Candidates) --- // FIXME - is this needed?

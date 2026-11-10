@@ -33,6 +33,7 @@ Mu2eEventDisplay : {
       CaloDigiCollection : ["CaloDigiMaker"]
       CaloClusterCollection : ["CaloClusterMaker"]
       KalSeedPtrCollection : ["MergeKK"]
+      KalSeedCollection : ["KKLine"]
       HelixSeedCollection : ["MHFinderDe"]
       CosmicTrackSeedCollection : "CosmicTrackFinderTimeFit"
       MCTrajectoryCollection :  ["compressRecoMCs"]
@@ -48,6 +49,7 @@ Mu2eEventDisplay : {
       addCaloDigis : false
       addClusters : true
       addKalSeeds : true
+      addKKLine : false
       addCosmicTrackSeeds : false
       addMCTraj : true
       addTrackerHist : false
