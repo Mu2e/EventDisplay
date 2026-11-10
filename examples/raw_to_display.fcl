@@ -1,16 +1,12 @@
 # raw_to_display.fcl
-# author : merged from Combined_Pass1.fcl (PassN) and extracted_VST.fcl (EventDisplay)
+# merged from Combined_Pass1.fcl (PassN) and extracted_VST.fcl (EventDisplay)
 # purpose: read raw artdaq data, run full reco (tracker + calo + CRV + MSD), then display events
 
-# All prologs must come before any non-prolog content (FHiCL rule).
 #include "EventDisplay/fcl/prolog.fcl"
 #include "Offline/CRVResponse/fcl/prolog.fcl"
 
-# Non-prolog base config: services, physics block, tracker RecoPath from raw fragments.
 #include "PassN/Tracker/TrkRecoFromFragments.fcl"
 
-# EventDisplay epilog: sets physics.EndPath, physics.REvePath, trigger_paths (overridden below),
-# services.TFileService.fileName, and Mu2eEventDisplay.* geometry defaults.
 #include "EventDisplay/fcl/extracted.fcl"
 
 ### Calo + CRV + MSD producers (Combined_Pass1) ###
@@ -60,14 +56,35 @@ physics.filters :
 physics.CaloRecoPath : [ CaloDigis, CaloRecoDigiMaker, CaloHitMaker, CaloProtoClusterMaker, CaloClusterMaker ]
 physics.CRVRecoPath  : [ CrvDigi, CrvRecoPulses, CrvCoincidenceClusterFinder ]
 physics.RecoPath     : [ CaloDigis, CaloRecoDigiMaker, CaloHitMaker, CaloProtoClusterMaker, CaloClusterMaker, @sequence::physics.RecoPath ]
-physics.MSDRecoPath  : [ ProcessCFOData, MSDHitMaker ]
 physics.CRVEndPath   : [ CrvDQMcollector ]
+physics.MSDRecoPath  : [ ProcessCFOData, MSDHitMaker ]
+physics.REveEndPath  : [ @sequence::REveDis.seqBase]
+physics.REvePath : @local::REvePath
+Mu2eEventDisplay.SelectEvents : ["REvePath" ]
 
 # Override trigger_paths to include reco paths alongside the display path set by extracted.fcl
-physics.trigger_paths : [ RecoPath, CaloRecoPath, CRVRecoPath, MSDRecoPath, "REvePath" ]
-physics.end_paths     : [ CRVEndPath, EndPath ]
+physics.trigger_paths : [ RecoPath, CaloRecoPath, CRVRecoPath, MSDRecoPath, REvePath]
+physics.end_paths     : [ ]
 
-physics.analyzers.Mu2eEventDisplay.SelectEvents : [ "REvePath" ]
+outputs.KinematicLineOutput.SelectEvents : []
+outputs.KinematicLineOutput.outputCommands : [ "drop *_*_*_*",
+      @sequence::Reconstruction.GeneralProducts,
+      @sequence::Reconstruction.HighRecoProducts,
+      @sequence::Reconstruction.MidRecoProducts,
+      "keep *_DummyLumiInfo_*_*",
+      "keep *_TriggerResults_*_*",
+      "keep mu2e::CrvRecoPulses_*_*_*",
+      "keep mu2e::CrvDigis_*_*_*",
+      # "keep mu2e::CrvDAQerrors_*_*_*",
+      # "keep *_ProcessCFOData_*_*",
+      "keep mu2e::CrvCoincidenceClusters_*_*_*",
+      "keep mu2e::CrvStatuss_*_*_*",
+      "drop artdaq::*_*_*_*" ,
+      "drop mu2e::CrvDigis_*_NZS_*",
+      "keep *_MSDHitMaker_*_*"
+    ]
+
+# physics.analyzers.Mu2eEventDisplay.SelectEvents : [ "REvePath" ]
 
 source.inputCommands : [ "keep *",
     "drop mu2e::CaloClusters_CaloClusterFast_*_*"
@@ -95,6 +112,10 @@ services.DbService.purpose      : "KPP_reco"
 services.DbService.version      : ""
 services.DbService.nearestMatch : true
 
+services.DbService.textFile : ["TrkPanelStatus.txt", "TrkStrawStatusShort.txt", "TrkAlignPanel.txt", "TrkAlignPlane.txt"]
+services.ProditionsService.alignedTracker.useDb: true
+services.ProditionsService.trackerStatus.Settings.useDb: true
+
 ### EventDisplay config (extracted_VST) ###
 physics.analyzers.Mu2eEventDisplay.gdmlname :"Offline/gen/gdml/mu2e_extracted.gdml"
 physics.analyzers.Mu2eEventDisplay.addKalInter : false
@@ -113,3 +134,4 @@ physics.analyzers.Mu2eEventDisplay.filler.addTrackerHist : true
 physics.analyzers.Mu2eEventDisplay.filler.useAlignedTracker : true
 physics.analyzers.Mu2eEventDisplay.extracted : true
 physics.analyzers.Mu2eEventDisplay.specifyTag : false
+
