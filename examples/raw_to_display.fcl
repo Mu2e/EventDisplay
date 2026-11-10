@@ -1,19 +1,12 @@
 # raw_to_display.fcl
-# author : merged from Combined_Pass1.fcl (PassN) and extracted_VST.fcl (EventDisplay)
-# purpose: read raw artdaq data, run full reco (tracker + calo + CRV + MSD), then display events
+# merged from Combined_Pass1.fcl (PassN) and extracted_VST.fcl (EventDisplay)
+# purpose: read raw artdaq data, run full reco (tracker + calo + CRV), then display events
 
-# All prologs must come before any non-prolog content (FHiCL rule).
 #include "EventDisplay/fcl/prolog.fcl"
 #include "Offline/CRVResponse/fcl/prolog.fcl"
-
-# Non-prolog base config: services, physics block, tracker RecoPath from raw fragments.
 #include "PassN/Tracker/TrkRecoFromFragments.fcl"
-
-# EventDisplay epilog: sets physics.EndPath, physics.REvePath, trigger_paths (overridden below),
-# services.TFileService.fileName, and Mu2eEventDisplay.* geometry defaults.
 #include "EventDisplay/fcl/extracted.fcl"
 
-### Calo + CRV + MSD producers (Combined_Pass1) ###
 physics.producers :
 {
   @table::physics.producers
@@ -29,26 +22,12 @@ physics.producers :
   }
   CrvRecoPulses               : @local::CrvRecoPulses
   CrvCoincidenceClusterFinder : @local::CrvCoincidenceClusterFinder
-  MSDHitMaker :
-  {
-    module_type : MSDHitsFromDTCEvents
-    debugLevel  : 0
-  }
-  # EventHeader (EWT, mode, flags) from the CFO fragment
-  ProcessCFOData :
-  {
-    module_type : EventHeaderFromCFOFragment
-    cfoTag      : "fragmentAggregator:CFO"
-    createEWM   : false
-    diagLevel   : 0
-  }
 }
 
 ### EventDisplay analyzers and filters ###
 physics.analyzers :
 {
   @table::REveDis.analyzers
-  CrvDQMcollector : @local::CrvDQMcollector
 }
 physics.filters :
 {
@@ -57,23 +36,29 @@ physics.filters :
 }
 
 ### Reco paths (Combined_Pass1) ###
-physics.CaloRecoPath : [ CaloDigis, CaloRecoDigiMaker, CaloHitMaker, CaloProtoClusterMaker, CaloClusterMaker ]
 physics.CRVRecoPath  : [ CrvDigi, CrvRecoPulses, CrvCoincidenceClusterFinder ]
-physics.RecoPath     : [ CaloDigis, CaloRecoDigiMaker, CaloHitMaker, CaloProtoClusterMaker, CaloClusterMaker, @sequence::physics.RecoPath ]
-physics.MSDRecoPath  : [ ProcessCFOData, MSDHitMaker ]
-physics.CRVEndPath   : [ CrvDQMcollector ]
+physics.RecoPath     : [ CaloDigis, CaloRecoDigiMaker, CaloHitMaker, CaloProtoClusterMaker, CaloClusterMaker, @sequence::physics.RecoPath , MergeKK]
+physics.REveEndPath  : [ @sequence::REveDis.seqBase]
+physics.REveKPPPath : @local::REveKPPPath
 
 # Override trigger_paths to include reco paths alongside the display path set by extracted.fcl
-physics.trigger_paths : [ RecoPath, CaloRecoPath, CRVRecoPath, MSDRecoPath, "REvePath" ]
-physics.end_paths     : [ CRVEndPath, EndPath ]
+physics.trigger_paths : [ CRVRecoPath, RecoPath]
+physics.end_paths     : [ REveEndPath]
 
-physics.analyzers.Mu2eEventDisplay.SelectEvents : [ "REvePath" ]
+outputs.KinematicLineOutput.SelectEvents : []
+outputs.KinematicLineOutput.outputCommands : [ "drop *_*_*_*",
+      @sequence::Reconstruction.GeneralProducts,
+      @sequence::Reconstruction.HighRecoProducts,
+      @sequence::Reconstruction.MidRecoProducts,
+      "keep *_DummyLumiInfo_*_*",
+      "keep *_TriggerResults_*_*",
+      "keep mu2e::CrvRecoPulses_*_*_*",
+      "keep mu2e::CrvDigis_*_*_*",
+      "keep mu2e::CrvCoincidenceClusters_*_*_*",
+      "drop artdaq::*_*_*_*" ,
+      "drop mu2e::CrvDigis_*_NZS_*"
+    ]
 
-source.inputCommands : [ "keep *",
-    "drop mu2e::CaloClusters_CaloClusterFast_*_*"
-]
-
-### Geometry: extracted_v06 = commissioning_v02 renamed in Offline#2082 ###
 services.GeometryService.inputFile : "Offline/Mu2eG4/geom/geom_common_extracted_v06.txt"
 
 ### Calo config (Combined_Pass1) ###
@@ -94,6 +79,10 @@ services.ProditionsService.eventTiming.useDb : true
 services.DbService.purpose      : "KPP_reco"
 services.DbService.version      : ""
 services.DbService.nearestMatch : true
+
+# services.DbService.textFile : ["TrkPanelStatus.txt", "TrkStrawStatusShort.txt", "TrkAlignPanel.txt", "TrkAlignPlane.txt"]
+services.ProditionsService.alignedTracker.useDb: true
+services.ProditionsService.trackerStatus.Settings.useDb: true
 
 ### EventDisplay config (extracted_VST) ###
 physics.analyzers.Mu2eEventDisplay.gdmlname :"Offline/gen/gdml/mu2e_extracted.gdml"

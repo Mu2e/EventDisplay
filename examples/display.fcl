@@ -1,0 +1,55 @@
+# author : Sophie Middleton:w
+# purpose : DAQ running
+#include "Offline/fcl/minimalMessageService.fcl"
+#include "Offline/fcl/standardServices.fcl"
+#include "EventDisplay/fcl/prolog.fcl"
+#include "PassN/Combined_Pass1.fcl"
+#include "EventDisplay/fcl/extracted.fcl"
+
+
+
+process_name : Extracted
+
+physics.analyzers : {
+    @table::physics.analyzers
+    @table::REveDis.analyzers
+}
+physics.producers : {
+   @table::physics.producers
+   @table::REveDis.producers
+  }
+physics.filters : {
+    @table::physics.filters
+    @table::REveDis.filters
+}
+
+# print statements
+physics.analyzers.Mu2eEventDisplay.diagLevel : 0
+physics.analyzers.Mu2eEventDisplay.filler.addCrvClusters : false
+physics.analyzers.Mu2eEventDisplay.filler.addCrvRecoPulse : false
+physics.analyzers.Mu2eEventDisplay.filler.addCaloDigis : true
+physics.analyzers.Mu2eEventDisplay.filler.addCaloHist : false
+physics.analyzers.Mu2eEventDisplay.filler.shiftTracker : false
+physics.analyzers.Mu2eEventDisplay.filler.addTrackerHist : false
+physics.analyzers.Mu2eEventDisplay.filler.useAlignedTracker : false
+
+# the path
+physics.RecoPath : [@sequence::physics.RecoPath]
+physics.EndPath  : [ @sequence::REveDis.seqBase]
+physics.REvePath : @local::REvePath
+physics.end_paths : [EndPath]
+physics.trigger_paths :  ["REvePath" ]
+physics.analyzers.Mu2eEventDisplay.SelectEvents : ["REvePath" ]
+
+# useless file name
+services.TFileService.fileName: "/dev/null"
+physics.analyzers.Mu2eEventDisplay.gdmlname :"Offline/gen/gdml/mu2e_extracted.gdml"
+services.GeometryService.inputFile: "Offline/Mu2eG4/geom/geom_common_extracted.txt"
+services.ProditionsService.alignedTracker.useDb: true
+services.ProditionsService.alignedTracker.verbose: 0
+services.ProditionsService.trackerStatus.Settings.useDb: true
+services.ProditionsService.trackerStatus.Settings.verbose: 0
+services.ProditionsService.strawElectronics.useDb: true
+services.ProditionsService.strawElectronics.verbose: 0
+
+physics.analyzers.Mu2eEventDisplay.extracted : true

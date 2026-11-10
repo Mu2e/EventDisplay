@@ -1,0 +1,54 @@
+# author : Sophie Middleton
+# purpose : example for extracted position tracks
+#include "Offline/fcl/minimalMessageService.fcl"
+#include "Offline/fcl/standardProducers.fcl"
+#include "Offline/fcl/standardServices.fcl"
+#include "EventDisplay/fcl/prolog.fcl"
+#include "EventDisplay/fcl/extracted.fcl"
+
+
+services : @local::Services.Reco
+
+process_name : Nominal
+
+source : { module_type : RootInput }
+
+physics :
+{
+  analyzers : { @table::REveDis.analyzers}
+  producers : { @table::REveDis.producers }
+  filters : { @table::REveDis.filters }
+}
+
+# print statements
+physics.analyzers.Mu2eEventDisplay.diagLevel : 10
+
+# the path
+physics.EndPath  : [ @sequence::REveDis.seqBase]
+physics.REvePath : @local::REvePath
+physics.trigger_paths :  ["REvePath" ]
+physics.analyzers.Mu2eEventDisplay.SelectEvents : ["REvePath" ]
+
+
+source.inputCommands: ["keep *",
+    "drop mu2e::CaloClusters_CaloClusterFast_*_*"
+    ]
+
+# useless file name
+services.TFileService.fileName: "/dev/null"
+
+physics.analyzers.Mu2eEventDisplay.gdmlname :"Offline/gen/gdml/mu2e_extracted.gdml"
+services.TFileService.fileName: "/dev/null"
+services.GeometryService.inputFile: "Offline/Mu2eG4/geom/geom_common_extracted.txt"
+physics.analyzers.Mu2eEventDisplay.filler.addCrvClusters : true
+physics.analyzers.Mu2eEventDisplay.filler.addCrvTrack : true
+physics.analyzers.Mu2eEventDisplay.filler.addCrvRecoPulse : false
+physics.analyzers.Mu2eEventDisplay.filler.addCaloDigis : false
+physics.analyzers.Mu2eEventDisplay.filler.addClusters : true
+physics.analyzers.Mu2eEventDisplay.filler.addKalSeeds : true
+physics.analyzers.Mu2eEventDisplay.addTrkStrawHits : false
+physics.analyzers.Mu2eEventDisplay.filler.addHits : true
+physics.analyzers.Mu2eEventDisplay.filler.addCaloHist : false
+physics.analyzers.Mu2eEventDisplay.filler.useAlignedTracker : true
+physics.analyzers.Mu2eEventDisplay.extracted : true
+physics.analyzers.Mu2eEventDisplay.specifyTag : false

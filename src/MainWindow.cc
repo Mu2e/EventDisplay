@@ -729,6 +729,10 @@ void MainWindow::showEvents(REX::REveManager *eveMng, REX::REveScene* &eventScen
       fTrackerCalo2DViews->drawTrackerXYView(seedcol, run, subRun, event);
      }
   }
+  std::vector<const KalSeedCollection*> kkline_list = std::get<1>(data.kkline_tuple);
+  if(drawOpts.addKKLineTracks and kkline_list.size() != 0) {
+    pass_data->FillKinKalTrajectoryFromCol(eveMng, eventScene, data.kkline_tuple, KKOpts.addKalInter, KKOpts.addTrkStrawHits, KKOpts.addTrkCaloHits, t1, t2, drawOpts.shiftTracker);
+  }
    if(drawOpts.addCrvTrack) {
      pass_data->AddCRVKalIntersection(eveMng, eventScene, data.track_tuple, KKOpts.addKalInter,  KKOpts.addTrkStrawHits, KKOpts.addTrkCaloHits, t1, t2, data.crvcoin_tuple, geomOpts.extracted, drawOpts.addCrvBars);
    }

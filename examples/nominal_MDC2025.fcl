@@ -28,6 +28,10 @@ physics.analyzers.Mu2eEventDisplay.filler.addCaloHist : false
 physics.analyzers.Mu2eEventDisplay.filler.shiftTracker : false
 physics.analyzers.Mu2eEventDisplay.filler.addTrackerHist : false
 physics.analyzers.Mu2eEventDisplay.filler.useAlignedTracker : false
+physics.analyzers.Mu2eEventDisplay.filler.addKalSeeds : true
+physics.analyzers.Mu2eEventDisplay.addTrkStrawHits : true
+physics.analyzers.Mu2eEventDisplay.filler.addHits : false
+
 
 # the path
 physics.EndPath  : [ @sequence::REveDis.seqBase]
