@@ -1,15 +1,12 @@
 # raw_to_display.fcl
 # merged from Combined_Pass1.fcl (PassN) and extracted_VST.fcl (EventDisplay)
-# purpose: read raw artdaq data, run full reco (tracker + calo + CRV + MSD), then display events
+# purpose: read raw artdaq data, run full reco (tracker + calo + CRV), then display events
 
 #include "EventDisplay/fcl/prolog.fcl"
 #include "Offline/CRVResponse/fcl/prolog.fcl"
-
 #include "PassN/Tracker/TrkRecoFromFragments.fcl"
-
 #include "EventDisplay/fcl/extracted.fcl"
 
-### Calo + CRV + MSD producers (Combined_Pass1) ###
 physics.producers :
 {
   @table::physics.producers
@@ -25,26 +22,12 @@ physics.producers :
   }
   CrvRecoPulses               : @local::CrvRecoPulses
   CrvCoincidenceClusterFinder : @local::CrvCoincidenceClusterFinder
-  MSDHitMaker :
-  {
-    module_type : MSDHitsFromDTCEvents
-    debugLevel  : 0
-  }
-  # EventHeader (EWT, mode, flags) from the CFO fragment
-  ProcessCFOData :
-  {
-    module_type : EventHeaderFromCFOFragment
-    cfoTag      : "fragmentAggregator:CFO"
-    createEWM   : false
-    diagLevel   : 0
-  }
 }
 
 ### EventDisplay analyzers and filters ###
 physics.analyzers :
 {
   @table::REveDis.analyzers
-  CrvDQMcollector : @local::CrvDQMcollector
 }
 physics.filters :
 {
@@ -53,16 +36,13 @@ physics.filters :
 }
 
 ### Reco paths (Combined_Pass1) ###
-# physics.CaloRecoPath : [ CaloDigis, CaloRecoDigiMaker, CaloHitMaker, CaloProtoClusterMaker, CaloClusterMaker ]
 physics.CRVRecoPath  : [ CrvDigi, CrvRecoPulses, CrvCoincidenceClusterFinder ]
-physics.RecoPath     : [ CaloDigis, CaloRecoDigiMaker, CaloHitMaker, CaloProtoClusterMaker, CaloClusterMaker, @sequence::physics.RecoPath ]
-physics.CRVEndPath   : [ CrvDQMcollector ]
-physics.MSDRecoPath  : [ ProcessCFOData, MSDHitMaker ]
+physics.RecoPath     : [ CaloDigis, CaloRecoDigiMaker, CaloHitMaker, CaloProtoClusterMaker, CaloClusterMaker, @sequence::physics.RecoPath , MergeKK]
 physics.REveEndPath  : [ @sequence::REveDis.seqBase]
 physics.REveKPPPath : @local::REveKPPPath
 
 # Override trigger_paths to include reco paths alongside the display path set by extracted.fcl
-physics.trigger_paths : [ RecoPath, CRVRecoPath, MSDRecoPath, REveKPPPath]
+physics.trigger_paths : [ CRVRecoPath, RecoPath]
 physics.end_paths     : [ REveEndPath]
 
 outputs.KinematicLineOutput.SelectEvents : []
@@ -74,22 +54,11 @@ outputs.KinematicLineOutput.outputCommands : [ "drop *_*_*_*",
       "keep *_TriggerResults_*_*",
       "keep mu2e::CrvRecoPulses_*_*_*",
       "keep mu2e::CrvDigis_*_*_*",
-      # "keep mu2e::CrvDAQerrors_*_*_*",
-      # "keep *_ProcessCFOData_*_*",
       "keep mu2e::CrvCoincidenceClusters_*_*_*",
-      # "keep mu2e::CrvStatuss_*_*_*",
       "drop artdaq::*_*_*_*" ,
       "drop mu2e::CrvDigis_*_NZS_*"
-      # "keep *_MSDHitMaker_*_*"
     ]
 
-# physics.analyzers.Mu2eEventDisplay.SelectEvents : [ "REvePath" ]
-
-# source.inputCommands : [ "keep *",
-#    "drop mu2e::CaloClusters_CaloClusterFast_*_*"
-# ]
-
-### Geometry: extracted_v06 = commissioning_v02 renamed in Offline#2082 ###
 services.GeometryService.inputFile : "Offline/Mu2eG4/geom/geom_common_extracted_v06.txt"
 
 ### Calo config (Combined_Pass1) ###
@@ -111,7 +80,7 @@ services.DbService.purpose      : "KPP_reco"
 services.DbService.version      : ""
 services.DbService.nearestMatch : true
 
-services.DbService.textFile : ["TrkPanelStatus.txt", "TrkStrawStatusShort.txt", "TrkAlignPanel.txt", "TrkAlignPlane.txt"]
+# services.DbService.textFile : ["TrkPanelStatus.txt", "TrkStrawStatusShort.txt", "TrkAlignPanel.txt", "TrkAlignPlane.txt"]
 services.ProditionsService.alignedTracker.useDb: true
 services.ProditionsService.trackerStatus.Settings.useDb: true
 
@@ -125,7 +94,6 @@ physics.analyzers.Mu2eEventDisplay.filler.addCaloDigis : false
 physics.analyzers.Mu2eEventDisplay.filler.addClusters : true
 physics.analyzers.Mu2eEventDisplay.addTrkCaloHits : true
 physics.analyzers.Mu2eEventDisplay.filler.addKalSeeds : true
-physics.analyzers.Mu2eEventDisplay.filler.addKKLine : false
 physics.analyzers.Mu2eEventDisplay.addTrkStrawHits : true
 physics.analyzers.Mu2eEventDisplay.filler.addHits : false
 physics.analyzers.Mu2eEventDisplay.filler.addCaloHist : true

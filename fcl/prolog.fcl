@@ -78,7 +78,7 @@ REveDis : {
         KalSeedCollections : [ "KKDe", "KKUe", "KKDmu", "KKUmu", # loop helix fits (both charges)
         "KKLine", "KKCHmu", # straight and curved fits
         "KKDeM", "KKDeP", "KKUeM", "KKUeP", "KKDmuM", "KKDmuP", "KKUmuM", "KKUmuP" ] # legacy fits
-	debugLevel : 5
+	debugLevel : 0
       }
   }
   filters : {
