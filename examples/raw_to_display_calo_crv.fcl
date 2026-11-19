@@ -73,8 +73,8 @@ physics.analyzers.Mu2eEventDisplay.gdmlname                       : "Offline/gen
 physics.analyzers.Mu2eEventDisplay.SelectEvents                   : []
 physics.analyzers.Mu2eEventDisplay.addKalInter                    : false
 physics.analyzers.Mu2eEventDisplay.filler.addCrvClusters          : true
-physics.analyzers.Mu2eEventDisplay.filler.addCrvTrack             : true
-physics.analyzers.Mu2eEventDisplay.filler.addCrvRecoPulse         : false
+physics.analyzers.Mu2eEventDisplay.filler.addCrvTrack             : false
+physics.analyzers.Mu2eEventDisplay.filler.addCrvRecoPulse         : true
 physics.analyzers.Mu2eEventDisplay.filler.addCaloDigis            : false
 physics.analyzers.Mu2eEventDisplay.filler.addClusters             : true
 physics.analyzers.Mu2eEventDisplay.addTrkCaloHits                 : false

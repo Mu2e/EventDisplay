@@ -1,56 +1,47 @@
-# artdaq_to_display.fcl
-# Modified from EventDisplay/examples/raw_to_display.fcl
-# Purpose: read live artdaq data from shared memory (ArtdaqInput / dispatcher),
-#          run full reco (tracker + calo + CRV + MSD), then display events.
+# artdaq_to_display_calo_crv.fcl
+# Version of artdaq_to_display.fcl without PassN tracker dependencies
+# Reads live artdaq data from shared memory (ArtdaqInput / dispatcher),
+# runs CRV and Calo reconstruction only, then displays events.
+# Tracker reconstruction and display are disabled.
 #
 # Run as a standalone art job alongside a running artdaq event builder:
-#   mu2e -c artdaq_to_display.fcl
-#
-# The ArtdaqInput source reads events from the artdaq shared memory segment
-# written by the event builder.  The job does NOT need a fragment_receiver or
-# event_builder block because those belong to the artdaqDriver that is already
-# running and producing the shared-memory segment this job attaches to.
+#   mu2e -c artdaq_to_display_calo_crv.fcl
 
+#include "Offline/fcl/standardServices.fcl"
 #include "EventDisplay/fcl/prolog.fcl"
 #include "Offline/CRVResponse/fcl/prolog.fcl"
-
-#include "PassN/Tracker/TrkRecoFromFragments.fcl"
-
+#include "Offline/CaloReco/fcl/prolog.fcl"
+#include "Offline/CaloCluster/fcl/prolog.fcl"
+#include "Offline/DAQ/fcl/prolog.fcl"
 #include "EventDisplay/fcl/extracted.fcl"
 
 ### Process name ###
-process_name: ArtdaqEventDisplay
+process_name : ArtdaqEventDisplay
 
 ### Source: read from artdaq shared memory written by the event builder ###
-source: {
+source : {
     module_type         : "ArtdaqInput"
-    # waiting_time and resume_after_timeout are controlled via
-    # ArtdaqSharedMemoryServiceInterface below
 }
 
 ### Services: standard reco services + artdaq shared-memory/naming services ###
-services: {
-    @table::services   # inherit services defined in included FCLs above
-
-    # Required artdaq services when using ArtdaqInput
-    ArtdaqFragmentNamingServiceInterface: {
+services : {
+    @table::Services.Reco
+    TFileService : { fileName : "/dev/null" }
+    ArtdaqFragmentNamingServiceInterface : {
         service_provider : "ArtdaqFragmentNamingService"
         helper_plugin    : "Mu2e"
     }
-    ArtdaqSharedMemoryServiceInterface: {
-        service_provider    : "ArtdaqSharedMemoryService"
-        waiting_time        : 60     # seconds to wait for a new event before giving up
-        resume_after_timeout: true   # keep trying rather than stopping at timeout
+    ArtdaqSharedMemoryServiceInterface : {
+        service_provider     : "ArtdaqSharedMemoryService"
+        waiting_time         : 60
+        resume_after_timeout : true
     }
 }
 
-### Calo + CRV + MSD producers (same as raw_to_display.fcl) ###
 physics.producers :
 {
-  @table::physics.producers
   @table::CaloReco.producers
   @table::CaloCluster.producers
-  @table::REveDis.producers
   CaloDigis : @local::DAQ.producers.CaloDigis
   CrvDigi :
   {
@@ -60,71 +51,37 @@ physics.producers :
   }
   CrvRecoPulses               : @local::CrvRecoPulses
   CrvCoincidenceClusterFinder : @local::CrvCoincidenceClusterFinder
-  MSDHitMaker :
-  {
-    module_type : MSDHitsFromDTCEvents
-    debugLevel  : 0
-  }
-  # EventHeader (EWT, mode, flags) from the CFO fragment
-  ProcessCFOData :
-  {
-    module_type : EventHeaderFromCFOFragment
-    cfoTag      : "fragmentAggregator:CFO"
-    createEWM   : false
-    diagLevel   : 0
-  }
 }
 
-### EventDisplay analyzers and filters (same as raw_to_display.fcl) ###
+### EventDisplay analyzers and filters ###
 physics.analyzers :
 {
   @table::REveDis.analyzers
-  CrvDQMcollector : @local::CrvDQMcollector
 }
 physics.filters :
 {
-  @table::physics.filters
   @table::REveDis.filters
 }
 
-### Reco paths (same as raw_to_display.fcl) ###
+### Reco paths (CRV and Calo only, no tracker) ###
 physics.CRVRecoPath  : [ CrvDigi, CrvRecoPulses, CrvCoincidenceClusterFinder ]
-physics.RecoPath     : [ CaloDigis, CaloRecoDigiMaker, CaloHitMaker, CaloProtoClusterMaker, CaloClusterMaker, @sequence::physics.RecoPath, MergeKK ]
-physics.CRVEndPath   : [ CrvDQMcollector ]
-physics.MSDRecoPath  : [ ProcessCFOData, MSDHitMaker ]
-physics.REveEndPath  : [ @sequence::REveDis.seqBase]
+physics.CaloRecoPath : [ CaloDigis, CaloRecoDigiMaker, CaloHitMaker, CaloProtoClusterMaker, CaloClusterMaker ]
+physics.REveEndPath  : [ @sequence::REveDis.seqBase ]
 
-physics.trigger_paths : [ RecoPath, CRVRecoPath, MSDRecoPath ]
+physics.trigger_paths : [ CRVRecoPath, CaloRecoPath ]
 physics.end_paths     : [ REveEndPath ]
 
-outputs.KinematicLineOutput.SelectEvents : []
-outputs.KinematicLineOutput.outputCommands : [ "drop *_*_*_*",
-      @sequence::Reconstruction.GeneralProducts,
-      @sequence::Reconstruction.HighRecoProducts,
-      @sequence::Reconstruction.MidRecoProducts,
-      "keep *_DummyLumiInfo_*_*",
-      "keep *_TriggerResults_*_*",
-      "keep mu2e::CrvRecoPulses_*_*_*",
-      "keep mu2e::CrvDigis_*_*_*",
-      "keep mu2e::CrvCoincidenceClusters_*_*_*",
-      "drop artdaq::*_*_*_*",
-      "drop mu2e::CrvDigis_*_NZS_*"
-    ]
-
-### Geometry (same as raw_to_display.fcl) ###
 services.GeometryService.inputFile : "Offline/Mu2eG4/geom/geom_common_extracted_v06.txt"
 
-### Calo config (same as raw_to_display.fcl) ###
+### Calo config ###
 physics.producers.CaloRecoDigiMaker.caloDigiCollection : CaloDigis
 physics.producers.CaloRecoDigiMaker.UseProtonBunchTime : false
-physics.producers.KKLine.KKFitSettings.UseCaloCluster  : true
-physics.producers.LineFinder.AddCaloClusters           : true
 
-### CRV config (same as raw_to_display.fcl) ###
+### CRV config ###
 #include "Offline/CRVReco/fcl/epilog_extracted.fcl"
 physics.producers.CrvCoincidenceClusterFinder.ignoreSecondaryPulses : true
 
-### Database calibrations (same as raw_to_display.fcl) ###
+### Database calibrations ###
 services.ProditionsService.calCalib.useDb    : true
 services.ProditionsService.crvStatus.useDb   : true
 services.ProditionsService.crvCalib.useDb    : true
@@ -133,26 +90,22 @@ services.DbService.purpose      : "KPP_reco"
 services.DbService.version      : ""
 services.DbService.nearestMatch : true
 
-services.DbService.textFile : ["TrkPanelStatus.txt", "TrkStrawStatusShort.txt", "TrkAlignPanel.txt", "TrkAlignPlane.txt"]
-services.ProditionsService.alignedTracker.useDb         : true
-services.ProditionsService.trackerStatus.Settings.useDb : true
-
-### EventDisplay config (same as raw_to_display.fcl) ###
+### EventDisplay config (CRV and Calo only, tracker disabled) ###
 physics.analyzers.Mu2eEventDisplay.gdmlname                       : "Offline/gen/gdml/mu2e_extracted.gdml"
+physics.analyzers.Mu2eEventDisplay.SelectEvents                   : []
 physics.analyzers.Mu2eEventDisplay.addKalInter                    : false
 physics.analyzers.Mu2eEventDisplay.filler.addCrvClusters          : true
-physics.analyzers.Mu2eEventDisplay.filler.addCrvTrack             : true
-physics.analyzers.Mu2eEventDisplay.filler.addCrvRecoPulse         : false
+physics.analyzers.Mu2eEventDisplay.filler.addCrvTrack             : false
+physics.analyzers.Mu2eEventDisplay.filler.addCrvRecoPulse         : true
 physics.analyzers.Mu2eEventDisplay.filler.addCaloDigis            : false
 physics.analyzers.Mu2eEventDisplay.filler.addClusters             : true
-physics.analyzers.Mu2eEventDisplay.addTrkCaloHits                 : true
-physics.analyzers.Mu2eEventDisplay.filler.addKalSeeds             : true
-physics.analyzers.Mu2eEventDisplay.filler.addKKLine               : false
-physics.analyzers.Mu2eEventDisplay.addTrkStrawHits                : true
+physics.analyzers.Mu2eEventDisplay.addTrkCaloHits                 : false
+physics.analyzers.Mu2eEventDisplay.filler.addKalSeeds             : false
+physics.analyzers.Mu2eEventDisplay.addTrkStrawHits                : false
 physics.analyzers.Mu2eEventDisplay.filler.addHits                 : false
 physics.analyzers.Mu2eEventDisplay.filler.addCaloHist             : true
 physics.analyzers.Mu2eEventDisplay.filler.shiftTracker            : false
-physics.analyzers.Mu2eEventDisplay.filler.addTrackerHist          : true
-physics.analyzers.Mu2eEventDisplay.filler.useAlignedTracker       : true
+physics.analyzers.Mu2eEventDisplay.filler.addTrackerHist          : false
+physics.analyzers.Mu2eEventDisplay.filler.useAlignedTracker       : false
 physics.analyzers.Mu2eEventDisplay.extracted                      : true
 physics.analyzers.Mu2eEventDisplay.specifyTag                     : false
