@@ -14,6 +14,7 @@
 process_name : RecoDisplay
 source : { module_type : RootInput }
 services : @local::Services.Reco
+services.TFileService.fileName : "/dev/null"
 
 physics.producers :
 {
