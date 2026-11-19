@@ -3,12 +3,18 @@
 # Runs CRV and Calo reconstruction only; tracker reconstruction and display are disabled
 # Offline/CaloReco, Offline/CaloCluster, and Offline/DAQ replace the PassN include
 
+#include "Offline/fcl/standardServices.fcl"
 #include "EventDisplay/fcl/prolog.fcl"
 #include "Offline/CRVResponse/fcl/prolog.fcl"
 #include "Offline/CaloReco/fcl/prolog.fcl"
 #include "Offline/CaloCluster/fcl/prolog.fcl"
 #include "Offline/DAQ/fcl/prolog.fcl"
 #include "EventDisplay/fcl/extracted.fcl"
+
+process_name : RecoDisplay
+source : { module_type : RootInput }
+services : @local::Services.Reco
+services.TFileService.fileName : "/dev/null"
 
 physics.producers :
 {
@@ -67,8 +73,8 @@ physics.analyzers.Mu2eEventDisplay.gdmlname                       : "Offline/gen
 physics.analyzers.Mu2eEventDisplay.SelectEvents                   : []
 physics.analyzers.Mu2eEventDisplay.addKalInter                    : false
 physics.analyzers.Mu2eEventDisplay.filler.addCrvClusters          : true
-physics.analyzers.Mu2eEventDisplay.filler.addCrvTrack             : true
-physics.analyzers.Mu2eEventDisplay.filler.addCrvRecoPulse         : false
+physics.analyzers.Mu2eEventDisplay.filler.addCrvTrack             : false
+physics.analyzers.Mu2eEventDisplay.filler.addCrvRecoPulse         : true
 physics.analyzers.Mu2eEventDisplay.filler.addCaloDigis            : false
 physics.analyzers.Mu2eEventDisplay.filler.addClusters             : true
 physics.analyzers.Mu2eEventDisplay.addTrkCaloHits                 : false
