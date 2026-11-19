@@ -748,10 +748,10 @@ void MainWindow::showEvents(REX::REveManager *eveMng, REX::REveScene* &eventScen
       // removed AddCrvInfo call
     }
 
-  /*if(drawOpts.addCrvClusters){
+  if(drawOpts.addCrvClusters){
     std::vector<const CrvCoincidenceClusterCollection*> crvcoin_list = std::get<1>(data.crvcoin_tuple);
     if(crvcoin_list.size() !=0) pass_data->AddCrvClusters(eveMng, data.crvcoin_tuple, eventScene, geomOpts.extracted, drawOpts.addCrvBars);
-    }*/
+  }
 
   if(drawOpts.addCaloDigis){
     std::vector<const CaloDigiCollection*> calodigi_list = std::get<1>(data.calodigi_tuple);
