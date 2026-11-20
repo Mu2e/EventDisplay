@@ -1,0 +1,54 @@
+# prolog_for_online_display
+
+#include "Offline/fcl/standardServices.fcl"
+#include "EventDisplay/fcl/prolog.fcl"
+#include "Offline/CRVResponse/fcl/prolog.fcl"
+#include "Offline/CaloReco/fcl/prolog.fcl"
+#include "Offline/CaloCluster/fcl/prolog.fcl"
+#include "Offline/DAQ/fcl/prolog.fcl"
+
+BEGIN_PROLOG
+
+rawdisplay.producers :
+{
+  @table::CaloReco.producers
+  @table::CaloCluster.producers
+  CaloDigis : @local::DAQ.producers.CaloDigis
+  CrvDigi :
+  {
+    module_type   : CrvDigisFromArtdaqFragmentsFEBII
+    diagLevel     : 0
+    useROC4asROC2 : true
+  }
+  CrvRecoPulses               : @local::CrvRecoPulses
+  CrvCoincidenceClusterFinder : @local::CrvCoincidenceClusterFinder
+}
+
+### EventDisplay analyzers and filters ###
+rawdisplay.analyzers :
+{
+  @table::REveDis.analyzers
+}
+rawdisplay.filters :
+{
+  @table::REveDis.filters
+}
+
+### Reco paths (CRV and Calo only, no tracker) ###
+
+rawdisplay.paths : {
+
+CRVRecoPath  : [ CrvDigi, CrvRecoPulses, CrvCoincidenceClusterFinder ]
+CaloRecoPath : [ CaloDigis, CaloRecoDigiMaker, CaloHitMaker, CaloProtoClusterMaker, CaloClusterMaker ]
+REveEndPath  : [ @sequence::REveDis.seqBase]
+}
+
+
+rawdisplay.trigger_paths : [ CRVRecoPath, CaloRecoPath ]
+rawdisplay.end_paths     : [ REveEndPath ]
+
+### Calo config ###
+rawdisplay.producers.CaloRecoDigiMaker.caloDigiCollection : CaloDigis
+rawdisplay.producers.CaloRecoDigiMaker.UseProtonBunchTime : false
+
+END_PROLOG
