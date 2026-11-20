@@ -139,6 +139,7 @@ namespace mu2e {
       bool addCosmicTracks = false;
       bool addHelices = false;
       bool addTracks = false;
+      bool addKKLineTracks = false;
       bool addCaloDigis = false;
       bool addClusters = false;
       bool addComboHits = false;
@@ -163,8 +164,8 @@ namespace mu2e {
       bool addCrvBars = true;
       DrawOptions(){};
 
-    DrawOptions(bool cosmictracks, bool helices, bool tracks, bool calodigis, bool clusters, bool combohits, bool bkgclusters, bool crv, bool crvclu, bool crvtrack, bool timeclusters, bool trkhits, bool mctraj, bool surfsteps, bool simparts, bool trackerhist, bool calohist, bool shifttracker, bool usealignedtracker, bool errbar, bool crys, bool crvbars)
-      : addCosmicTracks(cosmictracks), addHelices(helices), addTracks(tracks), addCaloDigis(calodigis), addClusters(clusters), addComboHits(combohits), addBkgClusters(bkgclusters), addCrvRecoPulse(crv), addCrvClusters(crvclu), addCrvTrack(crvtrack), addTimeClusters(timeclusters), addTrkHits(trkhits), addMCTrajectories(mctraj), addSurfaceSteps(surfsteps), addSimParts(simparts), addTrackerHist(trackerhist), addCaloHist(calohist), shiftTracker(shifttracker), useAlignedTracker(usealignedtracker), addTrkErrBar(errbar), addCrystalDraw(crys), addCrvBars(crvbars) {};
+    DrawOptions(bool cosmictracks, bool helices, bool tracks, bool calodigis, bool clusters, bool combohits, bool bkgclusters, bool crv, bool crvclu, bool crvtrack, bool timeclusters, bool trkhits, bool mctraj, bool surfsteps, bool simparts, bool trackerhist, bool calohist, bool shifttracker, bool usealignedtracker, bool errbar, bool crys, bool crvbars, bool kklinetracks = false)
+      : addCosmicTracks(cosmictracks), addHelices(helices), addTracks(tracks), addKKLineTracks(kklinetracks), addCaloDigis(calodigis), addClusters(clusters), addComboHits(combohits), addBkgClusters(bkgclusters), addCrvRecoPulse(crv), addCrvClusters(crvclu), addCrvTrack(crvtrack), addTimeClusters(timeclusters), addTrkHits(trkhits), addMCTrajectories(mctraj), addSurfaceSteps(surfsteps), addSimParts(simparts), addTrackerHist(trackerhist), addCaloHist(calohist), shiftTracker(shifttracker), useAlignedTracker(usealignedtracker), addTrkErrBar(errbar), addCrystalDraw(crys), addCrvBars(crvbars) {};
 
 
      };

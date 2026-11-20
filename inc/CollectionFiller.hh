@@ -23,8 +23,8 @@ namespace mu2e{
      * Used as a code in FillRecoCollections to retrieve a specific product type.
      */
     enum RecoDataProductName {
-        ComboHits, BkgClusters, CrvRecoPulses, TimeClusters, CaloClusters, HelixSeeds, 
-        KalSeeds, CosmicTrackSeeds, TrkHits, CrvCoincidenceCluster, CaloDigis
+        ComboHits, BkgClusters, CrvRecoPulses, TimeClusters, CaloClusters, HelixSeeds,
+        KalSeeds, KKLineSeeds, CosmicTrackSeeds, TrkHits, CrvCoincidenceCluster, CaloDigis
     };
     
     /**
@@ -63,6 +63,7 @@ namespace mu2e{
             fhicl::Sequence<art::InputTag>cluTag{Name("CaloClusterCollection"),Comment("cluTag")};
             fhicl::Sequence<art::InputTag>helixSeedTag{Name("HelixSeedCollection"),Comment("helixseedTag")};
             fhicl::Sequence<art::InputTag>kalSeedTag{Name("KalSeedPtrCollection"),Comment("kalseedTag")};
+            fhicl::Sequence<art::InputTag>kkLineTag{Name("KalSeedCollection"),Comment("kkLineTag")};
             
             // FHiCL Atom for a single product tag (one instance expected)
             fhicl::Atom<art::InputTag>cosmicTrackSeedTag{Name("CosmicTrackSeedCollection"),Comment("cosmicTrackSeedTag")};
@@ -84,6 +85,7 @@ namespace mu2e{
             fhicl::Atom<bool> addClusters{Name("addClusters"), Comment("set to add caloclusters"),false};
             fhicl::Atom<bool> addHelixSeeds{Name("addHelixSeeds"), Comment("set to add helixseeds"),false};
             fhicl::Atom<bool> addKalSeeds{Name("addKalSeeds"), Comment("set to add kalseeds"),false};
+            fhicl::Atom<bool> addKKLine{Name("addKKLine"), Comment("set to add KalSeedCollection (e.g. KKLine)"),false};
             fhicl::Atom<bool> addCosmicTrackSeeds{Name("addCosmicTrackSeeds"), Comment("set to add cosmic track seeds"),false};
             fhicl::Atom<bool> addMCTraj{Name("addMCTraj"), Comment("set to add MCTrajectories"),false};
             fhicl::Atom<bool> addSurfSteps{Name("addSurfSteps"), Comment("set to add SurfaceStep MC"),false};
@@ -120,6 +122,7 @@ namespace mu2e{
         std::vector<art::InputTag> cluTag_;
         std::vector<art::InputTag> helixSeedTag_;
         std::vector<art::InputTag> kalSeedTag_;
+        std::vector<art::InputTag> kkLineTag_;
         art::InputTag cosmicTrackSeedTag_;
         std::vector<art::InputTag> MCTrajTag_;
         std::vector<art::InputTag> SurfStepsTag_;
@@ -131,7 +134,7 @@ namespace mu2e{
         
         // --- Boolean Control Flags (Copied from FHiCL Config) ---
          bool addHits_, addBkgClusters_, addCrvRecoPulse_, addCrvClusters_, addCrvTrack_, addTimeClusters_, addTrkHits_, addCaloDigis_,
-              addClusters_, addHelixSeeds_, addKalSeeds_, addCosmicTrackSeeds_, addMCTraj_,
+              addClusters_, addHelixSeeds_, addKalSeeds_, addKKLine_, addCosmicTrackSeeds_, addMCTraj_,
            addSurfSteps_, addSimParts_, addTrackerHist_, addCaloHist_, shiftTracker_, useAlignedTracker_, FillAll_;
 
              

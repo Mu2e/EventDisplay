@@ -1,0 +1,3 @@
+#include "EventDisplay/examples/nominal_MDC2025.fcl"
+physics.analyzers.Mu2eEventDisplay.filler.KalSeedPtrCollection : [ "Reflectmu", "Reflecte", "SelectReflectmu", "SelectReflecte" ]
+physics.REvePath : [ "eidsel" ]

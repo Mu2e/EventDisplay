@@ -71,6 +71,7 @@ namespace mu2e{
           void AddTrkCaloHit(KalSeed const& kalseed, REX::REveScene* &scene);
           template<class KTRAJ> void AddKinKalTrajectory( std::unique_ptr<KTRAJ> &trajectory, REX::REveScene* &scene, unsigned int j, std::string kaltitle, double& t1, double& t2);
       void FillKinKalTrajectory(REX::REveManager *&eveMng, REX::REveScene* &scene, std::tuple<std::vector<std::string>, std::vector<const KalSeedPtrCollection*>> track_tuple, bool kalinter, bool hits, bool calohits, double& t1, double& t2, bool shifttracker);
+      void FillKinKalTrajectoryFromCol(REX::REveManager *&eveMng, REX::REveScene* &scene, std::tuple<std::vector<std::string>, std::vector<const KalSeedCollection*>> track_tuple, bool kalinter, bool hits, bool calohits, double& t1, double& t2, bool shifttracker);
       void AddCRVKalIntersection(REX::REveManager *&eveMng, REX::REveScene* &scene, std::tuple<std::vector<std::string>, std::vector<const KalSeedPtrCollection*>> track_tuple, bool kalinter, bool hits, bool calohits, double& t1, double& t2, std::tuple<std::vector<std::string>, std::vector<const CrvCoincidenceClusterCollection*>>  crvpulse_tuple, bool extracted, bool addCrvBars);
           void AddCosmicTrackFit(REX::REveManager *&eveMng, const mu2e::CosmicTrackSeedCollection *cosmiccol, REX::REveScene* &scene);
 

@@ -1,0 +1,89 @@
+# raw_to_display_calo_crv.fcl
+# Version of raw_to_display.fcl without PassN tracker dependencies
+# Runs CRV and Calo reconstruction only; tracker reconstruction and display are disabled
+# Offline/CaloReco, Offline/CaloCluster, and Offline/DAQ replace the PassN include
+
+#include "Offline/fcl/standardServices.fcl"
+#include "EventDisplay/fcl/prolog.fcl"
+#include "Offline/CRVResponse/fcl/prolog.fcl"
+#include "Offline/CaloReco/fcl/prolog.fcl"
+#include "Offline/CaloCluster/fcl/prolog.fcl"
+#include "Offline/DAQ/fcl/prolog.fcl"
+#include "EventDisplay/fcl/extracted.fcl"
+
+process_name : RecoDisplay
+source : { module_type : RootInput }
+services : @local::Services.Reco
+services.TFileService.fileName : "/dev/null"
+
+physics.producers :
+{
+  @table::CaloReco.producers
+  @table::CaloCluster.producers
+  CaloDigis : @local::DAQ.producers.CaloDigis
+  CrvDigi :
+  {
+    module_type   : CrvDigisFromArtdaqFragmentsFEBII
+    diagLevel     : 0
+    useROC4asROC2 : true
+  }
+  CrvRecoPulses               : @local::CrvRecoPulses
+  CrvCoincidenceClusterFinder : @local::CrvCoincidenceClusterFinder
+}
+
+### EventDisplay analyzers and filters ###
+physics.analyzers :
+{
+  @table::REveDis.analyzers
+}
+physics.filters :
+{
+  @table::REveDis.filters
+}
+
+### Reco paths (CRV and Calo only, no tracker) ###
+physics.CRVRecoPath  : [ CrvDigi, CrvRecoPulses, CrvCoincidenceClusterFinder ]
+physics.CaloRecoPath : [ CaloDigis, CaloRecoDigiMaker, CaloHitMaker, CaloProtoClusterMaker, CaloClusterMaker ]
+physics.REveEndPath  : [ @sequence::REveDis.seqBase]
+
+physics.trigger_paths : [ CRVRecoPath, CaloRecoPath ]
+physics.end_paths     : [ REveEndPath ]
+
+services.GeometryService.inputFile : "Offline/Mu2eG4/geom/geom_common_extracted_v06.txt"
+
+### Calo config ###
+physics.producers.CaloRecoDigiMaker.caloDigiCollection : CaloDigis
+physics.producers.CaloRecoDigiMaker.UseProtonBunchTime : false
+
+### CRV config ###
+#include "Offline/CRVReco/fcl/epilog_extracted.fcl"
+physics.producers.CrvCoincidenceClusterFinder.ignoreSecondaryPulses : true
+
+### Database calibrations ###
+services.ProditionsService.calCalib.useDb    : true
+services.ProditionsService.crvStatus.useDb   : true
+services.ProditionsService.crvCalib.useDb    : true
+services.ProditionsService.eventTiming.useDb : true
+services.DbService.purpose      : "KPP_reco"
+services.DbService.version      : ""
+services.DbService.nearestMatch : true
+
+### EventDisplay config (CRV and Calo only, tracker disabled) ###
+physics.analyzers.Mu2eEventDisplay.gdmlname                       : "Offline/gen/gdml/mu2e_extracted.gdml"
+physics.analyzers.Mu2eEventDisplay.SelectEvents                   : []
+physics.analyzers.Mu2eEventDisplay.addKalInter                    : false
+physics.analyzers.Mu2eEventDisplay.filler.addCrvClusters          : true
+physics.analyzers.Mu2eEventDisplay.filler.addCrvTrack             : false
+physics.analyzers.Mu2eEventDisplay.filler.addCrvRecoPulse         : true
+physics.analyzers.Mu2eEventDisplay.filler.addCaloDigis            : false
+physics.analyzers.Mu2eEventDisplay.filler.addClusters             : true
+physics.analyzers.Mu2eEventDisplay.addTrkCaloHits                 : false
+physics.analyzers.Mu2eEventDisplay.filler.addKalSeeds             : false
+physics.analyzers.Mu2eEventDisplay.addTrkStrawHits                : false
+physics.analyzers.Mu2eEventDisplay.filler.addHits                 : false
+physics.analyzers.Mu2eEventDisplay.filler.addCaloHist             : true
+physics.analyzers.Mu2eEventDisplay.filler.shiftTracker            : false
+physics.analyzers.Mu2eEventDisplay.filler.addTrackerHist          : false
+physics.analyzers.Mu2eEventDisplay.filler.useAlignedTracker       : false
+physics.analyzers.Mu2eEventDisplay.extracted                      : true
+physics.analyzers.Mu2eEventDisplay.specifyTag                     : false

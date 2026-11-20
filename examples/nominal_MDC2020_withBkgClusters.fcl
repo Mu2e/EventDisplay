@@ -31,17 +31,20 @@ physics.analyzers.Mu2eEventDisplay.addCrystalHits : false
 physics.analyzers.Mu2eEventDisplay.filler.addHelixSeeds : false
 physics.analyzers.Mu2eEventDisplay.filler.addKalSeeds : true
 physics.analyzers.Mu2eEventDisplay.filler.addClusters : false
-physics.analyzers.Mu2eEventDisplay.filler.addHits : false #  adds ComboHits
-physics.analyzers.Mu2eEventDisplay.filler.addBkgClusters : true
+physics.analyzers.Mu2eEventDisplay.filler.addHits : true #  adds ComboHits
+physics.analyzers.Mu2eEventDisplay.filler.addBkgClusters : false
 physics.analyzers.Mu2eEventDisplay.filler.addCrvClusters : false
 # physics.analyzers.Mu2eEventDisplay.filler.addCrvHits : false
 physics.analyzers.Mu2eEventDisplay.filler.addTimeClusters : false
 physics.analyzers.Mu2eEventDisplay.filler.addSimParts : false
 physics.analyzers.Mu2eEventDisplay.addTrkStrawHits : false
 physics.analyzers.Mu2eEventDisplay.filler.addCosmicTrackSeeds : false
-physics.analyzers.Mu2eEventDisplay.filler.addMCTraj : false
+physics.analyzers.Mu2eEventDisplay.filler.addMCTraj : true
 physics.analyzers.Mu2eEventDisplay.filler.addSurfSteps : false
-physics.analyzers.Mu2eEventDisplay.specifyTag : false
+physics.analyzers.Mu2eEventDisplay.filler.addTrackerHist : false
+physics.analyzers.Mu2eEventDisplay.filler.useAlignedTracker : true
+physics.analyzers.Mu2eEventDisplay.specifyTag : true
+
 
 # allows movement through events in sequential order
 physics.analyzers.Mu2eEventDisplay.seqMode : true
@@ -73,5 +76,9 @@ source.inputCommands: ["keep *",
     "drop mu2e::CaloClusters_CaloClusterFast_*_*"
     ]
 
-services.TFileService.fileName: "/dev/null"
-services.GeometryService.inputFile: "Offline/Mu2eG4/geom/geom_common_MDC2020.txt"
+services.DbService.purpose: TRACKER_VST
+services.DbService.version: v2_0
+services.DbService.verbose: 2
+services.DbService.textFile : ["align_r660_v0.txt","calib_r660_v6.txt"]
+services.ProditionsService.alignedTracker.useDb: true
+services.ProditionsService.trackerStatus.Settings.useDb: true

@@ -1,0 +1,18 @@
+#include "EventDisplay/fcl/prolog_for_online_display.fcl"
+
+process_name : RecoDisplay
+source : { module_type : RootInput }
+services : @local::Services.Reco
+services.GeometryService.inputFile : "Offline/Mu2eG4/geom/geom_common_extracted_v06.txt"
+
+physics: {
+    producers: @local::rawdisplay.producers
+    filters: @local::rawdisplay.filters
+    analyzers: @local::rawdisplay.analyzers
+    @table::rawdisplay.paths
+
+    trigger_paths: @local::rawdisplay.trigger_paths
+    end_paths: @local::rawdisplay.end_paths
+}
+
+#include "EventDisplay/fcl/epilog_for_online_display.fcl"

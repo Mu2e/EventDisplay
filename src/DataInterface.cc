@@ -1096,6 +1096,121 @@ void DataInterface::FillKinKalTrajectory(REX::REveManager *&eveMng, REX::REveSce
 }
 
 /*
+ * Adds reconstructed KTRAJ directly from KalSeedCollection (not Ptr)
+*/
+void DataInterface::FillKinKalTrajectoryFromCol(REX::REveManager *&eveMng, REX::REveScene* &scene,
+                                                std::tuple<std::vector<std::string>,
+                                                std::vector<const KalSeedCollection*>> track_tuple,
+                                                bool plotKalIntersection, bool addTrkHits, bool addTrkCaloHits,
+                                                double& t1, double& t2, bool shifttracker)
+{
+    std::cout << "[DataInterface::FillKinKalTrajectoryFromCol()]" << std::endl;
+
+    const auto& ptable = GlobalConstantsHandle<ParticleDataList>();
+    const auto& track_list = std::get<1>(track_tuple);
+    if (track_list.empty()) return;
+
+    for(unsigned int j = 0; j < track_list.size(); j++){
+        const mu2e::KalSeedCollection* seedcol = track_list[j];
+
+        if(seedcol == nullptr) continue;
+
+        for(const auto& kseed : *seedcol){
+            std::string particle_name = ptable->particle(kseed.particle()).name();
+
+            unsigned nactive = 0;
+            for (auto const& hit : kseed.hits()){
+                if (hit.strawHitState() > mu2e::WireHitState::inactive) {
+                    ++nactive;
+                }
+            }
+
+            double t0;
+            kseed.t0Segment(t0);
+
+            std::string compound_name = "Track Products for KalSeed " + particle_name;
+            REX::REveCompound *trackproducts = new REX::REveCompound(compound_name.c_str(), compound_name.c_str(), 1);
+
+            std::stringstream ksstream;
+            std::string tag = particle_name;
+
+            if(kseed.loopHelixFit()) {
+                tag += " Loop Helix";
+                auto trajectory = kseed.loopHelixFitTrajectory();
+                const auto& lh = trajectory->nearestPiece(t0);
+                auto momvec = lh.momentum3(t0);
+
+                ksstream << particle_name << " LoopHelix "
+                    << std::setw(6) << std::setprecision(3) << momvec.R() << " MeV/c, cos(Theta) " << cos(momvec.Theta()) << '\n'
+                    << "t0 " << lh.t0() << " ns, "
+                    << "lam " << lh.lam() << " mm, "
+                    << "rad " << lh.rad() << " mm" << '\n'
+                    << "cx " << lh.cx() << " mm, "
+                    << "cy " << lh.cy() << " mm, "
+                    << "phi0 " << lh.phi0() << " rad" << '\n'
+                    << "N active hits: " << nactive << ", Fit cons: " << kseed.fitConsistency();
+
+                AddKinKalTrajectory<LHPT>(trajectory, scene, j, ksstream.str(), t1, t2);
+                if(addTrkHits) {
+                    AddTrkStrawHit<LHPT>(kseed, scene, trajectory, trackproducts, shifttracker);
+                    if(addTrkCaloHits) AddTrkCaloHit(kseed, scene);
+                }
+            }
+            else if(kseed.centralHelixFit()) {
+                tag += " Central Helix";
+                auto trajectory = kseed.centralHelixFitTrajectory();
+                const auto& ch = trajectory->nearestPiece(t0);
+                auto momvec = ch.momentum3(t0);
+
+                ksstream << particle_name << " CentralHelix "
+                    << std::setw(6) << std::setprecision(3) << momvec.R() << " MeV/c, cos(Theta) " << cos(momvec.Theta()) << '\n'
+                    << "t0 " << ch.t0() << " ns, "
+                    << "tandip " << ch.tanDip() << '\n'
+                    << "d0 " << ch.d0() << " mm, "
+                    << "z0 " << ch.z0() << " mm, "
+                    << "phi0 " << ch.phi0() << " rad" << '\n'
+                    << "omega " << ch.omega() << " mm^-1";
+
+                AddKinKalTrajectory<CHPT>(trajectory, scene, j, ksstream.str(), t1, t2);
+                if(addTrkHits) {
+                    AddTrkStrawHit<CHPT>(kseed, scene, trajectory, trackproducts, shifttracker);
+                    if(addTrkCaloHits) AddTrkCaloHit(kseed, scene);
+                }
+            }
+            else if(kseed.kinematicLineFit()) {
+                tag += " Kinematic Line";
+                auto trajectory = kseed.kinematicLineFitTrajectory();
+                const auto& kl = trajectory->nearestPiece(t0);
+                auto momvec = kl.momentum3(t0);
+
+                ksstream << particle_name << " Momentum "
+                    << std::setw(6) << std::setprecision(3) << momvec.R() << " MeV/c, cos(Theta) " << cos(momvec.Theta()) << '\n'
+                    << "t0 " << kl.t0() << " ns, "
+                    << "d0 " << kl.d0() << " mm, "
+                    << "z0 " << kl.z0() << " mm" << '\n'
+                    << "phi0 " << kl.phi0() << " rad, "
+                    << "theta " << kl.theta() << " rad";
+
+                AddKinKalTrajectory<KLPT>(trajectory, scene, j, ksstream.str(), t1, t2);
+                if(addTrkHits) {
+                    AddTrkStrawHit<KLPT>(kseed, scene, trajectory, trackproducts, shifttracker);
+                    if(addTrkCaloHits) AddTrkCaloHit(kseed, scene);
+                }
+            }
+
+            if(plotKalIntersection) {
+                AddKalIntersection(kseed, scene, trackproducts, tag);
+            }
+
+            if(addTrkHits || plotKalIntersection) {
+                scene->AddElement(trackproducts);
+            }
+
+        } // End of inner loop (KalSeeds)
+    } // End of outer loop (Collections)
+}
+
+/*
  * Adds reconstructed CosmicTrackSeed product, visualized as line
 */
 /*Function to visualize CosmicTrackSeed fits (straight lines)-*/

@@ -40,14 +40,14 @@ services.TFileService.fileName: "/dev/null"
 physics.analyzers.Mu2eEventDisplay.gdmlname :"Offline/gen/gdml/mu2e_extracted.gdml"
 services.TFileService.fileName: "/dev/null"
 services.GeometryService.inputFile: "Offline/Mu2eG4/geom/geom_common_extracted.txt"
-physics.analyzers.Mu2eEventDisplay.filler.addCrvClusters : true
-physics.analyzers.Mu2eEventDisplay.filler.addCrvTrack : true
+physics.analyzers.Mu2eEventDisplay.filler.addCrvClusters : false
+physics.analyzers.Mu2eEventDisplay.filler.addCrvTrack : false
 physics.analyzers.Mu2eEventDisplay.filler.addCrvRecoPulse : false
-physics.analyzers.Mu2eEventDisplay.filler.addCaloDigis : false
-physics.analyzers.Mu2eEventDisplay.filler.addClusters : true
-physics.analyzers.Mu2eEventDisplay.filler.addKalSeeds : true
+physics.analyzers.Mu2eEventDisplay.filler.addCaloDigis : true
+physics.analyzers.Mu2eEventDisplay.filler.addClusters : false
+physics.analyzers.Mu2eEventDisplay.filler.addKalSeeds : false
 physics.analyzers.Mu2eEventDisplay.addTrkStrawHits : false
-physics.analyzers.Mu2eEventDisplay.filler.addHits : true
+physics.analyzers.Mu2eEventDisplay.filler.addHits : false
 physics.analyzers.Mu2eEventDisplay.filler.addCaloHist : false
 physics.analyzers.Mu2eEventDisplay.filler.useAlignedTracker : true
 physics.analyzers.Mu2eEventDisplay.extracted : true
