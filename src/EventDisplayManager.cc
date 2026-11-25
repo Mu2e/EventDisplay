@@ -53,37 +53,6 @@ void EventDisplayManager::QuitRoot()
     exit(15);
 }
 
-/*Place holder, it will be used for online running - streaming events
- */
-void EventDisplayManager::autoplay(int x)
-{
-    std::cout << "EventManger autoplay() ....... " << x << std::endl;
-    
-    TextSelect* fText_obj = nullptr;
-    
-    // Check if the global REveManager instance is available.
-    if (ROOT::Experimental::gEve != nullptr) {
-        
-        // 1. Retrieve the generic REveElement using the global manager (gEve) and the Element ID.
-        ROOT::Experimental::REveElement* element = ROOT::Experimental::gEve->FindElementById(fTextId_);
-        
-        if (element != nullptr) {
-            // 2. Safely cast the generic element to the specific TextSelect type.
-            fText_obj = dynamic_cast<TextSelect*>(element);
-        }
-    }
-    
-    if (fText_obj == nullptr) {
-        // CRITICAL ERROR if the object wasn't found or the cast failed.
-        std::cerr << "CRITICAL ERROR: TextSelect object not found via gEve->FindElementWithId(" 
-                  << fTextId_ << "). Cannot set Run/Event." << std::endl; 
-        return; 
-    }
-
-    // 3. Command executed: Set the Run/Event numbers in the TextSelect object.
-    fText_obj->setAutoplay(x); 
-}
-
 
 
 // --- Element ID Management ---
