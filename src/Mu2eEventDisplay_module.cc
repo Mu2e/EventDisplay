@@ -135,6 +135,7 @@ namespace mu2e
           fhicl::Atom<bool> extracted{Name("extracted"), Comment(""),false};
           fhicl::Atom<bool> showEM{Name("showEM"), Comment(""),false};
           fhicl::Atom<bool> seqMode{Name("seqMode"), Comment("turn off for go to any event functionality"),true};
+          fhicl::Atom<bool> autoplay{Name("autoplay"), Comment("auto-advance through events without waiting for user input"),false};
         };
 
         typedef art::EDAnalyzer::Table<Config> Parameters;
@@ -213,7 +214,7 @@ namespace mu2e
         int eventn;
         int runn;
         int subrunn;
-        int autoplay = 0;
+        int autoplay;
         std::vector<std::shared_ptr<DataProduct>> listoflists;
         GeomOptions geomOpts;
         ConfigFileLookupPolicy configFile;
@@ -247,7 +248,8 @@ namespace mu2e
     strawdisplay_(conf().strawdisplay()),
     extracted_(conf().extracted()),
     showEM_(conf().showEM()),
-    seqMode_(conf().seqMode())
+    seqMode_(conf().seqMode()),
+    autoplay(conf().autoplay() ? 1 : 0)
     {
       geomOpts.fill(showCrv_,showPS_, showTS_, showDS_, show2D_, caloVST_, showST_, extracted_, showSTM_, showCalo_, showTracker_, showCaloCrystals_, showEM_ );
     }
