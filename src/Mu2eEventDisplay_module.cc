@@ -347,7 +347,8 @@ void Mu2eEventDisplay::FillAnyCollection(const art::Event& evt, std::vector<std:
 
       if (fText) {
           auto [user_run, user_subrun, user_event] = fText->getRunEvent();
-          autoplay = fText->getAutoplay();
+          int guiAutoplay = fText->getAutoplay();
+          if (guiAutoplay > 0) autoplay = guiAutoplay;
 
           if (user_run != 0 && user_event != 0) {
               runn    = user_run;
