@@ -13,18 +13,6 @@ void TextSelect::set(int run, int subrun, int event) {
               << runN << "/" << subrunN << "/" << eventN << std::endl;
 }
 
-// Setter: Called by the REve thread (EventDisplayManager)
-void TextSelect::setAutoplay(int x) {
-    // Lock the mutex for writing
-    std::lock_guard<std::mutex> lock(_mutex);
-    autoplay_ = x;
-    std::cout << "[TextSelect::setAutoplay] set to: " << autoplay_ << std::endl;
-}
-
-int TextSelect::getAutoplay(){
-  return autoplay_;
-}
-
 // Getter: Called by the art module thread (Mu2eEventDisplay::analyze)
 std::tuple<int, int, int> TextSelect::getRunEvent() {
     std::lock_guard<std::mutex> lock(_mutex);
