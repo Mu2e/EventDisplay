@@ -19,12 +19,12 @@ usage() {
 
 
 
-# Assign command-line arguments to variables
-run=0
-subrun=0
-event=0
-datset=""
-geom=2025
+# Defaults, overridden by the command-line options below
+RUN=0
+SUBRUN=0
+EVENT=0
+DATASET=""
+GEOM=2025
 
 # Function: Exit with error.
 exit_abnormal() {

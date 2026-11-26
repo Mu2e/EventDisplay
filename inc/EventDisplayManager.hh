@@ -58,8 +58,6 @@ namespace mu2e {
          */
         void QuitRoot();
 
-        void autoplay(int x);
-
         /**
          * @brief Command to handle user input and trigger loading a specific Run and Event ID.
          * * This function runs in the REve thread and uses fTextId_ to look up the TextSelect object.

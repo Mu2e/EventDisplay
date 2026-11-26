@@ -21,14 +21,10 @@ class TextSelect : public ROOT::Experimental::REveElement
     // Getter (Called by the art module thread)
     std::tuple<int, int, int> getRunEvent();
 
-    // setAutoplay
-    void setAutoplay(int x);
-    int getAutoplay();
     private:
      int runN = 0;
      int subrunN = 0;
      int eventN = 0;
-     int autoplay_=0;
      std::mutex _mutex; // <<< The synchronization tool
 };
 }
